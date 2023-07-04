@@ -25,7 +25,8 @@ def usage():
     print(" clean       -- remove static data from disk")
     print(" lists       -- make all lists from zips, does not touch static data")
     print(" new_lists   -- update lists from updated/new zips, does not touch static data")
-    print(" stage[1-4]  -- stage1, ..., stage4 for creating static pages")
+    print(" fillall     -- (re)fill all lists to database")
+    #print(" fillnew     -- (re)fill only new/updated lists to database")
 
 
 def clean():
@@ -81,14 +82,10 @@ if __name__ == "__main__":
             renew_lists()
         elif sys.argv[1] == "new_lists":
             new_lists()
-        elif sys.argv[1] == "stage1":
-            fromlists("global")
-        elif sys.argv[1] == "stage2":
-            fromlists("authors")
-        elif sys.argv[1] == "stage3":
-            fromlists("sequences")
-        elif sys.argv[1] == "stage4":
-            fromlists("genres")
+        elif sys.argv[1] == "fillall":
+            fromlists("all")
+        #elif sys.argv[1] == "fillnew":
+        #    fromlists("newonly")
         else:
             usage()
     else:

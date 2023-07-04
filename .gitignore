@@ -5,6 +5,7 @@ genres_unknown
 tmp
 __pycache__
 data
+pgdata
 LOG*
 logs
 app/config.py

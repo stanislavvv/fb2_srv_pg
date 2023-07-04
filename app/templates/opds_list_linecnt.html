@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block entry %}
+        <div class=rowlist>
+        {% for i in entry %}
+            <div class=col1>
+                <a href={{i.link['@href']|replace('/opds', '/html', 1)}}>{{i.title}}</a>
+            </div>
+            <div class=col2>
+                {{i.content['#text']|safe}}
+            </div>
+        {% endfor %}
+        </div>
+        <hr>
+{% endblock %}

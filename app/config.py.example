@@ -1,0 +1,62 @@
+# -*- coding: utf-8 -*-
+
+import os
+import logging
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+class Config:
+    @staticmethod
+    def init_app(app):
+        pass
+
+
+class DevelopmentConfig(Config):
+    DBLOGLEVEL = logging.DEBUG  # DEBUG, INFO, WARN, ERR
+    DBLOGFORMAT = '%(asctime)s -- %(message)s'
+    DEBUG = True  # generate debug artefacts
+    GENRES_LIST = "genres.list"
+    ZIPS = "data"
+    STATIC = "data/pages"
+    TITLE = "Home opds directory"
+    FB2_XSLT = 'fb2_to_html.xsl'
+    APPLICATION_ROOT = ''
+    PAGE_SIZE = 10
+    MAX_SEARCH_RES = 50
+    HIDE_DELETED = False
+
+
+class TestConfig(Config):
+    DBLOGLEVEL = logging.DEBUG
+    DBLOGFORMAT = '%(asctime)s -- %(message)s'
+    TESTING = True
+    DEBUG = False
+    GENRES_LIST = "genres.list"
+    ZIPS = "data"
+    STATIC = "data/pages"
+    TITLE = "Home opds directory"
+    FB2_XSLT = 'fb2_to_html.xsl'
+    APPLICATION_ROOT = '/books'
+    PAGE_SIZE = 10
+    MAX_SEARCH_RES = 50
+    HIDE_DELETED = False
+
+
+class ProductionConfig(Config):
+    DBLOGLEVEL = logging.INFO
+    DBLOGFORMAT = '%(asctime)s -- %(message)s'
+    DEBUG = False
+    GENRES_LIST = "genres.list"
+    ZIPS = "data"
+    STATIC = "data/pages"
+    TITLE = "Home opds directory"
+    FB2_XSLT = 'fb2_to_html.xsl'
+    APPLICATION_ROOT = '/books'
+    PAGE_SIZE = 50
+    MAX_SEARCH_RES = 500
+    HIDE_DELETED = True
+
+
+config = {"development": DevelopmentConfig, "test": TestConfig, "prod": ProductionConfig}
+
+SELECTED_CONFIG = os.getenv("FLASK_ENV", "development")

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block entry %}
+        <div class=author_info>
+        {% for i in entry %}
+        <div>
+        {% if i.content is defined -%}
+            <h2>{{i.title}}</h2>
+            <p>{{i.content['#text']|safe}}</p>
+        {% else -%}
+            <p><a href={{i.link['@href']|replace('/opds', '/html', 1)}}>{{i.title}}</a></p>
+        {% endif -%}
+        </div>
+        {% endfor %}
+        </div>
+{% endblock %}

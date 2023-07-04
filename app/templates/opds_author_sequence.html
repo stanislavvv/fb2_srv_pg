@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block entry %}
+        {% for i in entry %}
+        <div>
+            <p><a href={{i.link['@href']|replace('/opds', '/html', 1)}}>{{i.title}}</a></p>
+            <p>{{i.content['#text']|safe}}</p>
+        </div>
+        <hr>
+        {% endfor %}
+{% endblock %}

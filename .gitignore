@@ -1,0 +1,11 @@
+*.sqlite
+run_zip.sh
+run_sqlite.sh
+genres_unknown
+tmp
+__pycache__
+data
+LOG*
+logs
+app/config.py
+venv

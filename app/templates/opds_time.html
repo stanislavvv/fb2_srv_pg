@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block entry %}
+        {% for i in entry %}
+        <div>
+            {% if i.title is defined -%}
+            <h2>{{i.title}}</h2>
+            {% endif -%}
+            <p>
+            {% for a in i.author %}
+                <a href={{a.uri|replace('/opds', '/html', 1)}}>{{a.name}}</a>
+            {% endfor %}
+            </p>
+            <p>
+            {% for l in i.link %}
+            <a href={{l['@href']|replace('/opds', '/html', 1)}}>{{l['@title']}}</a>
+            {% endfor %}
+            </p>
+            <p>
+            Genres: 
+            {% for c in i.category %}
+                <a href="{{ config.APPLICATION_ROOT }}/html/genre/{{c['@term']}}">{{c['@label']}}</a> 
+            {% endfor %}
+            </p>
+            <p>
+            {% if i.content is defined -%}
+                <p>{{i.content['#text']|safe}}</p>
+            {% endif -%}
+            </p>
+            <p>Язык: {{i['dc:language']}}</p>
+            <p>Добавлено: {{i.updated}}</p>
+        </div>
+        <hr>
+        {% endfor %}
+{% endblock %}

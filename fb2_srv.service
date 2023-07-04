@@ -1,0 +1,18 @@
+[Unit]
+Description=fb2 archive opds server unit
+After=network.target network-online.target
+
+[Service]
+Restart=always
+RestartSec=3
+
+# change to appropriate
+User=nobody
+# change to appropriate
+WorkingDirectory=/usr/local/fb2_srv
+# change to appropriate
+ExecStart=/usr/local/fb2_srv/gunicorn.sh
+
+[Install]
+WantedBy=multi-user.target
+

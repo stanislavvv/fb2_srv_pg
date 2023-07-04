@@ -17,7 +17,6 @@ class DevelopmentConfig(Config):
     DEBUG = True  # generate debug artefacts
     GENRES_LIST = "genres.list"
     ZIPS = "data"
-    STATIC = "data/pages"
     TITLE = "Home opds directory"
     FB2_XSLT = 'fb2_to_html.xsl'
     APPLICATION_ROOT = ''
@@ -33,7 +32,6 @@ class TestConfig(Config):
     DEBUG = False
     GENRES_LIST = "genres.list"
     ZIPS = "data"
-    STATIC = "data/pages"
     TITLE = "Home opds directory"
     FB2_XSLT = 'fb2_to_html.xsl'
     APPLICATION_ROOT = '/books'
@@ -48,7 +46,6 @@ class ProductionConfig(Config):
     DEBUG = False
     GENRES_LIST = "genres.list"
     ZIPS = "data"
-    STATIC = "data/pages"
     TITLE = "Home opds directory"
     FB2_XSLT = 'fb2_to_html.xsl'
     APPLICATION_ROOT = '/books'

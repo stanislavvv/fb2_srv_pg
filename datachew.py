@@ -13,7 +13,7 @@ from app import create_app
 from data_chew import INPX
 from data_chew import create_booklist, update_booklist
 from data_chew import process_lists
-from data_chew.idx import set_config
+from data_chew.db import bookdb
 
 DEBUG = True  # default, configure in app/config.py
 DBLOGLEVEL = logging.DEBUG
@@ -60,9 +60,17 @@ def new_lists():
 
 def fromlists(stage):
     zipdir = app.config['ZIPS']
-    pagesdir = app.config['STATIC']
-    # make_root(pagesdir)
-    process_lists(zipdir, pagesdir, stage)
+    pg_host = app.config['PG_HOST']
+    pg_base = app.config['PG_BASE']
+    pg_user = app.config['PG_USER']
+    pg_pass = app.config['PG_PASS']
+    db = bookdb(pg_host, pg_base, pg_user, pg_pass)
+    try:
+        process_lists(db, zipdir, stage)
+        db.conn.commit()
+    except:
+        db.conn.rollback()
+    db.conn.close()
 
 
 if __name__ == "__main__":
@@ -70,8 +78,6 @@ if __name__ == "__main__":
     DEBUG = app.config['DEBUG']
     DBLOGLEVEL = app.config['DBLOGLEVEL']
     DBLOGFORMAT = app.config['DBLOGFORMAT']
-    if "HIDE_DELETED" in app.config:
-        set_config("hide_deleted", app.config["HIDE_DELETED"])
     logging.basicConfig(level=DBLOGLEVEL, format=DBLOGFORMAT)
     if len(sys.argv) > 1:
         if sys.argv[1] == "clean":

@@ -14,32 +14,9 @@ from .strings import get_meta_name, genres_replacements
 MAX_PASS_LENGTH = 1000
 MAX_PASS_LENGTH_GEN = 5
 
-book_idx = {}
-book_titles = {}
-book_cnt = 0
-seq_idx = {}
-seq_cnt = 0
-seq_processed = {}
-auth_idx = {}
-auth_cnt = 0
-auth_processed = {}
-gen_idx = {}
-gen_names = {}
-gen_root = {}
-gen_cnt = 0
-gen_processed = {}
-pub_names = {}  # publisher's names
 
-config = {
-    "hide_deleted": True
-}
-
-
-def set_config(key, value):
-    config[key] = value
-
-
-def process_list_books(fd, booklist):
+def process_list_books(DB, booklist):
+    print(booklist)
     global book_cnt
     global book_titles
     with open(booklist) as lst:
@@ -47,60 +24,62 @@ def process_list_books(fd, booklist):
     for book in data:
         if book is None:
             continue
-        if "deleted" in book:
-            if config["hide_deleted"] and book["deleted"] > 0:
-                continue
-        book_titles[book["book_id"]] = book.get("book_title")
+        #book_titles[book["book_id"]] = book.get("book_title")
         book["genres"] = genres_replace(book["zipfile"], book["filename"], book["genres"])
-        # fd.send(book)
-        fd.write(json.dumps(book, ensure_ascii=False))
-        fd.write("\n")
-        book_cnt = book_cnt + 1
-        if book["sequences"] is not None:
-            for seq in book["sequences"]:
-                seq_id = seq.get("id")
-                if seq_id is not None:
-                    seq_name = seq["name"]
-                    if seq_id in seq_idx:
-                        s = seq_idx[seq_id]
-                        count = s["cnt"]
-                        count = count + 1
-                        s["cnt"] = count
-                        seq_idx[seq_id] = s
-                    else:
-                        s = {"name": seq_name, "id": seq_id, "cnt": 1}
-                        seq_idx[seq_id] = s
-        if book["authors"] is not None:
-            for auth in book["authors"]:
-                auth_id = auth.get("id")
-                if auth_id is not None:
-                    if auth_id not in auth_idx:
-                        auth_name = auth["name"]
-                        s = {"name": auth_name, "id": auth_id}
-                        auth_idx[auth_id] = s
-        if book["genres"] is not None:
-            for gen in book["genres"]:
-                gen_id = gen
-                if gen in genres_replacements:
-                    gen_id = genres_replacements[gen]
-                gen_name = gen_id
-                if gen in genres:
-                    gen_name = genres[gen]["descr"]
-                gen_names[gen_id] = gen_name
-                if gen_id in gen_idx:
-                    s = gen_idx[gen_id]
-                    count = s["cnt"]
-                    count = count + 1
-                    s["cnt"] = count
-                    gen_idx[gen_id] = s
-                else:
-                    s = {"name": gen_name, "id": gen_id, "cnt": 1}
-                    gen_idx[gen_id] = s
-        if book["pub_info"]["publisher"] is not None:
-            pub_names[book["pub_info"]["publisher_id"]] = {
-                "name": book["pub_info"]["publisher"],
-                "id": book["pub_info"]["publisher_id"]
-            }
+        if not "deleted" in book:
+            book["deleted"] = 0
+
+        try:
+            DB.add_book(book)
+        except Exception as e:
+            print(e)
+            exit(1)
+        # book_cnt = book_cnt + 1
+        # if book["sequences"] is not None:
+            # for seq in book["sequences"]:
+                # seq_id = seq.get("id")
+                # if seq_id is not None:
+                    # seq_name = seq["name"]
+                    # if seq_id in seq_idx:
+                        # s = seq_idx[seq_id]
+                        # count = s["cnt"]
+                        # count = count + 1
+                        # s["cnt"] = count
+                        # seq_idx[seq_id] = s
+                    # else:
+                        # s = {"name": seq_name, "id": seq_id, "cnt": 1}
+                        # seq_idx[seq_id] = s
+        # if book["authors"] is not None:
+            # for auth in book["authors"]:
+                # auth_id = auth.get("id")
+                # if auth_id is not None:
+                    # if auth_id not in auth_idx:
+                        # auth_name = auth["name"]
+                        # s = {"name": auth_name, "id": auth_id}
+                        # auth_idx[auth_id] = s
+        # if book["genres"] is not None:
+            # for gen in book["genres"]:
+                # gen_id = gen
+                # if gen in genres_replacements:
+                    # gen_id = genres_replacements[gen]
+                # gen_name = gen_id
+                # if gen in genres:
+                    # gen_name = genres[gen]["descr"]
+                # gen_names[gen_id] = gen_name
+                # if gen_id in gen_idx:
+                    # s = gen_idx[gen_id]
+                    # count = s["cnt"]
+                    # count = count + 1
+                    # s["cnt"] = count
+                    # gen_idx[gen_id] = s
+                # else:
+                    # s = {"name": gen_name, "id": gen_id, "cnt": 1}
+                    # gen_idx[gen_id] = s
+        # if book["pub_info"]["publisher"] is not None:
+            # pub_names[book["pub_info"]["publisher_id"]] = {
+                # "name": book["pub_info"]["publisher"],
+                # "id": book["pub_info"]["publisher_id"]
+            # }
 
 
 # ToDo: postgres

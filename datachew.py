@@ -26,7 +26,7 @@ def usage():
     print(" lists       -- make all lists from zips, does not touch static data")
     print(" new_lists   -- update lists from updated/new zips, does not touch static data")
     print(" fillall     -- (re)fill all lists to database")
-    #print(" fillnew     -- (re)fill only new/updated lists to database")
+    # print(" fillnew     -- (re)fill only new/updated lists to database")
 
 
 def clean():
@@ -65,10 +65,9 @@ def fromlists(stage):
     pg_user = app.config['PG_USER']
     pg_pass = app.config['PG_PASS']
     db = bookdb(pg_host, pg_base, pg_user, pg_pass)
-    try:
-        process_lists(db, zipdir, stage)
+    if process_lists(db, zipdir, stage):
         db.conn.commit()
-    except:
+    else:
         db.conn.rollback()
     db.conn.close()
 
@@ -90,8 +89,8 @@ if __name__ == "__main__":
             new_lists()
         elif sys.argv[1] == "fillall":
             fromlists("all")
-        #elif sys.argv[1] == "fillnew":
-        #    fromlists("newonly")
+        # elif sys.argv[1] == "fillnew":
+        #     fromlists("newonly")
         else:
             usage()
     else:

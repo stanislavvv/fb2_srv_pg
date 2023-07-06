@@ -184,9 +184,14 @@ def process_lists(DB, zipdir, stage):
         logging.debug("zips %s:" % workpath)
         zips = glob.glob(workpath)
         try:
-            process_list_books(DB, zips[1])
+            print(zips[1])
+            if process_list_books(DB, zips[1]):
+                return True
+            else:
+                return False
         except Exception as e:
             print(e)
+            return False
 
         # make_global_indexes(zipdir, pagesdir)
         # with open(pagesdir + "/allauthorcnt.json") as f:
@@ -210,7 +215,8 @@ def process_lists(DB, zipdir, stage):
         #     make_gen_data(pagesdir)
         #     logging.debug(" - processed genres: %d/%d" % (len(gen_processed), gen_cnt))
         # make_gen_subindexes(pagesdir)
-        
+
+        return True
     elif stage == "newonly":
         logging.error("NOT IMPLEMENTED")
-        exit(1)
+        return False

@@ -21,6 +21,7 @@ def process_list_books(DB, booklist):
         try:
             DB.add_book(book)
         except Exception as e:
-            print(e)
-            return None  # ToDo: may be not return?
+            logging.error(e)
+            # return None  # ToDo: may be not return?
+            raise
     return True

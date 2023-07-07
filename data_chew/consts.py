@@ -32,6 +32,9 @@ CREATE_REQ = [
     CREATE INDEX IF NOT EXISTS books_descr_title ON books_descr USING GIN (to_tsvector('russian', book_title));
     """,
     """
+    CREATE INDEX IF NOT EXISTS books_descr_anno ON books_descr USING GIN (to_tsvector('russian', annotation));
+    """,
+    """
     CREATE TABLE IF NOT EXISTS authors (
         id    char(32) UNIQUE NOT NULL,
         name  text,
@@ -53,7 +56,7 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS sequences (
         id    char(32) UNIQUE NOT NULL,
         name  text,
-        info  text,
+        info  text DEFAULT '',
         PRIMARY KEY(id)
     );
     """,
@@ -79,13 +82,12 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS seq_books (
         seq_id	char(32) NOT NULL REFERENCES sequences(id) ON DELETE CASCADE,
         book_id	char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
-        seq_num	integer,
+        seq_num	integer DEFAULT NULL,
         UNIQUE (seq_id, book_id, seq_num)
     );
     """
 ]
 
-# ToDo: Postgres
 INSERT_REQ = {
     "books": """
         INSERT INTO books(zipfile, filename, genres, book_id, lang, date, size, deleted)
@@ -109,19 +111,32 @@ INSERT_REQ = {
 
     #  no author info in books list, must be updated later
     # "authors": """
-    #     INSERT OR REPLACE INTO authors(id, name, info) VALUES ('%s', '%s', '%s');
+    #     INSERT INTO authors(id, name, info) VALUES ('%s', '%s', '%s');
     # """,
     "author": """
         INSERT INTO authors(id, name) VALUES ('%s', '%s');
     """,
+    #  no sequence info in books list
+    # "sequences": """
+    #     INSERT INTO sequences(id, name, info) VALUES ('%s', '%s', '%s');
+    # """,
     "sequences": """
-        INSERT OR REPLACE INTO sequences(id, name, info) VALUES ('%s', '%s', '%s');
+        INSERT INTO sequences(id, name) VALUES ('%s', '%s');
     """,
     "book_authors": """
         INSERT INTO books_authors(book_id, author_id) VALUES ('%s', '%s');
     """,
     "seq_books": """
-        INSERT OR REPLACE INTO seq_books(seq_id, book_id, seq_num) VALUES ('%s', '%s', '%s');
+        INSERT INTO seq_books(seq_id, book_id, seq_num) VALUES ('%s', '%s', %s);
+    """,
+    "seq_books_replace": """
+        UPDATE seq_books SET seq_num = %s WHERE seq_id = '%s' AND book_id = '%s'
+    """,
+    "genres": """
+        INSERT INTO genres(id, meta_id, description) VALUES ('%s', '%s', '%s');
+    """,
+    "meta": """
+        INSERT INTO genres_meta(meta_id, description) VALUES (%s, '%s');
     """
 }
 
@@ -137,5 +152,17 @@ GET_REQ = {
     """,
     "book_of_author": """
         SELECT 1 FROM books_authors WHERE book_id = '%s' AND author_id = '%s';
+    """,
+    "seq_exist": """
+        SELECT 1 FROM sequences WHERE id = '%s';
+    """,
+    "book_in_seq": """
+        SELECT 1 FROM seq_books WHERE seq_id = '%s' AND book_id = '%s'
+    """,
+    "genre_exist": """
+        SELECT 1 FROM genres WHERE id = '%s';
+    """,
+    "meta_exist": """
+        SELECT 1 FROM genres_meta WHERE meta_id = '%s';
     """
 }

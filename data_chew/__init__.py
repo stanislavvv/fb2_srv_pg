@@ -19,8 +19,6 @@ from .data import get_pub_info
 
 from .inpx import get_inpx_meta
 
-from .db import bookdb
-
 from .idx import process_list_books
 
 # from .idx import auth_processed, seq_processed, gen_processed  # vars
@@ -180,42 +178,15 @@ def process_lists(DB, zipdir, stage):
     get_genres_replace()
     if stage == "all":
         DB.create_tables()
-        workpath = zipdir + '/*.zip.list'
-        logging.debug("zips %s:" % workpath)
-        zips = glob.glob(workpath)
         try:
-            print(zips[1])
-            if process_list_books(DB, zips[1]):
-                return True
-            else:
-                return False
+            i = 0
+            for booklist in glob.glob(zipdir + '/*.zip.list'):
+                logging.info("[" + str(i) + "] " + booklist)
+                process_list_books(DB, booklist)
+                i = i + 1
         except Exception as e:
             print(e)
             return False
-
-        # make_global_indexes(zipdir, pagesdir)
-        # with open(pagesdir + "/allauthorcnt.json") as f:
-        #     auth_cnt = json.load(f)
-        # logging.info("Creating authors indexes (total: %d)..." % auth_cnt)
-        # while(len(auth_processed) < auth_cnt):
-        #     make_auth_data(pagesdir)
-        #     logging.debug(" - processed authors: %d/%d" % (len(auth_processed), auth_cnt))
-        # make_auth_subindexes(pagesdir)
-        # with open(pagesdir + "/allsequencecnt.json") as f:
-        #     seq_cnt = json.load(f)
-        # logging.info("Creating sequences indexes (total: %d)..." % seq_cnt)
-        # while(len(seq_processed) < seq_cnt):
-        #     make_seq_data(pagesdir)
-        #     logging.debug(" - processed sequences: %d/%d" % (len(seq_processed), seq_cnt))
-        # make_seq_subindexes(pagesdir)
-        # with open(pagesdir + "/allgenrecnt.json") as f:
-        #     gen_cnt = json.load(f)
-        # logging.info("Creating genres indexes (total: %s)..." % gen_cnt)
-        # while(len(gen_processed) < gen_cnt):
-        #     make_gen_data(pagesdir)
-        #     logging.debug(" - processed genres: %d/%d" % (len(gen_processed), gen_cnt))
-        # make_gen_subindexes(pagesdir)
-
         return True
     elif stage == "newonly":
         logging.error("NOT IMPLEMENTED")

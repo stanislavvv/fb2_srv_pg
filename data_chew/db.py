@@ -279,7 +279,6 @@ class bookdb(object):
                 for genre in book["genres"]:
                     self.add_genre(genre)
 
-            return book  # success
         except Exception as e:
             logging.error("FAIL in add_book (genres): %s", e)
             logging.error("param: %s" % book)
@@ -332,6 +331,7 @@ class bookdb(object):
             logging.error("FAIL in add_book (sequences): %s", e)
             logging.error("param: %s" % book)
             raise
+        return book  # success
 
     def commit(self):
         self.conn.commit()

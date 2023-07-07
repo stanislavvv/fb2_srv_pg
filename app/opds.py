@@ -9,6 +9,8 @@ from .internals import paginate_array, unicode_upper, html_refine, pubinfo_anno,
 from .internals import custom_alphabet_sort, custom_alphabet_name_cmp, custom_alphabet_book_title_cmp
 from .internals import URL, get_genre_name
 
+from .db import dbconnect
+
 import json
 import logging
 import urllib
@@ -174,11 +176,9 @@ def main_opds():
 
 
 # ToDo: get data from postgres
-def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str, subtag: str, subtitle: str):
+def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str, subtag: str, subtitle: str, req=None):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workdir = rootdir + "/" + idx
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["title"] = title
@@ -198,13 +198,21 @@ def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str
         }
     )
 
+    data = []
     try:
-        with open(workdir + "/index.json") as jsfile:
-            data = json.load(jsfile)
+        db = dbconnect()
+        if req == "auth_1":
+            data = db.get_authors_one()
+        elif req == "auth_3":
+            data = db.get_authors_three("AAA")  # placeholder
     except Exception as e:
         logging.error(e)
         return ret
-    data_sorted = custom_alphabet_sort(data)
+    data_prepared = {}
+    for d in data:
+        data_prepared[d[0]] = 1
+    data_sorted = custom_alphabet_sort(data_prepared)
+    print(data_sorted)
     for d in data_sorted:
         ret["feed"]["entry"].append(
             {
@@ -293,12 +301,10 @@ def seq_cnt_list(
 # ToDo: get data from postgres
 def auth_list(
     idx: str, tag: str, title: str, baseref: str, self: str,
-    upref: str, subtag: str, subtitle: str, tpl="%d", layout=None
+    upref: str, subtag: str, subtitle: str, tpl="%d", sub=None, layout=None
 ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workdir = rootdir + "/" + idx
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["title"] = title
@@ -318,13 +324,25 @@ def auth_list(
         }
     )
 
+    data = []
     try:
-        if os.path.isdir(workdir):
-            with open(workdir + "/index.json") as jsfile:
-                data = json.load(jsfile)
+        db = dbconnect()
+        if layout == 'simple':
+            dbdata = db.get_authors_three(sub)
+            for d in dbdata:
+                data.append({
+                    "id": d[0],
+                    "name": d[0],
+                    "cnt": d[1]
+                })
         else:
-            with open(workdir + ".json") as jsfile:
-                data = json.load(jsfile)
+            dbdata = db.get_authors_list(sub)
+            for d in dbdata:
+                data.append({
+                    "id": d[0],
+                    "name": d[1]
+                })
+
     except Exception as e:
         logging.error(e)
         return ret
@@ -519,12 +537,14 @@ def books_list(
 def main_author(idx: str, tag: str, title: str, self: str, upref: str, authref: str, seqref: str, auth_id: str):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workfile = rootdir + "/" + idx + ".json"
+    auth_name = ""
+    auth_info = ""
     try:
-        with open(workfile) as nm:
-            auth_data = json.load(nm)
-            auth_name = "'" + auth_data["name"] + "'"
+        db = dbconnect()
+        dbdata = db.get_author(auth_id)
+        print(dbdata)
+        auth_name = dbdata[0][1]
+        auth_info = dbdata[0][2]
     except Exception as e:
         logging.error(e)
         auth_name = ""

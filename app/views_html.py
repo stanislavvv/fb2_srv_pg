@@ -109,7 +109,7 @@ def html_auth_root():
     title = "Авторы"
     subtag = "tag:authors:"
     subtitle = "Авторы на "
-    data = str_list(idx, tag, title, baseref, self, upref, subtag, subtitle)
+    data = str_list(idx, tag, title, baseref, self, upref, subtag, subtitle, req="auth_1")
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -131,14 +131,13 @@ def html_auth_sub(sub):
         tag = "tag:authors:" + sub
         subtag = "tag:authors:"
         subtitle = "Авторы на "
-        data = auth_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "%s")
+        data = auth_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "%s", sub=sub)
     else:
         baseref = URL["authidx"]
         tag = "tag:authors:" + sub
         subtag = "tag:author:"
         subtitle = ""
-        # data = str_list(idx, tag, title, baseref, self, upref, subtag, subtitle)
-        data = auth_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "%d aвт.", "simple")
+        data = auth_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "%d aвт.", sub=sub, layout="simple")
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']

@@ -65,10 +65,13 @@ def fromlists(stage):
     pg_user = app.config['PG_USER']
     pg_pass = app.config['PG_PASS']
     db = bookdb(pg_host, pg_base, pg_user, pg_pass)
-    if process_lists(db, zipdir, stage):
+    try:
+        process_lists(db, zipdir, stage)
         db.conn.commit()
-    else:
+    except:
         db.conn.rollback()
+        logging.error(e)
+        logging.error("data rollbacked")
     db.conn.close()
 
 

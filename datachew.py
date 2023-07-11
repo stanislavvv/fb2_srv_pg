@@ -68,7 +68,7 @@ def fromlists(stage):
     try:
         process_lists(db, zipdir, stage)
         db.conn.commit()
-    except:
+    except Exception as e:
         db.conn.rollback()
         logging.error(e)
         logging.error("data rollbacked")

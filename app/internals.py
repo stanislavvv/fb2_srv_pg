@@ -249,19 +249,6 @@ def url_str(s: str):
     return urllib.parse.quote(ret, encoding='utf-8')
 
 
-def get_seq_name(seq_id: str):
-    ret = ""
-    rootdir = current_app.config['STATIC']
-    seqidx = rootdir + "/allsequences.json"
-    with open(seqidx) as f:
-        for line in f:
-            seq = json.loads(line)
-            if seq["id"] == seq_id:
-                ret = seq["name"]
-                break
-    return ret
-
-
 def load_genres(pagesdir: str):
     global genre_names
     genidx = pagesdir + "/allgenres.json"

@@ -6,7 +6,8 @@ from .views_dl import dl
 from .views_opds import opds
 from .views_html import html
 from .get_fb2 import init_xslt
-from .internals import load_genres, load_meta, tpl_headers_symbols
+# from .internals import load_genres, load_meta, tpl_headers_symbols
+from .internals import tpl_headers_symbols
 
 
 def create_app():

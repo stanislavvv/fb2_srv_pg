@@ -81,9 +81,10 @@ CREATE_REQ = [
     """,
     """
     CREATE TABLE IF NOT EXISTS genres (
-        id	        char(32) UNIQUE NOT NULL,
+        id	        varchar UNIQUE NOT NULL,
         meta_id     integer REFERENCES genres_meta(meta_id) ON DELETE SET NULL,
         name        TEXT NOT NULL,
+        cnt         integer DEFAULT 0,
         description	text DEFAULT '',
         PRIMARY KEY(id)
     );
@@ -149,10 +150,13 @@ INSERT_REQ = {
         UPDATE seq_books SET seq_num = %s WHERE seq_id = '%s' AND book_id = '%s'
     """,
     "genres": """
-        INSERT INTO genres(id, meta_id, name, description) VALUES ('%s', '%s', '%s', '%s');
+        INSERT INTO genres(id, meta_id, name, cnt, description) VALUES ('%s', '%s', '%s', %s, '%s');
     """,
     "meta": """
         INSERT INTO genres_meta(meta_id, name, description) VALUES (%s, '%s', '%s');
+    """,
+    "genre_cnt_update": """
+        UPDATE genres SET cnt = %s WHERE id = '%s';
     """
 }
 
@@ -186,5 +190,8 @@ GET_REQ = {
     """,
     "meta_exist": """
         SELECT 1 FROM genres_meta WHERE meta_id = '%s';
+    """,
+    "get_genre_cnt": """
+        SELECT cnt FROM genres WHERE id = '%s';
     """
 }

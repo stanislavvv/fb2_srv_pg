@@ -3,7 +3,7 @@
 from flask import Blueprint, Response, request
 from .opds import main_opds, str_list, seq_cnt_list, books_list, auth_list, main_author
 from .opds import author_seqs, name_list, name_cnt_list, random_data
-from .opds import search_main, search_term, get_author_name, get_seq_name
+from .opds import search_main, search_term, get_author_name, get_seq_name, get_meta_name, get_genre_name
 from .validate import validate_prefix, validate_id, validate_genre_meta, validate_genre, validate_search
 from .internals import id2path, URL, meta_names, genre_names
 
@@ -231,7 +231,7 @@ def opds_gen_root():
     title = "Группы жанров"
     subtag = "tag:genres:"
     subtitle = "Книги на "
-    data = name_list(idx, tag, title, baseref, self, upref, subtag, subtitle)
+    data = name_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "genresroot")
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -245,25 +245,26 @@ def opds_gen_meta(sub):
     baseref = URL["genre"]
     upref = URL["genidx"]
     tag = "tag:genres:" + sub
-    title = meta_names[sub]
+    title = get_meta_name(sub)
     subtag = "tag:genres:"
     subtitle = "Книги на "
-    data = name_cnt_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "genres")
+    data = name_cnt_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "genres", meta_id=sub)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
 
 @opds.route(URL["genre"] + "<id>", methods=['GET'])
-def opds_genre(id):
+@opds.route(URL["genre"] + "<id>/<int:page>", methods=['GET'])
+def opds_genre(id, page=0):
     id = validate_genre(id)
     idx = "genre/%s" % (id)
     self = URL["genre"] + id
     upref = URL["start"]
     tag = "tag:root:genre:" + id
-    title = "Жанр "
+    title = "Жанр " + get_genre_name(id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(idx, tag, title, self, upref, authref, seqref, id)
+    data = books_list(idx, tag, title, self, upref, authref, seqref, '', page=page, paginate=True, gen_id=id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 

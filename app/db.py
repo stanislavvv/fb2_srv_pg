@@ -98,6 +98,31 @@ class bookdbro(object):
         data = self.cur.fetchone()
         return data[0]
 
+    def get_seqs_one(self):
+        self.cur.execute(BOOK_REQ["get_seqs_one"])
+        data = self.cur.fetchall()
+        return data
+
+    def get_seqs_three(self, seq_sub):
+        self.cur.execute(BOOK_REQ["get_seqs_three"] % seq_sub)
+        data = self.cur.fetchall()
+        return data
+
+    def get_seqs_list(self, seq_sub):
+        self.cur.execute(BOOK_REQ["get_seqs"] % seq_sub)
+        data = self.cur.fetchall()
+        return data
+
+    def get_seq(self, seq_id):
+        self.cur.execute(BOOK_REQ["get_seq"] % seq_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_genre_name(self, gen_id):
+        self.cur.execute(BOOK_REQ["get_genre_name"] % gen_id)
+        data = self.cur.fetchone()
+        return data
+
 
 def dbconnect():
     pg_host = current_app.config['PG_HOST']

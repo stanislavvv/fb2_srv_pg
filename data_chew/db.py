@@ -242,7 +242,7 @@ class bookdb(object):
         if not self.__meta_exists(meta):
             meta_id = str(meta)
             descr = quote_string(genres_meta[meta_id])
-            req = INSERT_REQ["meta"] % (meta_id, descr)
+            req = INSERT_REQ["meta"] % (meta_id, descr, '')
             # logging.debug("insert req: %s" % req)
             self.cur.execute(req)
 
@@ -252,7 +252,7 @@ class bookdb(object):
         meta_id = info["meta_id"]
         descr = info["descr"]
         self.__add_meta(meta_id)
-        req = INSERT_REQ["genres"] % (id, meta_id, descr)
+        req = INSERT_REQ["genres"] % (id, meta_id, descr, '')
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)
 

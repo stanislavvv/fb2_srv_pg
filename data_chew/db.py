@@ -22,7 +22,7 @@ def bdatetime2date(dt):
     return dt.split("_")[0]
 
 
-class bookdb(object):
+class BookDB(object):
 
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
@@ -262,6 +262,9 @@ class bookdb(object):
         cnt = self.cur.fetchone()[0]
         self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt + 1, id))
 
+    def __replace_genre_cnt(self, genre, cnt):  # set cnt
+        self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt, genre))
+
     def add_genre(self, genre):
         # ToDo: meta list in DB
         if self.__genre_exist(genre):
@@ -361,6 +364,20 @@ class bookdb(object):
             logging.error("param: %s" % book)
             raise
         return book  # success
+
+    def recalc_authors_books(self):
+        pass
+
+    def recalc_seqs_books(self):
+        pass
+
+    def recal_genres_books(self):
+        self.cur.execute(GET_REQ["get_seqs_ids"])
+        ids = self.cur.fetchall()
+        for id in ids:
+            self.cur.execute(GET_REQ["get_seq_books_cnt"])
+            cnt = self.cur.fetchone()
+            self.__replace_genre_cnt(id, cnt)
 
     def commit(self):
         self.conn.commit()

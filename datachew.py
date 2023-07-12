@@ -13,7 +13,7 @@ from app import create_app
 from data_chew import INPX
 from data_chew import create_booklist, update_booklist
 from data_chew import process_lists
-from data_chew.db import bookdb
+from data_chew.db import BookDB
 
 DEBUG = True  # default, configure in app/config.py
 DBLOGLEVEL = logging.DEBUG
@@ -64,7 +64,7 @@ def fromlists(stage):
     pg_base = app.config['PG_BASE']
     pg_user = app.config['PG_USER']
     pg_pass = app.config['PG_PASS']
-    db = bookdb(pg_host, pg_base, pg_user, pg_pass)
+    db = BookDB(pg_host, pg_base, pg_user, pg_pass)
     try:
         process_lists(db, zipdir, stage)
         db.conn.commit()

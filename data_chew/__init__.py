@@ -172,22 +172,30 @@ def ziplist(inpx_data, zip_file, debug):
 
 
 # def process_lists(zipdir, pagesdir, stage):
-def process_lists(DB, zipdir, stage):
+def process_lists(db, zipdir, stage):
     get_genres_meta()
     get_genres()
     get_genres_replace()
     if stage == "all":
-        DB.create_tables()
         try:
+            db.create_tables()
             i = 0
             for booklist in glob.glob(zipdir + '/*.zip.list'):
                 logging.info("[" + str(i) + "] " + booklist)
-                process_list_books(DB, booklist)
+                process_list_books(db, booklist)
                 i = i + 1
         except Exception as e:
             print(e)
             return False
-        return True
     elif stage == "newonly":
         logging.error("NOT IMPLEMENTED")
         return False
+    try:
+        logging.info("recalc stored counts...")
+        db.recalc_authors_books()
+        db.recalc_seqs_books()
+        db.recal_genres_books()
+    except Exception as e:
+        print(e)
+        return False
+    return True

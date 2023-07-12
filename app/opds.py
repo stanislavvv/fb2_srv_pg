@@ -5,7 +5,7 @@ from functools import cmp_to_key
 
 from .internals import get_dtiso, id2path, get_book_entry, sizeof_fmt, get_seq_link
 from .internals import get_book_link, url_str
-from .internals import paginate_array, unicode_upper, html_refine, pubinfo_anno, search_words
+from .internals import unicode_upper, html_refine, pubinfo_anno, search_words
 from .internals import custom_alphabet_sort, custom_alphabet_name_cmp, custom_alphabet_book_title_cmp
 from .internals import URL
 
@@ -14,8 +14,16 @@ from .db import dbconnect
 import json
 import logging
 import urllib
-import os
 import random
+
+
+def get_meta_name(meta_id):
+    ret = meta_id
+    db = dbconnect()
+    dbdata = db.get_meta_name(meta_id)
+    if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
+        ret = dbdata[0]
+    return ret
 
 
 def get_genre_name(gen_id):
@@ -459,10 +467,9 @@ def auth_list(
     return ret
 
 
-# ToDo: get data from postgres
 def books_list(
     idx: str, tag: str, title: str, self: str, upref: str, authref: str,
-    seqref: str, seq_id: str, timeorder=False, page=0, paginate=False, auth_id=None
+    seqref: str, seq_id: str, timeorder=False, page=0, paginate=False, auth_id=None, gen_id=None
 ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
@@ -485,9 +492,13 @@ def books_list(
     )
     name = ''
     data = []
+    limit = int(current_app.config['PAGE_SIZE'])
+    offset = limit * page
     try:
         db = dbconnect()
         dbdata = []
+        limit = int(current_app.config['PAGE_SIZE'])
+        offset = limit * page
         if seq_id is not None and seq_id != '':  # author's books in seq
             if auth_id is not None and auth_id != '':
                 dbdata = db.get_author_seq(auth_id, seq_id)
@@ -496,6 +507,8 @@ def books_list(
         else:  # all books (nonseq will be filtered later)
             if auth_id is not None and auth_id != '':
                 dbdata = db.get_author_books(auth_id)
+            elif gen_id is not None and gen_id != '':
+                dbdata = db.get_genre_books(gen_id, paginate, limit, offset)
             else:
                 name = "'" + "DUMMY" + "'"
         for d in dbdata:
@@ -560,7 +573,9 @@ def books_list(
                 dfix.append(d)
         data = sorted(dfix, key=cmp_to_key(custom_alphabet_book_title_cmp))
     if paginate:
-        data, next = paginate_array(data, page)
+        next = None
+        if len(data) >= limit:
+            next = page + 1
         prev = page - 1
         if prev > 0:
             ret["feed"]["link"].append(
@@ -751,7 +766,6 @@ def main_author(idx: str, tag: str, title: str, self: str, upref: str, authref: 
     return ret
 
 
-# ToDo: get data from postgres
 def author_seqs(
     idx: str, tag: str, title: str, baseref: str, self: str, upref: str,
     authref: str, seqref: str, subtag: str, auth_id: str
@@ -842,17 +856,14 @@ def get_author_name(auth_id):
     return ret
 
 
-# ToDo: get data from postgres
 # for [{name: ..., id: ...}, ...]
 def name_list(
         idx: str, tag: str, title: str, baseref: str,
         self: str, upref: str, subtag: str, subtitle: str,
-        subdata=None
+        subdata=None, meta_id=None
 ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workdir = rootdir + "/" + idx
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["title"] = title
@@ -872,18 +883,25 @@ def name_list(
         }
     )
 
+    data = []
     try:
-        if os.path.isdir(workdir):
-            with open(workdir + "/index.json") as jsfile:
-                data = json.load(jsfile)
-        else:
-            with open(workdir + ".json") as jsfile:
-                data = json.load(jsfile)
+        if subdata is not None:
+            db = dbconnect()
+            dbdata = []
+            if subdata == "genresroot":
+                dbdata = db.get_genres_meta()
+            elif subdata == "genres":
+                dbdata = db.get_genres(meta_id)
+            for d in dbdata:
+                id = d[0]
+                name = d[1]
+                data.append({
+                    "id": id,
+                    "name": name
+                })
     except Exception as e:
         logging.error(e)
         return ret
-    if subdata is not None:
-        data = data[subdata]
     for d in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
         name = d["name"]
         id = d["id"]
@@ -905,17 +923,14 @@ def name_list(
     return ret
 
 
-# ToDo: get data from postgres
 # for [{name: ..., id: ..., cnt: ...}, ...]
 def name_cnt_list(
         idx: str, tag: str, title: str, baseref: str,
         self: str, upref: str, subtag: str, subtitle: str,
-        subdata=None, tpl="%d книг(и)"
+        subdata=None, tpl="%d книг(и)", meta_id=None
 ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workdir = rootdir + "/" + idx
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["title"] = title
@@ -935,18 +950,25 @@ def name_cnt_list(
         }
     )
 
+    data = []
     try:
-        if os.path.isdir(workdir):
-            with open(workdir + "/index.json") as jsfile:
-                data = json.load(jsfile)
-        else:
-            with open(workdir + ".json") as jsfile:
-                data = json.load(jsfile)
+        db = dbconnect()
+        dbdata = []
+        if subdata is not None and subdata == "genres":
+            if meta_id is not None:
+                dbdata = db.get_genres(meta_id)
+        for d in dbdata:
+            id = d[0]
+            name = d[1]
+            cnt = d[2]
+            data.append({
+                "id": id,
+                "name": name,
+                "cnt": cnt
+            })
     except Exception as e:
         logging.error(e)
         return ret
-    if subdata is not None:
-        data = data[subdata]
     for d in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
         name = d["name"]
         id = d["id"]

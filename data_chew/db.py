@@ -252,13 +252,15 @@ class bookdb(object):
         meta_id = info["meta_id"]
         descr = info["descr"]
         self.__add_meta(meta_id)
-        req = INSERT_REQ["genres"] % (id, meta_id, descr, '')
+        req = INSERT_REQ["genres"] % (id, meta_id, descr, 1, '')
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)
 
-    def __replace_genre(self, genre):
-        # logging.debug("NOT IMPLEMENTED: %s" % inspect.currentframe().f_code.co_name)
-        pass
+    def __replace_genre(self, genre):  # simply increment
+        id = genre
+        self.cur.execute(GET_REQ["get_genre_cnt"] % id)
+        cnt = self.cur.fetchone()[0]
+        self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt + 1, id))
 
     def add_genre(self, genre):
         # ToDo: meta list in DB
@@ -292,8 +294,6 @@ class bookdb(object):
     #     pass
 
     def add_book(self, book):
-        # logging.debug("%s/%s" % (book["zipfile"], book["filename"]))
-
         # fixes:
         if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
             book["genres"] = ["other"]

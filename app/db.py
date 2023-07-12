@@ -123,6 +123,29 @@ class bookdbro(object):
         data = self.cur.fetchone()
         return data
 
+    def get_meta_name(self, meta_id):
+        self.cur.execute(BOOK_REQ["get_meta_name"] % meta_id)
+        data = self.cur.fetchone()
+        return data
+
+    def get_genres_meta(self):
+        self.cur.execute(BOOK_REQ["get_genres_meta"])
+        data = self.cur.fetchall()
+        return data
+
+    def get_genres(self, meta_id):
+        self.cur.execute(BOOK_REQ["get_genres_in_meta"] % meta_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_genre_books(self, gen_id, paginate, limit, offset):
+        if paginate:
+            self.cur.execute(BOOK_REQ["get_genre_books_pag"] % (gen_id, limit, offset))
+        else:
+            self.cur.execute(BOOK_REQ["get_genre_books"] % gen_id)
+        data = self.cur.fetchall()
+        return data
+
 
 def dbconnect():
     pg_host = current_app.config['PG_HOST']

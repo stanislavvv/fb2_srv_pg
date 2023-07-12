@@ -1,6 +1,8 @@
 # ToDo
 
-- Индексация .lists в БД
-- Получение данных в БД
+- random data
+- reindex counts by data in database after all .lists
 
-Учесть статус "deleted" в БД, а не при индексации
+# ToDo sometimes
+
+- code review: function parameters and other

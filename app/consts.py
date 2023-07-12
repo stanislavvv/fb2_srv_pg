@@ -73,15 +73,30 @@ BOOK_REQ = {
     "get_seq_name": """
         SELECT name FROM sequences WHERE id = '%s';
     """,
-    "get_meta": """
+    "get_genres_meta": """
+        SELECT meta_id, name FROM genres_meta ORDER BY name;
     """,
     "get_genres_in_meta": """
+        SELECT id, name, cnt FROM genres WHERE meta_id = '%s' ORDER BY name;
     """,
     "get_genre_name": """
         SELECT name FROM genres WHERE id = '%s';
     """,
-    "1": """
+    "get_meta_name": """
+        SELECT name FROM genres_meta WHERE meta_id = '%s';
     """,
-    "2": """
-    """
+    "get_genre_books": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        WHERE
+            '%s' = ANY (genres)
+        ORDER BY filename;
+    """,
+    "get_genre_books_pag": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        WHERE
+            '%s' = ANY (genres)
+        ORDER BY filename
+        LIMIT %s
+        OFFSET %s;
+    """,
 }

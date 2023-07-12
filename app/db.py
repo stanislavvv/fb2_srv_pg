@@ -2,9 +2,11 @@
 
 import psycopg2
 import logging
+import codecs
 
 from .consts import BOOK_REQ
 from flask import current_app
+
 
 # quote string for sql
 def quote_string(s, errors="strict"):
@@ -36,6 +38,21 @@ class bookdbro(object):
         self.cur = self.conn.cursor()
         logging.info("connected to db")
 
+    def get_book_authors(self, book_id):
+        self.cur.execute(BOOK_REQ["get_book_authors"] % book_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_book_seqs(self, book_id):
+        self.cur.execute(BOOK_REQ["get_book_seqs"] % book_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_book_descr(self, book_id):
+        self.cur.execute(BOOK_REQ["get_book_descr"] % book_id)
+        data = self.cur.fetchone()
+        return data
+
     def get_authors_one(self):
         self.cur.execute(BOOK_REQ["get_authors_one"])
         data = self.cur.fetchall()
@@ -55,6 +72,31 @@ class bookdbro(object):
         self.cur.execute(BOOK_REQ["get_author"] % auth_id)
         data = self.cur.fetchall()
         return data
+
+    def get_author_seqs(self, auth_id):
+        self.cur.execute(BOOK_REQ["get_auth_seqs"] % auth_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_author_seq(self, auth_id, seq_id):
+        self.cur.execute(BOOK_REQ["get_auth_seq"] % (auth_id, seq_id))
+        data = self.cur.fetchall()
+        return data
+
+    def get_author_nonseq(self, auth_id, seq_id):
+        self.cur.execute(BOOK_REQ["get_auth_nonseq"] % (auth_id, seq_id))
+        data = self.cur.fetchall()
+        return data
+
+    def get_author_books(self, auth_id):
+        self.cur.execute(BOOK_REQ["get_auth_books"] % auth_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_seq_name(self, seq_id):
+        self.cur.execute(BOOK_REQ["get_seq_name"] % seq_id)
+        data = self.cur.fetchone()
+        return data[0]
 
 
 def dbconnect():

@@ -2,8 +2,8 @@
 
 from flask import Blueprint, Response, render_template, request, redirect, url_for
 from .opds import main_opds, str_list, seq_cnt_list, books_list, auth_list, main_author
-from .opds import author_seqs, get_main_name, name_list, name_cnt_list, random_data
-from .opds import search_main, search_term
+from .opds import author_seqs, name_list, name_cnt_list, random_data
+from .opds import search_main, search_term, get_author_name, get_seq_name
 from .validate import validate_prefix, validate_id, validate_genre_meta, validate_genre, validate_search
 from .internals import id2path, URL, meta_names, genre_names
 
@@ -200,11 +200,10 @@ def html_author_seq(sub1, sub2, id, seq_id):
     self = URL["author"] + "%s/%s/%s/%s" % (sub1, sub2, id, seq_id)
     upref = URL["author"] + "%s/%s/%s" % (sub1, sub2, id)
     tag = "tag:root:author:" + id + ":sequence:" + seq_id
-    idx2 = "author/%s/%s/%s" % (sub1, sub2, id)
-    title = "Автор '" + get_main_name(idx2) + "', серия "
+    title = "Автор '" + get_author_name(id) + "', серия '" + get_seq_name(seq_id) + "'"
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(idx, tag, title, self, upref, authref, seqref, seq_id)
+    data = books_list(idx, tag, title, self, upref, authref, seqref, seq_id, auth_id=id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -222,10 +221,10 @@ def html_author_nonseq(sub1, sub2, id):
     self = URL["author"] + "%s/%s/%s/sequenceless" % (sub1, sub2, id)
     upref = URL["author"] + id2path(id)
     tag = "tag:root:author:" + id
-    title = "Книги вне серий автора "
+    title = "Книги вне серий автора " + get_author_name(id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(idx, tag, title, self, upref, authref, seqref, None)
+    data = books_list(idx, tag, title, self, upref, authref, seqref, None, auth_id=id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -243,10 +242,10 @@ def html_author_alphabet(sub1, sub2, id):
     self = URL["author"] + "%s/%s/%s/alphabet" % (sub1, sub2, id)
     upref = URL["author"] + id2path(id)
     tag = "tag:root:author:" + id + ":alphabet"
-    title = "Книги по алфавиту автора "
+    title = "Книги по алфавиту автора " + get_author_name(id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(idx, tag, title, self, upref, authref, seqref, '')
+    data = books_list(idx, tag, title, self, upref, authref, seqref, '', auth_id=id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -264,10 +263,10 @@ def html_author_time(sub1, sub2, id):
     self = URL["author"] + "%s/%s/%s/time" % (sub1, sub2, id)
     upref = URL["author"] + id2path(id)
     tag = "tag:root:author:" + id + ":time"
-    title = "Книги по дате добавления, автор "
+    title = "Книги по дате добавления, автор " + get_author_name(id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(idx, tag, title, self, upref, authref, seqref, None, True)
+    data = books_list(idx, tag, title, self, upref, authref, seqref, None, True, auth_id=id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']

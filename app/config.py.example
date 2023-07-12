@@ -26,6 +26,7 @@ class DevelopmentConfig(Config):
     PG_BASE = 'books'
     PG_USER = 'books'
     PG_PASS = 'ExamplePassword'
+    HIDE_DELETED = False
 
 
 class TestConfig(Config):
@@ -44,6 +45,7 @@ class TestConfig(Config):
     PG_BASE = 'books'
     PG_USER = 'books'
     PG_PASS = 'ExamplePassword'
+    HIDE_DELETED = False
 
 
 class ProductionConfig(Config):
@@ -61,6 +63,7 @@ class ProductionConfig(Config):
     PG_BASE = 'books'
     PG_USER = 'books'
     PG_PASS = 'ExamplePassword'
+    HIDE_DELETED = False
 
 
 config = {"development": DevelopmentConfig, "test": TestConfig, "prod": ProductionConfig}

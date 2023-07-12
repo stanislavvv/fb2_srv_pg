@@ -47,8 +47,8 @@ CREATE_REQ = [
     """,
     """
     CREATE TABLE IF NOT EXISTS books_authors (
-        book_id               char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
-        author_id             char(32) NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
+        book_id   char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
+        author_id char(32) NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
         UNIQUE (author_id, book_id)
     );
     """,
@@ -62,6 +62,14 @@ CREATE_REQ = [
     """,
     """
     CREATE INDEX IF NOT EXISTS seq_names ON sequences USING GIN (to_tsvector('russian', name));
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS author_seqs (
+        author_id char(32) NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
+        seq_id    char(32) NOT NULL REFERENCES sequences(id) ON DELETE CASCADE,
+        cnt       integer DEFAULT 0,
+        UNIQUE (author_id, seq_id)
+    );
     """,
     """
     CREATE TABLE IF NOT EXISTS genres_meta (
@@ -129,6 +137,12 @@ INSERT_REQ = {
     "seq_books": """
         INSERT INTO seq_books(seq_id, book_id, seq_num) VALUES ('%s', '%s', %s);
     """,
+    "author_seqs": """
+        INSERT INTO author_seqs(author_id, seq_id, cnt) VALUES ('%s', '%s', %d);
+    """,
+    "author_seqs_update": """
+        UPDATE author_seqs SET cnt = %d WHERE author_id = '%s' AND seq_id = '%s';
+    """,
     "seq_books_replace": """
         UPDATE seq_books SET seq_num = %s WHERE seq_id = '%s' AND book_id = '%s'
     """,
@@ -155,6 +169,12 @@ GET_REQ = {
     """,
     "seq_exist": """
         SELECT 1 FROM sequences WHERE id = '%s';
+    """,
+    "seq_of_author": """
+        SELECT 1 FROM author_seqs WHERE author_id = '%s' AND seq_id = '%s';
+    """,
+    "seq_of_author_cnt": """
+        SELECT cnt FROM author_seqs WHERE author_id = '%s' AND seq_id = '%s';
     """,
     "book_in_seq": """
         SELECT 1 FROM seq_books WHERE seq_id = '%s' AND book_id = '%s'

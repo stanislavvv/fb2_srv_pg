@@ -4,7 +4,7 @@ from flask import current_app
 from functools import cmp_to_key
 
 from .internals import get_dtiso, id2path, get_book_entry, sizeof_fmt, get_seq_link
-from .internals import get_book_link, url_str, get_seq_name
+from .internals import get_book_link, url_str
 from .internals import paginate_array, unicode_upper, html_refine, pubinfo_anno, search_words
 from .internals import custom_alphabet_sort, custom_alphabet_name_cmp, custom_alphabet_book_title_cmp
 from .internals import URL, get_genre_name
@@ -16,6 +16,66 @@ import logging
 import urllib
 import os
 import random
+
+
+def get_seq_name(seq_id):
+    db = dbconnect()
+    return db.get_seq_name(seq_id)
+
+
+def get_book_authors(book_id):
+    ret = []
+    try:
+        db = dbconnect()
+        dbdata = db.get_book_authors(book_id)
+        for d in dbdata:
+            id = d[0]
+            name = d[1]
+            ret.append({
+                "id": id,
+                "name": name
+            })
+    except Exception as e:
+        logging.error(e)
+    return ret
+
+
+def get_book_seqs(book_id):
+    ret = []
+    try:
+        db = dbconnect()
+        dbdata = db.get_book_seqs(book_id)
+        for d in dbdata:
+            id = d[0]
+            name = d[1]
+            ret.append({
+                "id": id,
+                "name": name
+            })
+    except Exception as e:
+        logging.error(e)
+    return ret
+
+
+def get_book_descr(book_id):
+    book_title = ""
+    pub_isbn = None
+    pub_year = None
+    publisher = None
+    publisher_id = None
+    annotation = ""
+    try:
+        db = dbconnect()
+        d = db.get_book_descr(book_id)
+        book_title = d[0]
+        pub_isbn = d[1]
+        pub_year = d[2]
+        publisher = d[3]
+        publisher_id = d[4]
+        annotation = d[5]
+    except Exception as e:
+        logging.error(e)
+    return book_title, pub_isbn, pub_year, publisher, publisher_id, annotation
 
 
 def ret_hdr():  # python does not have constants
@@ -175,7 +235,6 @@ def main_opds():
     return json.loads(data)
 
 
-# ToDo: get data from postgres
 def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str, subtag: str, subtitle: str, req=None):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
@@ -298,7 +357,6 @@ def seq_cnt_list(
     return ret
 
 
-# ToDo: get data from postgres
 def auth_list(
     idx: str, tag: str, title: str, baseref: str, self: str,
     upref: str, subtag: str, subtitle: str, tpl="%d", sub=None, layout=None
@@ -378,12 +436,10 @@ def auth_list(
 # ToDo: get data from postgres
 def books_list(
     idx: str, tag: str, title: str, self: str, upref: str, authref: str,
-    seqref: str, seq_id: str, timeorder=False, page=0, paginate=False
+    seqref: str, seq_id: str, timeorder=False, page=0, paginate=False, auth_id=None
 ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workfile = rootdir + "/" + idx + ".json"
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["id"] = tag
@@ -401,18 +457,59 @@ def books_list(
             "@type": "application/atom+xml;profile=opds-catalog"
         }
     )
+    name = ''
+    data = []
     try:
-        with open(workfile) as nm:
-            data = json.load(nm)
-        if seq_id is not None and seq_id != '':
-            name = "'" + get_seq_name(seq_id) + "'"
-        else:
-            name = "'" + data["name"] + "'"
+        db = dbconnect()
+        dbdata = []
+        if seq_id is not None and seq_id != '':  # author's books in seq
+            if auth_id is not None and auth_id != '':
+                dbdata = db.get_author_seq(auth_id, seq_id)
+            else:
+                name = name + " DUMMY"
+        else:  # all books (nonseq will be filtered later)
+            if auth_id is not None and auth_id != '':
+                dbdata = db.get_author_books(auth_id)
+            else:
+                name = "'" + "DUMMY" + "'"
+        for d in dbdata:
+            zipfile = d[0]
+            filename = d[1]
+            genres = d[2]
+            book_id = d[3]
+            lang = d[4]
+            date = str(d[5])
+            size = d[6]
+            deleted = d[7]
+            if current_app.config['HIDE_DELETED'] and deleted:
+                continue
+            authors = get_book_authors(book_id)
+            sequences = get_book_seqs(book_id)
+            book_title, pub_isbn, pub_year, publisher, publisher_id, annotation = get_book_descr(book_id)
+            data.append({
+                "zipfile": zipfile,
+                "filename": filename,
+                "genres": genres,
+                "authors": authors,
+                "sequences": sequences,
+                "book_title": book_title,
+                "book_id": book_id,
+                "lang": lang,
+                "date_time": date,
+                "size": size,
+                "annotation": annotation,
+                "pub_info": {
+                    "isbn": pub_isbn,
+                    "year": pub_year,
+                    "publisher": publisher,
+                    "publisher_id": publisher_id
+                },
+                "deleted": 0
+            })
     except Exception as e:
         logging.error(e)
         return ret
     ret["feed"]["title"] = title + name
-    data = data["books"]
     if seq_id is not None and seq_id != '' and not timeorder:
         dfix = []
         for d in data:
@@ -433,7 +530,7 @@ def books_list(
     else:  # seq_id == None
         dfix = []
         for d in data:
-            if d["sequences"] is None:
+            if d["sequences"] is None or len(d["sequences"]) == 0:
                 dfix.append(d)
         data = sorted(dfix, key=cmp_to_key(custom_alphabet_book_title_cmp))
     if paginate:
@@ -533,7 +630,6 @@ def books_list(
     return ret
 
 
-# ToDo: get data from postgres
 def main_author(idx: str, tag: str, title: str, self: str, upref: str, authref: str, seqref: str, auth_id: str):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
@@ -542,7 +638,6 @@ def main_author(idx: str, tag: str, title: str, self: str, upref: str, authref: 
     try:
         db = dbconnect()
         dbdata = db.get_author(auth_id)
-        print(dbdata)
         auth_name = dbdata[0][1]
         auth_info = dbdata[0][2]
     except Exception as e:
@@ -587,7 +682,7 @@ def main_author(idx: str, tag: str, title: str, self: str, upref: str, authref: 
                     ],
                     "content": {
                         "@type": "text/html",
-                        "#text": "<p><span style=\"font-weight:bold\">" + auth_name + "</span></p>"
+                        "#text": "<p><span style=\"font-weight:bold\">" + auth_name + "</span>" + auth_info + "</p>"
                     }
                 },
                 {
@@ -637,9 +732,6 @@ def author_seqs(
 ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workfile = rootdir + "/" + idx + ".json"
-    auth_data = {}
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["id"] = tag
@@ -657,16 +749,26 @@ def author_seqs(
             "@type": "application/atom+xml;profile=opds-catalog"
         }
     )
+    data = []
     try:
-        with open(workfile) as nm:
-            auth_data = json.load(nm)
-            auth_name = "'" + auth_data["name"] + "'"
+        db = dbconnect()
+        dbauthdata = db.get_author(auth_id)
+        auth_name = dbauthdata[0][1]
+        dbdata = db.get_author_seqs(auth_id)
+        for d in dbdata:
+            seq_id = d[0]
+            seq_name = d[1]
+            seq_cnt = d[2]
+            data.append({
+                "id": seq_id,
+                "name": seq_name,
+                "cnt": seq_cnt
+            })
     except Exception as e:
         logging.error(e)
         return ret
 
     ret["feed"]["title"] = title + auth_name
-    data = auth_data["sequences"]
     for d in sorted(data, key=cmp_to_key(custom_alphabet_name_cmp)):
         name = d["name"]
         id = d["id"]
@@ -701,6 +803,17 @@ def get_main_name(idx: str):
         logging.error(e)
         return ret
     return data
+
+
+def get_author_name(auth_id):
+    ret = ""
+    try:
+        db = dbconnect()
+        dbauthdata = db.get_author(auth_id)
+        ret = dbauthdata[0][1]
+    except Exception as e:
+        logging.error(e)
+    return ret
 
 
 # ToDo: get data from postgres

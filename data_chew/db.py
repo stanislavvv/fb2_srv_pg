@@ -163,9 +163,27 @@ class bookdb(object):
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)
 
-    def __replace_book2author(self, book, author):  # dummy ?
+    def __replace_book2author(self, book, author):  # ToDo
         # logging.debug("NOT IMPLEMENTED: %s" % inspect.currentframe().f_code.co_name)
         pass
+
+    def __seq_in_author(self, seq, author):
+        self.cur.execute(GET_REQ["seq_of_author"] % (str(author["id"]), str(seq["id"])))
+        data = self.cur.fetchone()
+        return data
+
+    def __add_seq2author(self, seq, author):
+        seq_id = seq["id"]
+        auth_id = author["id"]
+        req = INSERT_REQ["author_seqs"] % (auth_id, seq_id, 1)
+        self.cur.execute(req)
+
+    def __replace_seq2author(self, seq, author):  # dummy
+        seq_id = seq["id"]
+        auth_id = author["id"]
+        self.cur.execute(GET_REQ["seq_of_author_cnt"] % (auth_id, seq_id))
+        cnt = self.cur.fetchone()[0]
+        self.cur.execute(INSERT_REQ["author_seqs_update"] % (cnt + 1, auth_id, seq_id))
 
     def __seq_exist(self, seq):
         self.cur.execute(GET_REQ["seq_exist"] % str(seq["id"]))
@@ -262,6 +280,13 @@ class bookdb(object):
         else:
             self.__add_author(author)
 
+    def add_seq2author(self, author, seq):
+        if "id" in seq:
+            if self.__seq_in_author(seq, author):
+                self.__replace_seq2author(seq, author)
+            else:
+                self.__add_seq2author(seq, author)
+
     # def add_author_info(self, author):  # may be sometime
     #     logging.debug("NOT IMPLEMENTED: %s" % inspect.currentframe().f_code.co_name)
     #     pass
@@ -327,6 +352,10 @@ class bookdb(object):
                         self.__add_book2seq(book, seq)
                     else:
                         self.__replace_book2seq(book, seq)
+                    if "authors" in book and book["authors"] is not None:
+                        for author in book["authors"]:
+                            if "id" in seq:
+                                self.add_seq2author(author, seq)
         except Exception as e:
             logging.error("FAIL in add_book (sequences): %s", e)
             logging.error("param: %s" % book)

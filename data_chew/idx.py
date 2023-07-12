@@ -9,7 +9,7 @@ MAX_PASS_LENGTH = 1000
 MAX_PASS_LENGTH_GEN = 5
 
 
-def process_list_books(DB, booklist):
+def process_list_books(db, booklist):
     with open(booklist) as lst:
         data = json.load(lst)
     for book in data:
@@ -20,7 +20,7 @@ def process_list_books(DB, booklist):
             book["deleted"] = 0
 
         try:
-            DB.add_book(book)
+            db.add_book(book)
         except Exception as e:
             logging.error(e)
             # return None  # ToDo: may be not return?

@@ -25,7 +25,7 @@ def quote_string(s, errors="strict"):
     return encodable.replace("\'", "\'\'")
 
 
-class bookdbro(object):
+class BookDBro(object):
 
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
@@ -152,5 +152,5 @@ def dbconnect():
     pg_base = current_app.config['PG_BASE']
     pg_user = current_app.config['PG_USER']
     pg_pass = current_app.config['PG_PASS']
-    db = bookdbro(pg_host, pg_base, pg_user, pg_pass)
+    db = BookDBro(pg_host, pg_base, pg_user, pg_pass)
     return db

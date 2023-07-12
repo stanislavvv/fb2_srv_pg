@@ -193,5 +193,17 @@ GET_REQ = {
     """,
     "get_genre_cnt": """
         SELECT cnt FROM genres WHERE id = '%s';
+    """,
+    "get_seqs_ids": """
+        SELECT id FROM sequences;
+    """,
+    "get_seq_books_cnt": """
+        SELECT count(book_id) as cnt FROM seq_books WHERE seq_id = '%s'
+    """,
+    "get_genres_ids": """
+        SELECT id FROM genres;
+    """,
+    "get_genre_books_cnt": """
+        SELECT count(book_id) as cnt FROM books WHERE '%s' = ANY (genres)
     """
 }

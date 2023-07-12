@@ -49,12 +49,12 @@ def opds_seq_sub(sub):
         baseref = URL["seq"]
         subtag = "tag:sequences:"
         subtitle = "Книги на "
-        data = seq_cnt_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "%d книг(и) в серии")
+        data = seq_cnt_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "%d книг(и) в серии", sub=sub)
     else:
         baseref = URL["seqidx"]
         subtag = "tag:sequence:"
         subtitle = "Серия "
-        data = seq_cnt_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "серий: %d", "simple")
+        data = seq_cnt_list(idx, tag, title, baseref, self, upref, subtag, subtitle, "серий: %d", "simple", sub=sub)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -68,7 +68,7 @@ def opds_seq(sub1, sub2, id):
     self = URL["seq"] + "%s/%s/%s" % (sub1, sub2, id)
     upref = URL["start"]
     tag = "tag:root:sequence:" + id
-    title = "Серия "
+    title = "Серия '" + get_seq_name(id) + "'"
     authref = URL["author"]
     seqref = URL["seq"]
     data = books_list(idx, tag, title, self, upref, authref, seqref, id)

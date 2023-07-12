@@ -7,7 +7,7 @@ from .internals import get_dtiso, id2path, get_book_entry, sizeof_fmt, get_seq_l
 from .internals import get_book_link, url_str
 from .internals import paginate_array, unicode_upper, html_refine, pubinfo_anno, search_words
 from .internals import custom_alphabet_sort, custom_alphabet_name_cmp, custom_alphabet_book_title_cmp
-from .internals import URL, get_genre_name
+from .internals import URL
 
 from .db import dbconnect
 
@@ -16,6 +16,15 @@ import logging
 import urllib
 import os
 import random
+
+
+def get_genre_name(gen_id):
+    ret = gen_id
+    db = dbconnect()
+    dbdata = db.get_genre_name(gen_id)
+    if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
+        ret = dbdata[0]
+    return ret
 
 
 def get_seq_name(seq_id):
@@ -262,7 +271,9 @@ def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str
         db = dbconnect()
         if req == "auth_1":
             data = db.get_authors_one()
-        elif req == "auth_3":
+        elif req == "seq_1":
+            data = db.get_seqs_one()
+        else:
             data = db.get_authors_three("AAA")  # placeholder
     except Exception as e:
         logging.error(e)
@@ -271,7 +282,6 @@ def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str
     for d in data:
         data_prepared[d[0]] = 1
     data_sorted = custom_alphabet_sort(data_prepared)
-    print(data_sorted)
     for d in data_sorted:
         ret["feed"]["entry"].append(
             {
@@ -295,12 +305,10 @@ def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str
 def seq_cnt_list(
     idx: str, tag: str, title: str, baseref: str, self: str,
     upref: str, subtag: str, subtitle: str, tpl="%d книг(и) в серии",
-    layout=None
+    layout=None, sub=None
 ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    workdir = rootdir + "/" + idx
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["title"] = title
@@ -320,13 +328,31 @@ def seq_cnt_list(
         }
     )
 
+    data = []
     try:
-        if os.path.isdir(workdir):
-            with open(workdir + "/index.json") as jsfile:
-                data = json.load(jsfile)
+        db = dbconnect()
+        if len(sub) < 3:
+            dbdata = db.get_seqs_three(sub)
+            for d in dbdata:
+                name = d[0]
+                id = name
+                cnt = d[1]
+                data.append({
+                    "id": id,
+                    "name": name,
+                    "cnt": cnt
+                })
         else:
-            with open(workdir + ".json") as jsfile:
-                data = json.load(jsfile)
+            dbdata = db.get_seqs_list(sub)
+            for d in dbdata:
+                name = d[1]
+                id = d[0]
+                cnt = d[2]
+                data.append({
+                    "id": id,
+                    "name": name,
+                    "cnt": cnt
+                })
     except Exception as e:
         logging.error(e)
         return ret
@@ -466,7 +492,7 @@ def books_list(
             if auth_id is not None and auth_id != '':
                 dbdata = db.get_author_seq(auth_id, seq_id)
             else:
-                name = name + " DUMMY"
+                dbdata = db.get_seq(seq_id)
         else:  # all books (nonseq will be filtered later)
             if auth_id is not None and auth_id != '':
                 dbdata = db.get_author_books(auth_id)

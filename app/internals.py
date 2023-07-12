@@ -314,10 +314,3 @@ def search_words(swords, txt: str):
         if unicode_upper(word) in unicode_upper(txt):
             found = found + 1
     return found == cnt
-
-
-# return genre name or gen_id if unknown
-def get_genre_name(gen_id):
-    if gen_id in genre_names:
-        return genre_names[gen_id]
-    return gen_id

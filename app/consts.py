@@ -30,7 +30,8 @@ BOOK_REQ = {
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
         WHERE
             book_id IN (SELECT book_id FROM books_authors WHERE author_id = '%s') AND
-            book_id IN (SELECT book_id FROM seq_books WHERE seq_id = '%s');
+            book_id IN (SELECT book_id FROM seq_books WHERE seq_id = '%s')
+        ORDER BY filename;
     """,
     "get_auth_nonseq": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
@@ -53,10 +54,21 @@ BOOK_REQ = {
         FROM books_descr WHERE book_id = '%s'
     """,
     "get_seqs_one": """
+        SELECT upper(substring(name, 1, 1)) as name1 FROM sequences GROUP BY name1;
     """,
     "get_seqs_three": """
+        SELECT upper(substring(name, 1, 3)) as name3, count(*) as cnt
+        FROM sequences
+        WHERE upper(substring(name, 1, 1)) = '%s' GROUP BY name3;    """,
+    "get_seqs": """
+        SELECT id, name, count(*) cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
+        WHERE upper(substring(sequences.name, 1, 3)) = '%s' GROUP BY id, name;
     """,
     "get_seq": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        WHERE
+            book_id IN (SELECT book_id FROM seq_books WHERE seq_id = '%s')
+        ORDER BY filename;
     """,
     "get_seq_name": """
         SELECT name FROM sequences WHERE id = '%s';
@@ -64,6 +76,9 @@ BOOK_REQ = {
     "get_meta": """
     """,
     "get_genres_in_meta": """
+    """,
+    "get_genre_name": """
+        SELECT name FROM genres WHERE id = '%s';
     """,
     "1": """
     """,

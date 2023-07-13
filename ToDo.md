@@ -1,7 +1,7 @@
 # ToDo
 
-- random data
-- reindex counts by data in database after all .lists
+- random data in interface
+- partial [re]indexing
 
 # ToDo sometimes
 

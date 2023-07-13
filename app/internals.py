@@ -60,6 +60,20 @@ def tpl_headers_symbols(s: str):
     return s
 
 
+def cmp_in_arr(arr, c1, c2):
+    if c1 in arr and c2 in arr:
+        n1 = arr.index(c1)
+        n2 = arr.index(c2)
+        if n1 == n2:
+            return 0
+        elif n1 < n2:
+            return -1
+        else:
+            return 1
+    else:
+        return None
+
+
 def custom_alphabet_sort(slist):
     ret = []
     ret = sorted(slist, key=cmp_to_key(custom_alphabet_cmp))
@@ -89,6 +103,12 @@ def custom_char_cmp(c1: str, c2: str):
         return 1
     if c2 in alphabet_2 and c1 not in alphabet_2 and c1 not in alphabet_1:
         return 1
+
+    # sort by array order
+    if c1 in alphabet_1 and c2 in alphabet_1:
+        return cmp_in_arr(alphabet_1, c1, c2)
+    if c1 in alphabet_2 and c1 in alphabet_2:
+        return cmp_in_arr(alphabet_2, c1, c2)
 
     if c1 < c2:
         return -1

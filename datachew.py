@@ -67,9 +67,7 @@ def fromlists(stage):
     db = BookDB(pg_host, pg_base, pg_user, pg_pass)
     try:
         process_lists(db, zipdir, stage)
-        db.conn.commit()
     except Exception as e:
-        db.conn.rollback()
         logging.error(e)
         logging.error("data rollbacked")
     db.conn.close()

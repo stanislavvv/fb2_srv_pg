@@ -184,7 +184,9 @@ def process_lists(db, zipdir, stage):
                 logging.info("[" + str(i) + "] " + booklist)
                 process_list_books(db, booklist)
                 i = i + 1
+                db.commit()
         except Exception as e:
+            db.conn.rollback()
             print(e)
             return False
     elif stage == "newonly":
@@ -195,7 +197,9 @@ def process_lists(db, zipdir, stage):
         db.recalc_authors_books()
         db.recalc_seqs_books()
         db.recal_genres_books()
+        db.commit()
     except Exception as e:
+        db.conn.rollback()
         print(e)
         return False
     return True

@@ -87,7 +87,6 @@ def opds_auth_root():
     subtag = "tag:authors:"
     subtitle = "Авторы на "
     data = str_list(idx, tag, title, baseref, self, upref, subtag, subtitle, req="auth_1")
-    print(data)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 

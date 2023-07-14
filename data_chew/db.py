@@ -81,29 +81,30 @@ class BookDB(object):
         return data
 
     def __add_bookdescr(self, book):
-        pub_isdn = "NULL"
+        pub_isbn = "NULL"
         pub_year = "NULL"
         publisher = "NULL"
         publisher_id = "NULL"
         if "pub_info" in book and book["pub_info"] is not None:
             bookpub = book["pub_info"]
-            if "pub_isdn" in bookpub:
-                pub_isdn = "'%s'" % quote_string(bookpub["pub_isdn"])
-            if "pub_year" in book:
-                pub_year = "'%s'" % quote_string(bookpub["pub_year"])
-            if "publisher" in book:
+            if "isbn" in bookpub and bookpub["isbn"] is not None:
+                pub_isbn = "'%s'" % quote_string(bookpub["isbn"])
+            if "year" in bookpub and bookpub["year"] is not None:
+                pub_year = "'%s'" % quote_string(bookpub["year"])
+            if "publisher" in bookpub and bookpub["publisher"] is not None:
                 publisher = "'%s'" % quote_string(bookpub["publisher"])
-            if "publisher_id" in book:
-                publisher_id = "'%s'" % quote_string(book["publisher_id"])
+            if "publisher_id" in bookpub and bookpub["publisher_id"] is not None:
+                publisher_id = "'%s'" % quote_string(bookpub["publisher_id"])
         data = (
             "'%s'" % quote_string(book["book_id"]),
             "'%s'" % quote_string(book["book_title"]),
-            pub_isdn,
+            pub_isbn,
             pub_year,
             publisher,
             publisher_id,
             "'%s'" % quote_string(book["annotation"])
         )
+
         req = INSERT_REQ["bookdescr"] % data
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)

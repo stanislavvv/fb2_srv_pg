@@ -6,7 +6,6 @@ from .views_dl import dl
 from .views_opds import opds
 from .views_html import html
 from .get_fb2 import init_xslt
-# from .internals import load_genres, load_meta, tpl_headers_symbols
 from .internals import tpl_headers_symbols
 
 
@@ -18,7 +17,5 @@ def create_app():
     app.register_blueprint(opds, url_prefix=app.config['APPLICATION_ROOT'])
     app.register_blueprint(html, url_prefix=app.config['APPLICATION_ROOT'])
     xslt = init_xslt(app.config['FB2_XSLT'])
-    # load_meta(app.config['STATIC'])
-    # load_genres(app.config['STATIC'])
     app.jinja_env.filters['head2sym'] = tpl_headers_symbols
     return app

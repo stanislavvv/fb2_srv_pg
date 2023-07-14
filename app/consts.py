@@ -41,6 +41,10 @@ BOOK_REQ = {
                 WHERE seq_id IN (SELECT seq_id FROM author_seqs WHERE author_id = '%s')
             );
     """,
+    "get_rnd_books": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        ORDER BY random() LIMIT %s;
+    """,
     "get_book_authors": """
         SELECT id, name FROM authors
         WHERE id IN (SELECT author_id FROM books_authors WHERE book_id = '%s');
@@ -51,11 +55,11 @@ BOOK_REQ = {
         WHERE books_authors.book_id IN ('%s');
     """,
     "get_book_seqs": """
-        SELECT id, name FROM sequences
+        SELECT id, name, seq_num FROM sequences
         WHERE id IN (SELECT seq_id FROM seq_books WHERE book_id = '%s');
     """,
     "get_books_seqs": """
-        SELECT book_id, id, name FROM sequences
+        SELECT book_id, id, name, seq_num FROM sequences
         INNER JOIN seq_books ON sequences.id = seq_books.seq_id
         WHERE seq_books.book_id IN ('%s');
     """,
@@ -75,8 +79,13 @@ BOOK_REQ = {
         FROM sequences
         WHERE upper(substring(name, 1, 1)) = '%s' GROUP BY name3;    """,
     "get_seqs": """
-        SELECT id, name, count(*) cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
+        SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
         WHERE upper(substring(sequences.name, 1, 3)) = '%s' GROUP BY id, name;
+    """,
+    "get_rnd_seqs": """
+        SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
+        GROUP BY id
+        ORDER BY random() LIMIT %s;
     """,
     "get_seq": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
@@ -104,6 +113,12 @@ BOOK_REQ = {
         WHERE
             '%s' = ANY (genres)
         ORDER BY filename;
+    """,
+    "get_genre_rndbooks": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        WHERE
+            '%s' = ANY (genres)
+        ORDER BY random() LIMIT %s;
     """,
     "get_genre_books_pag": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books

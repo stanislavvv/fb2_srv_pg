@@ -90,8 +90,8 @@ if __name__ == "__main__":
             new_lists()
         elif sys.argv[1] == "fillall":
             fromlists("all")
-        # elif sys.argv[1] == "fillnew":
-        #     fromlists("newonly")
+        elif sys.argv[1] == "fillnew":
+            fromlists("newonly")
         else:
             usage()
     else:

@@ -45,13 +45,27 @@ BOOK_REQ = {
         SELECT id, name FROM authors
         WHERE id IN (SELECT author_id FROM books_authors WHERE book_id = '%s');
     """,
+    "get_books_authors": """
+        SELECT book_id, id, name FROM authors
+        INNER JOIN books_authors ON authors.id = books_authors.author_id
+        WHERE books_authors.book_id IN ('%s');
+    """,
     "get_book_seqs": """
         SELECT id, name FROM sequences
         WHERE id IN (SELECT seq_id FROM seq_books WHERE book_id = '%s');
     """,
+    "get_books_seqs": """
+        SELECT book_id, id, name FROM sequences
+        INNER JOIN seq_books ON sequences.id = seq_books.seq_id
+        WHERE seq_books.book_id IN ('%s');
+    """,
     "get_book_descr": """
         SELECT book_title, pub_isbn, pub_year, publisher, publisher_id, annotation
         FROM books_descr WHERE book_id = '%s'
+    """,
+    "get_books_descr": """
+        SELECT book_id, book_title, pub_isbn, pub_year, publisher, publisher_id, annotation
+        FROM books_descr WHERE book_id IN ('%s');
     """,
     "get_seqs_one": """
         SELECT upper(substring(name, 1, 1)) as name1 FROM sequences GROUP BY name1;

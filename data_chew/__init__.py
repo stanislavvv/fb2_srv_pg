@@ -191,7 +191,7 @@ def process_lists(db, zipdir, stage):
             return False
     elif stage == "newonly":
         logging.error("NOT IMPLEMENTED")
-        return False
+        # return False
     try:
         logging.info("recalc stored counts...")
         db.recalc_authors_books()

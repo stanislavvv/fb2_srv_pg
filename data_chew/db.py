@@ -376,8 +376,8 @@ class BookDB(object):
         ids = self.cur.fetchall()
         for id in ids:
             self.cur.execute(GET_REQ["get_seq_books_cnt"])
-            cnt = self.cur.fetchone()
-            self.__replace_genre_cnt(id, cnt)
+            cnt = self.cur.fetchone()[0]
+            self.__replace_genre_cnt(id[0], cnt)
 
     def commit(self):
         self.conn.commit()

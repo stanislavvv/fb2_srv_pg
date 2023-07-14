@@ -511,6 +511,38 @@ def books_list(
                 dbdata = db.get_genre_books(gen_id, paginate, limit, offset)
             else:
                 name = "'" + "DUMMY" + "'"
+        book_ids = []
+        for d in dbdata:
+            book_ids.append(d[3])
+
+        book_descr = {}
+        dbsecondary = db.get_books_descr(book_ids)
+        for d in dbsecondary:
+            book_id = d[0]
+            book_descr[book_id] = (d[1], d[2], d[3], d[4], d[5], d[6])
+
+        book_authors = {}
+        dbsecondary = db.get_books_authors(book_ids)
+        for d in dbsecondary:
+            book_id = d[0]
+            if book_id not in book_authors:
+                book_authors[book_id] = []
+            book_authors[book_id].append({
+                "id": d[1],
+                "name": d[2]
+            })
+
+        book_seqs = {}
+        dbsecondary = db.get_books_seqs(book_ids)
+        for d in dbsecondary:
+            book_id = d[0]
+            if book_id not in book_seqs:
+                book_seqs[book_id] = []
+            book_seqs[book_id].append({
+                "id": d[1],
+                "name": d[2]
+            })
+
         for d in dbdata:
             zipfile = d[0]
             filename = d[1]
@@ -522,9 +554,15 @@ def books_list(
             deleted = d[7]
             if current_app.config['HIDE_DELETED'] and deleted:
                 continue
-            authors = get_book_authors(book_id)
-            sequences = get_book_seqs(book_id)
-            book_title, pub_isbn, pub_year, publisher, publisher_id, annotation = get_book_descr(book_id)
+            authors = []
+            if book_id in authors:
+                authors = book_authors[book_id]
+            sequences = None
+            if book_id in book_seqs:
+                sequences = book_seqs[book_id]
+            book_title, pub_isbn, pub_year, publisher, publisher_id, annotation = '---', None, None, None, None, ''
+            if book_id in book_descr:
+                (book_title, pub_isbn, pub_year, publisher, publisher_id, annotation) = book_descr[book_id]
             data.append({
                 "zipfile": zipfile,
                 "filename": filename,

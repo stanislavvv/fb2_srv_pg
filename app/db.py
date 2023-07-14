@@ -179,6 +179,39 @@ class BookDBro(object):
         data = self.cur.fetchall()
         return data
 
+    def get_books_byids(self, book_ids):
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_byids"] % req_data)
+        data = self.cur.fetchall()
+        return data
+
+    def get_search_titles(self, terms, limit):
+        s_terms = []
+        for t in terms:
+            s_terms.append('%s:*' % quote_string(t))
+        sterms = ' & '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_booktitle"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
+    def get_search_seqs(self, terms, limit):
+        s_terms = []
+        for t in terms:
+            s_terms.append('%s:*' % quote_string(t))
+        sterms = ' & '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_seqname"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
+    def get_search_authors(self, terms, limit):
+        s_terms = []
+        for t in terms:
+            s_terms.append('%s:*' % quote_string(t))
+        sterms = ' & '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_author"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
 
 def dbconnect():
     pg_host = current_app.config['PG_HOST']

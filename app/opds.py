@@ -5,7 +5,7 @@ from functools import cmp_to_key
 
 from .internals import get_dtiso, id2path, get_book_entry, sizeof_fmt, get_seq_link
 from .internals import get_book_link, url_str
-from .internals import unicode_upper, html_refine, pubinfo_anno, search_words
+from .internals import unicode_upper, html_refine, pubinfo_anno
 from .internals import custom_alphabet_sort, custom_alphabet_name_cmp, custom_alphabet_book_title_cmp
 from .internals import URL
 
@@ -585,7 +585,7 @@ def books_list(
             if current_app.config['HIDE_DELETED'] and deleted:
                 continue
             authors = []
-            if book_id in authors:
+            if book_id in book_authors:
                 authors = book_authors[book_id]
             sequences = None
             if book_id in book_seqs:
@@ -1176,7 +1176,7 @@ def random_data(
                     if current_app.config['HIDE_DELETED'] and deleted:
                         continue
                     authors = []
-                    if book_id in authors:
+                    if book_id in book_authors:
                         authors = book_authors[book_id]
                     sequences = None
                     if book_id in book_seqs:
@@ -1388,7 +1388,6 @@ def search_term(
     s_term: str, idx: str, tag: str, title: str, baseref: str,
     self: str, upref: str, subtag: str, restype: str
 ):
-    idx_titles = "allbooktitles.json"
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -1414,36 +1413,83 @@ def search_term(
         s_terms = s_term.split()
         ret["feed"]["id"] = tag + urllib.parse.quote_plus(s_term)
         data = []
+        maxres = current_app.config['MAX_SEARCH_RES']
+
         try:
-            rootdir = current_app.config['STATIC']
-            maxres = current_app.config['MAX_SEARCH_RES']
-            workdir = rootdir + "/"
+            db = dbconnect()
             if restype == "book":
-                nums = []
-                with open(workdir + idx_titles) as f:
-                    book_titles = json.load(f)
-                    num = 0
-                    i = 0
-                    for book_id in book_titles:
-                        if search_words(s_terms, book_titles[book_id]):
-                            nums.append(num)
-                            i = i + 1
-                        num = num + 1  # next book No in index
-                        if i >= maxres:
-                            break
-                data = read_data(workdir + idx, nums)
-            else:
-                with open(workdir + idx, "rb") as f:
-                    i = 0
-                    for line in f:
-                        d = json.loads(line)
-                        # dummy if in current searches set:
-                        # if restype == "auth" or restype == "seq":
-                        if search_words(s_terms, d["name"]):
-                            data.append(d)
-                            i = i + 1
-                        if i >= maxres:
-                            break
+                book_ids = []
+                dbdata = db.get_search_titles(s_terms, maxres)
+                for d in dbdata:
+                    book_ids.append(d[0])
+
+                dbdata = db.get_books_byids(book_ids)
+                book_descr = get_books_descr(book_ids)
+                book_authors = get_books_authors(book_ids)
+                book_seqs = get_books_seqs(book_ids)
+
+                for d in dbdata:
+                    zipfile = d[0]
+                    filename = d[1]
+                    genres = d[2]
+                    book_id = d[3]
+                    lang = d[4]
+                    date = str(d[5])
+                    size = d[6]
+                    deleted = d[7]
+                    if current_app.config['HIDE_DELETED'] and deleted:
+                        continue
+                    authors = []
+                    if book_id in book_authors:
+                        authors = book_authors[book_id]
+                    sequences = None
+                    if book_id in book_seqs:
+                        sequences = book_seqs[book_id]
+                    (
+                        book_title,
+                        pub_isbn,
+                        pub_year,
+                        publisher,
+                        publisher_id,
+                        annotation
+                    ) = ('---', None, None, None, None, '')
+                    if book_id in book_descr:
+                        (book_title, pub_isbn, pub_year, publisher, publisher_id, annotation) = book_descr[book_id]
+                    data.append({
+                        "zipfile": zipfile,
+                        "filename": filename,
+                        "genres": genres,
+                        "authors": authors,
+                        "sequences": sequences,
+                        "book_title": book_title,
+                        "book_id": book_id,
+                        "lang": lang,
+                        "date_time": date,
+                        "size": size,
+                        "annotation": annotation,
+                        "pub_info": {
+                            "isbn": pub_isbn,
+                            "year": pub_year,
+                            "publisher": publisher,
+                            "publisher_id": publisher_id
+                        },
+                        "deleted": deleted
+                    })
+            elif restype == "seq":
+                dbdata = db.get_search_seqs(s_terms, maxres)
+                for d in dbdata:
+                    data.append({
+                        "id": d[0],
+                        "name": d[1],
+                        "cnt": d[2]
+                    })
+            elif restype == "auth":
+                dbdata = db.get_search_authors(s_terms, maxres)
+                for d in dbdata:
+                    data.append({
+                        "id": d[0],
+                        "name": d[1]
+                    })
             if restype == "auth" or restype == "seq":
                 data = sorted(data, key=lambda s: unicode_upper(s["name"]) or -1)
             elif restype == "book":

@@ -57,6 +57,24 @@ def get_book_authors(book_id):
     return ret
 
 
+def get_books_authors(book_ids):
+    ret = {}
+    try:
+        db = dbconnect()
+        dbdata = db.get_books_authors(book_ids)
+        for d in dbdata:
+            book_id = d[0]
+            if book_id not in ret:
+                ret[book_id] = []
+            ret[book_id].append({
+                "id": d[1],
+                "name": d[2]
+            })
+    except Exception as e:
+        logging.error(e)
+    return ret
+
+
 def get_book_seqs(book_id):
     ret = []
     try:
@@ -65,9 +83,30 @@ def get_book_seqs(book_id):
         for d in dbdata:
             id = d[0]
             name = d[1]
+            num = d[2]
             ret.append({
                 "id": id,
-                "name": name
+                "name": name,
+                "num": num
+            })
+    except Exception as e:
+        logging.error(e)
+    return ret
+
+
+def get_books_seqs(book_ids):
+    ret = {}
+    try:
+        db = dbconnect()
+        dbdata = db.get_books_seqs(book_ids)
+        for d in dbdata:
+            book_id = d[0]
+            if book_id not in ret:
+                ret[book_id] = []
+            ret[book_id].append({
+                "id": d[1],
+                "name": d[2],
+                "num": d[3]
             })
     except Exception as e:
         logging.error(e)
@@ -93,6 +132,20 @@ def get_book_descr(book_id):
     except Exception as e:
         logging.error(e)
     return book_title, pub_isbn, pub_year, publisher, publisher_id, annotation
+
+
+def get_books_descr(book_ids):
+    ret = {}
+    try:
+        db = dbconnect()
+        dbdata = db.get_books_descr(book_ids)
+        for d in dbdata:
+            book_id = d[0]
+            ret[book_id] = (d[1], d[2], d[3], d[4], d[5], d[6])
+    except Exception as e:
+        logging.error(e)
+    print(ret)
+    return ret
 
 
 def ret_hdr():  # python does not have constants
@@ -515,33 +568,11 @@ def books_list(
         for d in dbdata:
             book_ids.append(d[3])
 
-        book_descr = {}
-        dbsecondary = db.get_books_descr(book_ids)
-        for d in dbsecondary:
-            book_id = d[0]
-            book_descr[book_id] = (d[1], d[2], d[3], d[4], d[5], d[6])
+        book_descr = get_books_descr(book_ids)
 
-        book_authors = {}
-        dbsecondary = db.get_books_authors(book_ids)
-        for d in dbsecondary:
-            book_id = d[0]
-            if book_id not in book_authors:
-                book_authors[book_id] = []
-            book_authors[book_id].append({
-                "id": d[1],
-                "name": d[2]
-            })
+        book_authors = get_books_authors(book_ids)
 
-        book_seqs = {}
-        dbsecondary = db.get_books_seqs(book_ids)
-        for d in dbsecondary:
-            book_id = d[0]
-            if book_id not in book_seqs:
-                book_seqs[book_id] = []
-            book_seqs[book_id].append({
-                "id": d[1],
-                "name": d[2]
-            })
+        book_seqs = get_books_seqs(book_ids)
 
         for d in dbdata:
             zipfile = d[0]
@@ -581,7 +612,7 @@ def books_list(
                     "publisher": publisher,
                     "publisher_id": publisher_id
                 },
-                "deleted": 0
+                "deleted": deleted
             })
     except Exception as e:
         logging.error(e)
@@ -1089,14 +1120,11 @@ def random_data(
             authref: str,
             seqref: str,
             subtag: str,
-            books: bool,
-            entirefile: False
+            books: bool,  # books or seqs
+            gen_id=None
         ):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
-    rootdir = current_app.config['STATIC']
-    count = current_app.config['PAGE_SIZE']
-    workdir = rootdir + "/"
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
     ret["feed"]["title"] = title
@@ -1116,18 +1144,81 @@ def random_data(
         }
     )
     cnt = 0
-    cntf = workdir + cntfile
     try:
-        with open(cntf) as jsfile:
-            cnt = json.load(jsfile)
-        randoms = get_randoms(count - 1, cnt)
-        dataf = workdir + datafile
-        data = {}
-        if entirefile:
-            data = get_data(dataf, randoms)
-        else:
-            data = read_data(dataf, randoms)
         if books:
+            data = []
+            try:
+                db = dbconnect()
+                limit = int(current_app.config['PAGE_SIZE'])
+                if gen_id is None:
+                    dbdata = db.get_rnd_books(limit)
+                else:
+                    dbdata = db.get_rnd_genre_books(gen_id, limit)
+
+                book_ids = []
+                for d in dbdata:
+                    book_ids.append(d[3])
+
+                book_descr = get_books_descr(book_ids)
+
+                book_authors = get_books_authors(book_ids)
+
+                book_seqs = get_books_seqs(book_ids)
+
+                for d in dbdata:
+                    zipfile = d[0]
+                    filename = d[1]
+                    genres = d[2]
+                    book_id = d[3]
+                    lang = d[4]
+                    date = str(d[5])
+                    size = d[6]
+                    deleted = d[7]
+                    if current_app.config['HIDE_DELETED'] and deleted:
+                        continue
+                    authors = []
+                    if book_id in authors:
+                        authors = book_authors[book_id]
+                    sequences = None
+                    if book_id in book_seqs:
+                        sequences = book_seqs[book_id]
+                    (
+                        book_title,
+                        pub_isbn,
+                        pub_year,
+                        publisher,
+                        publisher_id,
+                        annotation
+                    ) = ('---', None, None, None, None, '')
+                    if book_id in book_descr:
+                        print()
+                        print(book_descr[book_id])
+                        (book_title, pub_isbn, pub_year, publisher, publisher_id, annotation) = book_descr[book_id]
+                    data.append({
+                        "zipfile": zipfile,
+                        "filename": filename,
+                        "genres": genres,
+                        "authors": authors,
+                        "sequences": sequences,
+                        "book_title": book_title,
+                        "book_id": book_id,
+                        "lang": lang,
+                        "date_time": date,
+                        "size": size,
+                        "annotation": annotation,
+                        "pub_info": {
+                            "isbn": pub_isbn,
+                            "year": pub_year,
+                            "publisher": publisher,
+                            "publisher_id": publisher_id
+                        },
+                        "deleted": deleted
+                    })
+
+            except Exception as e:
+                logging.error(e)
+                return ret
+
             for d in data:
                 book_title = d["book_title"]
                 book_id = d["book_id"]
@@ -1182,7 +1273,22 @@ def random_data(
                 ret["feed"]["entry"].append(
                     get_book_entry(date_time, book_id, book_title, authors, links, category, lang, annotext)
                 )
-        else:
+        else:  # seq
+            data = []
+            try:
+                db = dbconnect()
+                limit = int(current_app.config['PAGE_SIZE'])
+                dbdata = db.get_rnd_seqs(limit)
+                for d in dbdata:
+                    data.append({
+                        "id": d[0],
+                        "name": d[1],
+                        "cnt": d[2]
+                    })
+            except Exception as e:
+                logging.error(e)
+                return ret
+
             for d in data:
                 name = d["name"]
                 id = d["id"]

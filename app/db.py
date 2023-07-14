@@ -164,6 +164,21 @@ class BookDBro(object):
         data = self.cur.fetchall()
         return data
 
+    def get_rnd_books(self, limit):
+        self.cur.execute(BOOK_REQ["get_rnd_books"] % limit)
+        data = self.cur.fetchall()
+        return data
+
+    def get_rnd_seqs(self, limit):
+        self.cur.execute(BOOK_REQ["get_rnd_seqs"] % limit)
+        data = self.cur.fetchall()
+        return data
+
+    def get_rnd_genre_books(self, gen_id, limit):
+        self.cur.execute(BOOK_REQ["get_genre_rndbooks"] % (gen_id, limit))
+        data = self.cur.fetchall()
+        return data
+
 
 def dbconnect():
     pg_host = current_app.config['PG_HOST']

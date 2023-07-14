@@ -4,15 +4,10 @@ from flask import current_app
 from bs4 import BeautifulSoup
 from functools import cmp_to_key
 
-import logging
 import datetime
 import urllib
-import json
-import os
 import unicodedata as ud
 
-genre_names = {}
-meta_names = {}
 
 alphabet_1 = [  # first letters in main authors/sequences page
     'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й',
@@ -267,33 +262,6 @@ def url_str(s: str):
                 c = tr[c]
             ret = ret + c
     return urllib.parse.quote(ret, encoding='utf-8')
-
-
-def load_genres(pagesdir: str):
-    global genre_names
-    genidx = pagesdir + "/allgenres.json"
-    if os.path.exists(genidx):
-        try:
-            with open(genidx) as f:
-                for g in f:
-                    genre = json.loads(g)
-                    genre_names[genre["id"]] = genre["name"]
-        except Exception as e:
-            logging.error(e)
-
-
-def load_meta(pagesdir: str):
-    global meta_names
-    genidx = pagesdir + "/allgenresmeta.json"
-    if os.path.exists(genidx):
-        try:
-            with open(genidx) as f:
-                metas = json.load(f)
-                for meta_id in metas:
-                    meta_name = metas[meta_id]["name"]
-                    meta_names[meta_id] = meta_name
-        except Exception as e:
-            logging.error(e)
 
 
 def paginate_array(data, page: int):

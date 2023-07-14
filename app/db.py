@@ -43,14 +43,32 @@ class BookDBro(object):
         data = self.cur.fetchall()
         return data
 
+    def get_books_authors(self, book_ids):
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_authors"] % req_data)
+        data = self.cur.fetchall()
+        return data
+
     def get_book_seqs(self, book_id):
         self.cur.execute(BOOK_REQ["get_book_seqs"] % book_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_books_seqs(self, book_ids):
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_seqs"] % req_data)
         data = self.cur.fetchall()
         return data
 
     def get_book_descr(self, book_id):
         self.cur.execute(BOOK_REQ["get_book_descr"] % book_id)
         data = self.cur.fetchone()
+        return data
+
+    def get_books_descr(self, book_ids):
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_descr"] % req_data)
+        data = self.cur.fetchall()
         return data
 
     def get_authors_one(self):

@@ -476,6 +476,26 @@ def html_search_books():
     return Response(page, mimetype='text/html')
 
 
+@html.route(URL["srchbookanno"].replace("/opds", "/html", 1), methods=['GET'])
+def html_search_books_anno():
+    s_term = request.args.get('searchTerm')
+    s_term = validate_search(s_term)
+    idx = "allbooks.json"
+    baseref = URL["author"]
+    self = URL["srchbook"]
+    upref = URL["start"]
+    tag = "tag:search:books:"
+    subtag = "tag:book:"
+    title = "Поиск среди книг по '" + s_term + "'"
+    data = search_term(s_term, idx, tag, title, baseref, self, upref, subtag, "bookanno")
+    title = data['feed']['title']
+    updated = data['feed']['updated']
+    entry = data['feed']['entry']
+    link = data['feed']['link']
+    page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
+    return Response(page, mimetype='text/html')
+
+
 @html.route(URL["rndgenidx"].replace("/opds", "/html", 1), methods=['GET'])
 def html_rnd_gen_root():
     idx = "genresindex"

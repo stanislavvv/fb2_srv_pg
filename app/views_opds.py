@@ -385,6 +385,22 @@ def opds_search_books():
     return Response(xml, mimetype='text/xml')
 
 
+@opds.route(URL["srchbookanno"], methods=['GET'])
+def opds_search_booksanno():
+    s_term = request.args.get('searchTerm')
+    s_term = validate_search(s_term)
+    idx = "allbooks.json"
+    baseref = URL["author"]
+    self = URL["srchbook"]
+    upref = URL["start"]
+    tag = "tag:search:books:"
+    subtag = "tag:book:"
+    title = "Поиск среди книг по '" + s_term + "'"
+    data = search_term(s_term, idx, tag, title, baseref, self, upref, subtag, "bookanno")
+    xml = xmltodict.unparse(data, pretty=True)
+    return Response(xml, mimetype='text/xml')
+
+
 @opds.route(URL["rndgenidx"].replace("/opds", "/opds", 1), methods=['GET'])
 def opds_rnd_gen_root():
     idx = "genresindex"

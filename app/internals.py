@@ -33,6 +33,7 @@ URL = {
     "srchauth": "/opds/search-authors",
     "srchseq": "/opds/search-sequences",
     "srchbook": "/opds/search-books",
+    "srchbookanno": "/opds/search-booksanno",
     "rndbook": "/opds/random-books/",
     "rndseq": "/opds/random-sequences/",
     "rndgen": "/opds/rnd-genre/",

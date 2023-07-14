@@ -1379,6 +1379,21 @@ def search_main(s_term: str, tag: str, title: str, self: str, upref: str):
             }
           }
         )
+        ret["feed"]["entry"].append(
+          {
+            "updated": dtiso,
+            "id": "tag:search:booktitles::",
+            "title": "Поиск в аннотациях книг",
+            "content": {
+              "@type": "text",
+              "#text": "Поиск в аннотациях книг"
+            },
+            "link": {
+              "@href": approot + URL["srchbookanno"] + "?searchTerm=%s" % url_str(s_term),
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          }
+        )
     return ret
 
 
@@ -1417,9 +1432,13 @@ def search_term(
 
         try:
             db = dbconnect()
-            if restype == "book":
+            if restype == "book" or restype == "bookanno":
                 book_ids = []
-                dbdata = db.get_search_titles(s_terms, maxres)
+                if restype == "book":
+                    dbdata = db.get_search_titles(s_terms, maxres)
+                else:
+                    dbdata = db.get_search_anno(s_terms, maxres)
+
                 for d in dbdata:
                     book_ids.append(d[0])
 
@@ -1534,7 +1553,7 @@ def search_term(
                         }
                     }
                 )
-            elif restype == "book":
+            elif restype == "book" or restype == "bookanno":
                 book_title = d["book_title"]
                 book_id = d["book_id"]
                 lang = d["lang"]

@@ -194,6 +194,15 @@ class BookDBro(object):
         data = self.cur.fetchall()
         return data
 
+    def get_search_anno(self, terms, limit):
+        s_terms = []
+        for t in terms:
+            s_terms.append('%s:*' % quote_string(t))
+        sterms = ' & '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_bookanno"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
     def get_search_seqs(self, terms, limit):
         s_terms = []
         for t in terms:

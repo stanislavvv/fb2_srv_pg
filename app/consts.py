@@ -128,4 +128,18 @@ BOOK_REQ = {
         LIMIT %s
         OFFSET %s;
     """,
+    "get_books_byids": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        WHERE book_id IN ('%s')
+    """,
+    "search_booktitle": """
+        SELECT book_id FROM books_descr WHERE book_title @@ to_tsquery('%s') LIMIT %s;
+    """,
+    "search_seqname": """
+        SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
+        WHERE name @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
+    """,
+    "search_author": """
+        SELECT id, name FROM authors WHERE name @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
+    """
 }

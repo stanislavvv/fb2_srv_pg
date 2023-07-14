@@ -283,11 +283,11 @@ def html_refine(txt: str):
 
 def pubinfo_anno(pubinfo):
     ret = ""
-    if pubinfo["isbn"] is not None:
+    if pubinfo["isbn"] is not None and pubinfo["isbn"] != 'None':
         ret = ret + "<p><b>Данные публикации:</b></p><p>ISBN: %s</p>" % pubinfo["isbn"]
-    if pubinfo["year"] is not None:
-        ret = ret + "<p>Год: %s</p>" % pubinfo["year"]
-    if pubinfo["publisher"] is not None:
+    if pubinfo["year"] is not None and pubinfo["year"] != 'None':
+        ret = ret + "<p>Год публикации: %s</p>" % pubinfo["year"]
+    if pubinfo["publisher"] is not None and pubinfo["year"] != 'None':
         ret = ret + "<p>Издательство: %s</p>" % pubinfo["publisher"]
     return ret
 

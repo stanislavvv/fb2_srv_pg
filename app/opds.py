@@ -144,7 +144,6 @@ def get_books_descr(book_ids):
             ret[book_id] = (d[1], d[2], d[3], d[4], d[5], d[6])
     except Exception as e:
         logging.error(e)
-    print(ret)
     return ret
 
 
@@ -1191,8 +1190,6 @@ def random_data(
                         annotation
                     ) = ('---', None, None, None, None, '')
                     if book_id in book_descr:
-                        print()
-                        print(book_descr[book_id])
                         (book_title, pub_isbn, pub_year, publisher, publisher_id, annotation) = book_descr[book_id]
                     data.append({
                         "zipfile": zipfile,

@@ -22,7 +22,7 @@ CREATE_REQ = [
         book_id      char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
         book_title   text,
         pub_isbn     varchar,
-        pub_year     date,
+        pub_year     varchar,
         publisher    text,
         publisher_id char(32),
         annotation   text

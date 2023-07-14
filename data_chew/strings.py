@@ -177,6 +177,8 @@ def id2pathonly(id: str):
 
 # quote string for sql
 def quote_string(s, errors="strict"):
+    if s is None:
+        return None
     encodable = s.encode("utf-8", errors).decode("utf-8")
 
     nul_index = encodable.find("\x00")

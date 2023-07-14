@@ -135,6 +135,9 @@ BOOK_REQ = {
     "search_booktitle": """
         SELECT book_id FROM books_descr WHERE book_title @@ to_tsquery('%s') LIMIT %s;
     """,
+    "search_bookanno": """
+        SELECT book_id FROM books_descr WHERE annotation @@ to_tsquery('%s') LIMIT %s;
+    """,
     "search_seqname": """
         SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
         WHERE name @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;

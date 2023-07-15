@@ -1,28 +1,33 @@
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint, Response, send_file, request, current_app
-from .get_fb2 import fb2_out, html_out
-from .validate import redir_invalid, validate_zip, validate_fb2
+"""fb2 read/download view"""
 
 import io
 import zipfile
 import time
 
+from flask import Blueprint, Response, send_file, request, current_app
+
+# pylint: disable=E0402
+from .get_fb2 import fb2_out, html_out
+from .validate import redir_invalid, validate_zip, validate_fb2
+
 dl = Blueprint("dl", __name__)
 
-redir_all = "html.html_root"
+REDIR_ALL = "html.html_root"
 
 
 def shutdown_server():
+    """correctly shutdown app"""
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
 
 
-# we send fb2.zip on download request
 @dl.route("/fb2/<zip_file>/<filename>")
 def fb2_download(zip_file=None, filename=None):
+    """send fb2.zip on download request"""
     if filename.endswith('.zip'):  # will accept any of .fb2 or .fb2.zip with right filename in .zip
         filename = filename[:-4]
     if not zip_file.endswith('.zip'):
@@ -30,11 +35,11 @@ def fb2_download(zip_file=None, filename=None):
     zip_file = validate_zip(zip_file)
     filename = validate_fb2(filename)
     if zip_file is None or filename is None:
-        return redir_invalid(redir_all)
+        return redir_invalid(REDIR_ALL)
     fb2data = fb2_out(zip_file, filename)
-    if fb2data is not None:
+    if fb2data is not None:  # pylint: disable=R1705
         memory_file = io.BytesIO()
-        with zipfile.ZipFile(memory_file, 'w') as zf:
+        with zipfile.ZipFile(memory_file, 'w') as zf:  # pylint: disable=C0103
             data = zipfile.ZipInfo(filename)
             data.date_time = time.localtime(time.time())[:6]
             data.compress_type = zipfile.ZIP_DEFLATED
@@ -49,6 +54,7 @@ def fb2_download(zip_file=None, filename=None):
 
 @dl.route("/read/<zip_file>/<filename>")
 def fb2_read(zip_file=None, filename=None):
+    """translate fb2 to html for read request"""
     if filename.endswith('.zip'):  # will accept any of .fb2 or .fb2.zip with right filename in .zip
         filename = filename[:-4]
     if not zip_file.endswith('.zip'):
@@ -56,9 +62,9 @@ def fb2_read(zip_file=None, filename=None):
     zip_file = validate_zip(zip_file)
     filename = validate_fb2(filename)
     if zip_file is None or filename is None:
-        return redir_invalid(redir_all)
+        return redir_invalid(REDIR_ALL)
     data = html_out(zip_file, filename)
-    if data is not None:
+    if data is not None:  # pylint: disable=R1705
         return Response(data, mimetype='text/html')
     else:
         return Response("Book not found", status=404)
@@ -66,7 +72,8 @@ def fb2_read(zip_file=None, filename=None):
 
 @dl.route("/XaiJee6Fexoocoo1")
 def debug_exit():
-    if current_app.config['DEBUG']:
+    """shutdown server in debug mode"""
+    if current_app.config['DEBUG']:  # pylint: disable=R1705
         shutdown_server()
         return 'Server shutting down...'
     else:

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-
-from bs4 import BeautifulSoup
-from functools import cmp_to_key
-from .consts import URL, alphabet_1, alphabet_2
+"""some internal library functions"""
 
 import datetime
 import urllib
 import unicodedata as ud
+from functools import cmp_to_key
+from bs4 import BeautifulSoup
+
+# pylint: disable=E0402
+from .consts import URL, alphabet_1, alphabet_2
 
 
-def tpl_headers_symbols(s: str):
+def tpl_headers_symbols(link: str):
+    """replace link name for html interface"""
     h2s = {
         "start": "HOME",  # was "&#8962;", # "⌂"
         "self": "RELOAD",  # was "&#x21bb;",  # "↻", was "🗘"
@@ -17,18 +20,19 @@ def tpl_headers_symbols(s: str):
         "next": "NEXT",  # "&#8658;",  # "⇑"
         "prev": "PREV"  # "&#8656;"  # "⇐"
     }
-    if s in h2s:
-        return h2s[s]
-    return s
+    if link in h2s:
+        return h2s[link]
+    return link
 
 
-def cmp_in_arr(arr, c1, c2):
-    if c1 in arr and c2 in arr:
-        n1 = arr.index(c1)
-        n2 = arr.index(c2)
-        if n1 == n2:
+def cmp_in_arr(arr, char1, char2):
+    """compare characters by array"""
+    if char1 in arr and char2 in arr:
+        idx1 = arr.index(char1)
+        idx2 = arr.index(char2)
+        if idx1 == idx2:  # pylint: disable=R1705
             return 0
-        elif n1 < n2:
+        elif idx1 < idx2:
             return -1
         else:
             return 1
@@ -37,15 +41,15 @@ def cmp_in_arr(arr, c1, c2):
 
 
 def custom_alphabet_sort(slist):
+    """custom sort by arrays of characters"""
     ret = []
     ret = sorted(slist, key=cmp_to_key(custom_alphabet_cmp))
     return ret
 
 
-# ToDo: replace cyrillic letters to latin for similar letters
-# custom UPPER + normalize for sqlite and other
-def unicode_upper(s: str):
-    ret = ud.normalize('NFKD', s)
+def unicode_upper(stri: str):
+    """custom UPPER + normalize for sqlite and other"""
+    ret = ud.normalize('NFKD', stri)
     ret = ret.upper()
     ret = ret.replace('Ё', 'Е')
     ret = ret.replace('Й', 'И')
@@ -53,37 +57,40 @@ def unicode_upper(s: str):
     return ret
 
 
-def custom_char_cmp(c1: str, c2: str):
-    if c1 == c2:
+def custom_char_cmp(char1: str, char2: str):  # pylint: disable=R0911
+    """custom compare chars"""
+    if char1 == char2:
         return 0
 
-    if c1 in alphabet_1 and c2 not in alphabet_1:
+    if char1 in alphabet_1 and char2 not in alphabet_1:
         return -1
-    if c1 in alphabet_2 and c2 not in alphabet_2 and c2 not in alphabet_1:
+    if char1 in alphabet_2 and char2 not in alphabet_2 and char2 not in alphabet_1:
         return -1
-    if c2 in alphabet_1 and c1 not in alphabet_1:
+    if char2 in alphabet_1 and char1 not in alphabet_1:
         return 1
-    if c2 in alphabet_2 and c1 not in alphabet_2 and c1 not in alphabet_1:
+    if char2 in alphabet_2 and char1 not in alphabet_2 and char1 not in alphabet_1:
         return 1
 
     # sort by array order
-    if c1 in alphabet_1 and c2 in alphabet_1:
-        return cmp_in_arr(alphabet_1, c1, c2)
-    if c1 in alphabet_2 and c1 in alphabet_2:
-        return cmp_in_arr(alphabet_2, c1, c2)
+    if char1 in alphabet_1 and char2 in alphabet_1:
+        return cmp_in_arr(alphabet_1, char1, char2)
+    if char1 in alphabet_2 and char1 in alphabet_2:
+        return cmp_in_arr(alphabet_2, char1, char2)
 
-    if c1 < c2:
+    if char1 < char2:  # pylint: disable=R1705
         return -1
     else:
         return +1
 
 
-def custom_alphabet_cmp(s1: str, s2: str):
-    s1len = len(s1)
-    s2len = len(s2)
+def custom_alphabet_cmp(str1: str, str2: str):  # pylint: disable=R0911
+    """custom compare strings"""
+    # pylint: disable=R1705
+    s1len = len(str1)
+    s2len = len(str2)
     i = 0
 
-    # случай нулевых строк
+    # zero-length strings case
     if s1len == i:
         if i == s2len:
             return 0
@@ -92,7 +99,7 @@ def custom_alphabet_cmp(s1: str, s2: str):
     elif i == s2len:
         return 1
 
-    while custom_char_cmp(s1[i], s2[i]) == 0:
+    while custom_char_cmp(str1[i], str2[i]) == 0:
         i = i + 1
         if i == s1len:
             if i == s2len:
@@ -101,51 +108,56 @@ def custom_alphabet_cmp(s1: str, s2: str):
                 return -1
         elif i == s2len:
             return 1
-    return custom_char_cmp(s1[i], s2[i])
+    return custom_char_cmp(str1[i], str2[i])
 
 
-def custom_alphabet_name_cmp(s1, s2):
-    s1len = len(s1["name"])
-    s2len = len(s2["name"])
+def custom_alphabet_name_cmp(str1, str2):
+    """custom compare name fields"""
+    s1len = len(str1["name"])
+    s2len = len(str2["name"])
     i = 0
-    while custom_char_cmp(s1["name"][i], s2["name"][i]) == 0:
+    while custom_char_cmp(str1["name"][i], str2["name"][i]) == 0:
         i = i + 1
         if i == s1len:
-            if i == s2len:
+            if i == s2len:  # pylint: disable=R1705
                 return 0
             else:
                 return -1
         elif i == s2len:
             return 1
-    return custom_char_cmp(s1["name"][i], s2["name"][i])
+    return custom_char_cmp(str1["name"][i], str2["name"][i])
 
 
-def custom_alphabet_book_title_cmp(s1, s2):
-    s1len = len(s1["book_title"])
-    s2len = len(s2["book_title"])
+def custom_alphabet_book_title_cmp(str1, str2):
+    """custom compare book_title fields"""
+    s1len = len(str1["book_title"])
+    s2len = len(str2["book_title"])
     i = 0
-    while custom_char_cmp(s1["book_title"][i], s2["book_title"][i]) == 0:
+    while custom_char_cmp(str1["book_title"][i], str2["book_title"][i]) == 0:
         i = i + 1
         if i == s1len:
-            if i == s2len:
+            if i == s2len:  # pylint: disable=R1705
                 return 0
             else:
                 return -1
         elif i == s2len:
             return 1
-    return custom_char_cmp(s1["book_title"][i], s2["book_title"][i])
+    return custom_char_cmp(str1["book_title"][i], str2["book_title"][i])
 
 
 def get_dtiso():
+    """return current time in iso"""
     return datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
 
 
-def id2path(id: str):
-    first = id[:2]
-    second = id[2:4]
-    return first + "/" + second + "/" + id
+def id2path(any_id: str):
+    """create path from id"""
+    first = any_id[:2]
+    second = any_id[2:4]
+    return first + "/" + second + "/" + any_id
 
 
+# pylint: disable=R0913
 def get_book_entry(
     date_time: str,
     book_id: str,
@@ -156,6 +168,7 @@ def get_book_entry(
     lang: str,
     annotext: str
 ):
+    """create book entry for opds"""
     ret = {
         "updated": date_time,
         "id": "tag:book:" + book_id,
@@ -175,6 +188,7 @@ def get_book_entry(
 
 # 123456 -> 123k, 1234567 -> 1.23M
 def sizeof_fmt(num: int, suffix="B"):
+    """format size to human-readable format"""
     for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
             return f"{num:3.1f}{unit}{suffix}"
@@ -183,6 +197,7 @@ def sizeof_fmt(num: int, suffix="B"):
 
 
 def get_seq_link(approot: str, seqref: str, seq_id: str, seq_name: str):
+    """create sequence link for opds"""
     ret = {
         "@href": approot + seqref + seq_id,
         "@rel": "related",
@@ -194,6 +209,7 @@ def get_seq_link(approot: str, seqref: str, seq_id: str, seq_name: str):
 
 # ctype == 'dl' for download
 def get_book_link(approot: str, zipfile: str, filename: str, ctype: str):
+    """create download/read link for opds"""
     title = "Читать онлайн"
     book_ctype = "text/html"
     rel = "alternate"
@@ -214,30 +230,33 @@ def get_book_link(approot: str, zipfile: str, filename: str, ctype: str):
     return ret
 
 
-# urlencode string (quote + replace some characters to %NN)
-def url_str(s: str):
-    tr = {
+def url_str(string: str):
+    """urlencode string (quote + replace some characters to %NN)"""
+    transl = {
         '"': '%22',
         "'": '%27',
         # '.': '%2E',
         # '/': '%2F'
     }
     ret = ''
-    if s is not None:
-        for c in s:
-            if c in tr:
-                c = tr[c]
-            ret = ret + c
+    if string is not None:
+        for char in string:
+            if char in transl:  # pylint: disable=R1715
+                # pylint take here wrong warning
+                char = transl[char]
+            ret = ret + char
     return urllib.parse.quote(ret, encoding='utf-8')
 
 
 def html_refine(txt: str):
-    ht = BeautifulSoup(txt, 'html.parser')
-    ret = ht.prettify()
+    """refine html by beautiful soap"""
+    html = BeautifulSoup(txt, 'html.parser')
+    ret = html.prettify()
     return ret
 
 
 def pubinfo_anno(pubinfo):
+    """create publication info for opds"""
     ret = ""
     if pubinfo["isbn"] is not None and pubinfo["isbn"] != 'None':
         ret = ret + "<p><b>Данные публикации:</b></p><p>ISBN: %s</p>" % pubinfo["isbn"]

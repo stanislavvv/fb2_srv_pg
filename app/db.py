@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
+"""library database interface"""
 
-import psycopg2
 import logging
 import codecs
 
-from .consts import BOOK_REQ
+import psycopg2
+
 from flask import current_app
 
+# pylint: disable=E0402
+from .consts import BOOK_REQ
 
-# quote string for sql
-def quote_string(s, errors="strict"):
-    encodable = s.encode("utf-8", errors).decode("utf-8")
+
+def quote_string(string: str, errors="strict"):
+    """quote string for sql"""
+    encodable = string.encode("utf-8", errors).decode("utf-8")
 
     nul_index = encodable.find("\x00")
 
@@ -21,11 +25,12 @@ def quote_string(s, errors="strict"):
         replacement, _ = error_handler(error)
         encodable = encodable.replace("\x00", replacement)
 
-    # OLD return "\"" + encodable.replace("\"", "\"\"") + "\""
     return encodable.replace("\'", "\'\'")
 
 
-class BookDBro(object):
+class BookDBro():
+    """read-only interface for books database"""
+    # pylint: disable=R0904
 
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
@@ -39,124 +44,148 @@ class BookDBro(object):
         logging.info("connected to db")
 
     def get_book_authors(self, book_id):
+        """get authors of one book"""
         self.cur.execute(BOOK_REQ["get_book_authors"] % book_id)
         data = self.cur.fetchall()
         return data
 
     def get_books_authors(self, book_ids):
+        """get authors of many books"""
         req_data = "', '".join(book_ids)
         self.cur.execute(BOOK_REQ["get_books_authors"] % req_data)
         data = self.cur.fetchall()
         return data
 
     def get_book_seqs(self, book_id):
+        """get sequences which one book belongs to"""
         self.cur.execute(BOOK_REQ["get_book_seqs"] % book_id)
         data = self.cur.fetchall()
         return data
 
     def get_books_seqs(self, book_ids):
+        """get sequences which any of many books belongs to"""
         req_data = "', '".join(book_ids)
         self.cur.execute(BOOK_REQ["get_books_seqs"] % req_data)
         data = self.cur.fetchall()
         return data
 
     def get_book_descr(self, book_id):
+        """get title/annotation/publication for one book"""
         self.cur.execute(BOOK_REQ["get_book_descr"] % book_id)
         data = self.cur.fetchone()
         return data
 
     def get_books_descr(self, book_ids):
+        """get title/annotation/publication for many book"""
         req_data = "', '".join(book_ids)
         self.cur.execute(BOOK_REQ["get_books_descr"] % req_data)
         data = self.cur.fetchall()
         return data
 
     def get_authors_one(self):
+        """get first letters of all authors names"""
         self.cur.execute(BOOK_REQ["get_authors_one"])
         data = self.cur.fetchall()
         return data
 
     def get_authors_three(self, auth_sub):
+        """get three letters of authors names on letter"""
         self.cur.execute(BOOK_REQ["get_authors_three"] % auth_sub)
         data = self.cur.fetchall()
         return data
 
     def get_authors_list(self, auth_sub):
+        """get list of author with names on three letters"""
         self.cur.execute(BOOK_REQ["get_authors"] % auth_sub)
         data = self.cur.fetchall()
         return data
 
     def get_author(self, auth_id):
+        """get author by id"""
         self.cur.execute(BOOK_REQ["get_author"] % auth_id)
         data = self.cur.fetchall()
         return data
 
     def get_author_seqs(self, auth_id):
+        """get book sequences of author"""
         self.cur.execute(BOOK_REQ["get_auth_seqs"] % auth_id)
         data = self.cur.fetchall()
         return data
 
     def get_author_seq(self, auth_id, seq_id):
+        """list books of author in sequence"""
         self.cur.execute(BOOK_REQ["get_auth_seq"] % (auth_id, seq_id))
         data = self.cur.fetchall()
         return data
 
     def get_author_nonseq(self, auth_id, seq_id):
+        """list books of not belong to any sequence"""
         self.cur.execute(BOOK_REQ["get_auth_nonseq"] % (auth_id, seq_id))
         data = self.cur.fetchall()
         return data
 
     def get_author_books(self, auth_id):
+        """list all books of author"""
         self.cur.execute(BOOK_REQ["get_auth_books"] % auth_id)
         data = self.cur.fetchall()
         return data
 
     def get_seq_name(self, seq_id):
+        """get sequence name by id"""
         self.cur.execute(BOOK_REQ["get_seq_name"] % seq_id)
         data = self.cur.fetchone()
         return data[0]
 
     def get_seqs_one(self):
+        """get first letters of all sequences"""
         self.cur.execute(BOOK_REQ["get_seqs_one"])
         data = self.cur.fetchall()
         return data
 
     def get_seqs_three(self, seq_sub):
+        """get three letters of sequences on letter"""
         self.cur.execute(BOOK_REQ["get_seqs_three"] % seq_sub)
         data = self.cur.fetchall()
         return data
 
     def get_seqs_list(self, seq_sub):
+        """get list of sequences with names on three letters"""
         self.cur.execute(BOOK_REQ["get_seqs"] % seq_sub)
         data = self.cur.fetchall()
         return data
 
     def get_seq(self, seq_id):
+        """get books in sequence"""
         self.cur.execute(BOOK_REQ["get_seq"] % seq_id)
         data = self.cur.fetchall()
         return data
 
     def get_genre_name(self, gen_id):
+        """get name of genre by id"""
         self.cur.execute(BOOK_REQ["get_genre_name"] % gen_id)
         data = self.cur.fetchone()
         return data
 
     def get_meta_name(self, meta_id):
+        """get genre meta name by id"""
         self.cur.execute(BOOK_REQ["get_meta_name"] % meta_id)
         data = self.cur.fetchone()
         return data
 
     def get_genres_meta(self):
+        """list genre metas"""
         self.cur.execute(BOOK_REQ["get_genres_meta"])
         data = self.cur.fetchall()
         return data
 
     def get_genres(self, meta_id):
+        """list genres in meta"""
         self.cur.execute(BOOK_REQ["get_genres_in_meta"] % meta_id)
         data = self.cur.fetchall()
         return data
 
     def get_genre_books(self, gen_id, paginate, limit, offset):
+        """list books in genre"""
         if paginate:
             self.cur.execute(BOOK_REQ["get_genre_books_pag"] % (gen_id, limit, offset))
         else:
@@ -165,57 +194,65 @@ class BookDBro(object):
         return data
 
     def get_rnd_books(self, limit):
+        """get random books"""
         self.cur.execute(BOOK_REQ["get_rnd_books"] % limit)
         data = self.cur.fetchall()
         return data
 
     def get_rnd_seqs(self, limit):
+        """get random sequences"""
         self.cur.execute(BOOK_REQ["get_rnd_seqs"] % limit)
         data = self.cur.fetchall()
         return data
 
     def get_rnd_genre_books(self, gen_id, limit):
+        """get random books in genre"""
         self.cur.execute(BOOK_REQ["get_genre_rndbooks"] % (gen_id, limit))
         data = self.cur.fetchall()
         return data
 
     def get_books_byids(self, book_ids):
+        """get books data by list of ids"""
         req_data = "', '".join(book_ids)
         self.cur.execute(BOOK_REQ["get_books_byids"] % req_data)
         data = self.cur.fetchall()
         return data
 
     def get_search_titles(self, terms, limit):
+        """search books in book titles"""
         s_terms = []
-        for t in terms:
-            s_terms.append('%s:*' % quote_string(t))
+        for trm in terms:
+            s_terms.append('%s:*' % quote_string(trm))
         sterms = ' & '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_booktitle"] % (sterms, limit))
         data = self.cur.fetchall()
         return data
 
     def get_search_anno(self, terms, limit):
+        """search books in book annotations"""
         s_terms = []
-        for t in terms:
-            s_terms.append('%s:*' % quote_string(t))
+        for trm in terms:
+            s_terms.append('%s:*' % quote_string(trm))
         sterms = ' & '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_bookanno"] % (sterms, limit))
         data = self.cur.fetchall()
         return data
 
     def get_search_seqs(self, terms, limit):
+        """search sequences"""
         s_terms = []
-        for t in terms:
-            s_terms.append('%s:*' % quote_string(t))
+        for trm in terms:
+            s_terms.append('%s:*' % quote_string(trm))
         sterms = ' & '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_seqname"] % (sterms, limit))
         data = self.cur.fetchall()
         return data
 
     def get_search_authors(self, terms, limit):
+        """search authors"""
         s_terms = []
-        for t in terms:
-            s_terms.append('%s:*' % quote_string(t))
+        for trm in terms:
+            s_terms.append('%s:*' % quote_string(trm))
         sterms = ' & '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_author"] % (sterms, limit))
         data = self.cur.fetchall()
@@ -223,6 +260,7 @@ class BookDBro(object):
 
 
 def dbconnect():
+    """return object for connected database"""
     pg_host = current_app.config['PG_HOST']
     pg_base = current_app.config['PG_BASE']
     pg_user = current_app.config['PG_USER']

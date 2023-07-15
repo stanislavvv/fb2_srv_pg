@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from flask import current_app
-from functools import cmp_to_key
+"""library opds functions"""
 
+import json
+import logging
+import urllib
+
+from functools import cmp_to_key
+from flask import current_app
+
+# pylint: disable=E0402
 from .internals import get_dtiso, id2path, get_book_entry, sizeof_fmt, get_seq_link
 from .internals import get_book_link, url_str
 from .internals import unicode_upper, html_refine, pubinfo_anno
@@ -11,23 +18,21 @@ from .internals import URL
 
 from .db import dbconnect
 
-import json
-import logging
-import urllib
 
-
-def get_author_name(auth_id):
+def get_author_name(auth_id: str):
+    """author name by id"""
     ret = ""
     try:
         db = dbconnect()
         dbauthdata = db.get_author(auth_id)
         ret = dbauthdata[0][1]
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
     return ret
 
 
 def get_meta_name(meta_id):
+    """author name by id"""
     ret = meta_id
     db = dbconnect()
     dbdata = db.get_meta_name(meta_id)
@@ -36,7 +41,8 @@ def get_meta_name(meta_id):
     return ret
 
 
-def get_genre_name(gen_id):
+def get_genre_name(gen_id: str):
+    """genre name by id"""
     ret = gen_id
     db = dbconnect()
     dbdata = db.get_genre_name(gen_id)
@@ -45,85 +51,86 @@ def get_genre_name(gen_id):
     return ret
 
 
-def get_seq_name(seq_id):
+def get_seq_name(seq_id: str):
+    """sequence name by id"""
     db = dbconnect()
     return db.get_seq_name(seq_id)
 
 
-def get_book_authors(book_id):
+def get_book_authors(book_id: str):
+    """one book authors"""
     ret = []
     try:
         db = dbconnect()
         dbdata = db.get_book_authors(book_id)
-        for d in dbdata:
-            id = d[0]
-            name = d[1]
+        for auth in dbdata:
             ret.append({
-                "id": id,
-                "name": name
+                "id": auth[0],
+                "name": auth[1]
             })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
     return ret
 
 
 def get_books_authors(book_ids):
+    """books authors"""
     ret = {}
     try:
         db = dbconnect()
         dbdata = db.get_books_authors(book_ids)
-        for d in dbdata:
-            book_id = d[0]
+        for auth in dbdata:
+            book_id = auth[0]
             if book_id not in ret:
                 ret[book_id] = []
             ret[book_id].append({
-                "id": d[1],
-                "name": d[2]
+                "id": auth[1],
+                "name": auth[2]
             })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
     return ret
 
 
-def get_book_seqs(book_id):
+def get_book_seqs(book_id: str):
+    """one book sequences"""
     ret = []
     try:
         db = dbconnect()
         dbdata = db.get_book_seqs(book_id)
-        for d in dbdata:
-            id = d[0]
-            name = d[1]
-            num = d[2]
+        for seq in dbdata:
             ret.append({
-                "id": id,
-                "name": name,
-                "num": num
+                "id": seq[0],
+                "name": seq[1],
+                "num": seq[2]
             })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
     return ret
 
 
 def get_books_seqs(book_ids):
+    """books sequences"""
     ret = {}
     try:
         db = dbconnect()
         dbdata = db.get_books_seqs(book_ids)
-        for d in dbdata:
-            book_id = d[0]
+        for seq in dbdata:
+            book_id = seq[0]
             if book_id not in ret:
                 ret[book_id] = []
             ret[book_id].append({
-                "id": d[1],
-                "name": d[2],
-                "num": d[3]
+                "id": seq[1],
+                "name": seq[2],
+                "num": seq[3]
             })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
     return ret
 
 
-def get_book_descr(book_id):
+def get_book_descr(book_id: str):
+    """one book title/publication/annotation"""
     book_title = ""
     pub_isbn = None
     pub_year = None
@@ -132,32 +139,34 @@ def get_book_descr(book_id):
     annotation = ""
     try:
         db = dbconnect()
-        d = db.get_book_descr(book_id)
-        book_title = d[0]
-        pub_isbn = d[1]
-        pub_year = d[2]
-        publisher = d[3]
-        publisher_id = d[4]
-        annotation = d[5]
-    except Exception as e:
-        logging.error(e)
+        binfo = db.get_book_descr(book_id)
+        book_title = binfo[0]
+        pub_isbn = binfo[1]
+        pub_year = binfo[2]
+        publisher = binfo[3]
+        publisher_id = binfo[4]
+        annotation = binfo[5]
+    except Exception as ex:
+        logging.error(ex)
     return book_title, pub_isbn, pub_year, publisher, publisher_id, annotation
 
 
 def get_books_descr(book_ids):
+    """many books title/publication/annotation"""
     ret = {}
     try:
         db = dbconnect()
         dbdata = db.get_books_descr(book_ids)
-        for d in dbdata:
-            book_id = d[0]
-            ret[book_id] = (d[1], d[2], d[3], d[4], d[5], d[6])
-    except Exception as e:
-        logging.error(e)
+        for binfo in dbdata:
+            book_id = binfo[0]
+            ret[book_id] = (binfo[1], binfo[2], binfo[3], binfo[4], binfo[5], binfo[6])
+    except Exception as ex:
+        logging.error(ex)
     return ret
 
 
 def ret_hdr():  # python does not have constants
+    """return opds title"""
     return {
         "feed": {
             "@xmlns": "http://www.w3.org/2005/Atom",
@@ -186,6 +195,7 @@ def ret_hdr():  # python does not have constants
 
 
 def main_opds():
+    """return opds root struct"""
     approot = current_app.config['APPLICATION_ROOT']
     dtiso = get_dtiso()
 
@@ -314,7 +324,17 @@ def main_opds():
     return json.loads(data)
 
 
-def str_list(tag: str, title: str, baseref: str, self: str, upref: str, subtag: str, subtitle: str, req=None):
+def str_list(
+    tag: str,
+    title: str,
+    baseref: str,
+    self: str,
+    upref: str,
+    subtag: str,
+    subtitle: str,
+    req=None
+):  # pylint: disable=R0913,R0914
+    """return for opds list of strings with links"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -345,25 +365,25 @@ def str_list(tag: str, title: str, baseref: str, self: str, upref: str, subtag: 
             data = db.get_seqs_one()
         else:
             data = db.get_authors_three("AAA")  # placeholder
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         return ret
     data_prepared = {}
-    for d in data:
-        data_prepared[d[0]] = 1
+    for i in data:
+        data_prepared[i[0]] = 1
     data_sorted = custom_alphabet_sort(data_prepared)
-    for d in data_sorted:
+    for link in data_sorted:
         ret["feed"]["entry"].append(
             {
                 "updated": dtiso,
-                "id": subtag + urllib.parse.quote(d),
-                "title": d,
+                "id": subtag + urllib.parse.quote(link),
+                "title": link,
                 "content": {
                     "@type": "text",
-                    "#text": subtitle + "'" + d + "'"
+                    "#text": subtitle + "'" + link + "'"
                 },
                 "link": {
-                    "@href": approot + baseref + urllib.parse.quote(d),
+                    "@href": approot + baseref + urllib.parse.quote(link),
                     "@type": "application/atom+xml;profile=opds-catalog"
                 }
             }
@@ -371,12 +391,12 @@ def str_list(tag: str, title: str, baseref: str, self: str, upref: str, subtag: 
     return ret
 
 
-# ToDo: get data from postgres
 def seq_cnt_list(
     tag: str, title: str, baseref: str, self: str,
     upref: str, subtag: str, subtitle: str, tpl="%d книг(и) в серии",
     layout=None, sub=None
-):
+):  # pylint: disable=R0913,R0914
+    """return for opds list of sequences with book count"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -403,42 +423,42 @@ def seq_cnt_list(
         db = dbconnect()
         if len(sub) < 3:
             dbdata = db.get_seqs_three(sub)
-            for d in dbdata:
-                name = d[0]
-                id = name
-                cnt = d[1]
+            for seq in dbdata:
+                name = seq[0]
+                seq_id = name
+                cnt = seq[1]
                 data.append({
-                    "id": id,
+                    "id": seq_id,
                     "name": name,
                     "cnt": cnt
                 })
         else:
             dbdata = db.get_seqs_list(sub)
-            for d in dbdata:
-                name = d[1]
-                id = d[0]
-                cnt = d[2]
+            for seq in dbdata:
+                name = seq[1]
+                seq_id = seq[0]
+                cnt = seq[2]
                 data.append({
-                    "id": id,
+                    "id": seq_id,
                     "name": name,
                     "cnt": cnt
                 })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         return ret
-    for d in sorted(data, key=cmp_to_key(custom_alphabet_name_cmp)):
-        name = d["name"]
-        id = d["id"]
-        cnt = d["cnt"]
+    for seq in sorted(data, key=cmp_to_key(custom_alphabet_name_cmp)):
+        name = seq["name"]
+        seq_id = seq["id"]
+        cnt = seq["cnt"]
         if layout == "simple":
-            href = approot + baseref + urllib.parse.quote(id)
+            href = approot + baseref + urllib.parse.quote(seq_id)
         else:
-            href = approot + baseref + urllib.parse.quote(id2path(id))
+            href = approot + baseref + urllib.parse.quote(id2path(seq_id))
 
         ret["feed"]["entry"].append(
             {
                 "updated": dtiso,
-                "id": subtag + urllib.parse.quote(id),
+                "id": subtag + urllib.parse.quote(seq_id),
                 "title": name,
                 "content": {
                     "@type": "text",
@@ -456,7 +476,8 @@ def seq_cnt_list(
 def auth_list(
     tag: str, title: str, baseref: str, self: str,
     upref: str, subtag: str, subtitle: str, tpl="%d", sub=None, layout=None
-):
+):  # pylint: disable=R0913,R0914
+    """opds authors list"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -483,38 +504,38 @@ def auth_list(
         db = dbconnect()
         if layout == 'simple':
             dbdata = db.get_authors_three(sub)
-            for d in dbdata:
+            for auth in dbdata:
                 data.append({
-                    "id": d[0],
-                    "name": d[0],
-                    "cnt": d[1]
+                    "id": auth[0],
+                    "name": auth[0],
+                    "cnt": auth[1]
                 })
         else:
             dbdata = db.get_authors_list(sub)
-            for d in dbdata:
+            for auth in dbdata:
                 data.append({
-                    "id": d[0],
-                    "name": d[1]
+                    "id": auth[0],
+                    "name": auth[1]
                 })
 
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         return ret
-    for d in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
-        name = d["name"]
-        id = d["id"]
-        if "cnt" in d:
-            cnt = d["cnt"]
+    for auth in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
+        name = auth["name"]
+        auth_id = auth["id"]
+        if "cnt" in auth:
+            cnt = auth["cnt"]
         else:
             cnt = ""
         if layout == "simple":
-            href = approot + baseref + urllib.parse.quote(id)
+            href = approot + baseref + urllib.parse.quote(auth_id)
         else:
-            href = approot + baseref + urllib.parse.quote(id2path(id))
+            href = approot + baseref + urllib.parse.quote(id2path(auth_id))
         ret["feed"]["entry"].append(
             {
                 "updated": dtiso,
-                "id": subtag + urllib.parse.quote(id),
+                "id": subtag + urllib.parse.quote(auth_id),
                 "title": name,
                 "content": {
                     "@type": "text",
@@ -532,7 +553,8 @@ def auth_list(
 def books_list(
     tag: str, title: str, self: str, upref: str, authref: str,
     seqref: str, seq_id: str, timeorder=False, page=0, paginate=False, auth_id=None, gen_id=None
-):
+):  # pylint: disable=R0912,R0913,R0914,R0915
+    """opds books list"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -574,8 +596,8 @@ def books_list(
             else:
                 name = "'" + "DUMMY" + "'"
         book_ids = []
-        for d in dbdata:
-            book_ids.append(d[3])
+        for book in dbdata:
+            book_ids.append(book[3])
 
         book_descr = get_books_descr(book_ids)
 
@@ -583,22 +605,22 @@ def books_list(
 
         book_seqs = get_books_seqs(book_ids)
 
-        for d in dbdata:
-            zipfile = d[0]
-            filename = d[1]
-            genres = d[2]
-            book_id = d[3]
-            lang = d[4]
-            date = str(d[5])
-            size = d[6]
-            deleted = d[7]
+        for book in dbdata:
+            zipfile = book[0]
+            filename = book[1]
+            genres = book[2]
+            book_id = book[3]
+            lang = book[4]
+            date = str(book[5])
+            size = book[6]
+            deleted = book[7]
             if current_app.config['HIDE_DELETED'] and deleted:
                 continue
             authors = []
-            if book_id in book_authors:
+            if book_id in book_authors:  # pylint: disable=R1715
                 authors = book_authors[book_id]
             sequences = None
-            if book_id in book_seqs:
+            if book_id in book_seqs:  # pylint: disable=R1715
                 sequences = book_seqs[book_id]
             book_title, pub_isbn, pub_year, publisher, publisher_id, annotation = '---', None, None, None, None, ''
             if book_id in book_descr:
@@ -623,22 +645,22 @@ def books_list(
                 },
                 "deleted": deleted
             })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         return ret
     ret["feed"]["title"] = title + name
-    if seq_id is not None and seq_id != '' and not timeorder:
+    if seq_id is not None and seq_id != '' and not timeorder:  # pylint: disable=R1702
         dfix = []
-        for d in data:
+        for book in data:
             seq_num = -1
-            if d["sequences"] is not None:
-                for s in d["sequences"]:
-                    if s.get("id") == seq_id:
-                        snum = s.get("num")
+            if book["sequences"] is not None:
+                for seq in book["sequences"]:
+                    if seq.get("id") == seq_id:
+                        snum = seq.get("num")
                         if snum is not None:
                             seq_num = int(snum)
-                        d["seq_num"] = seq_num
-                        dfix.append(d)
+                        book["seq_num"] = seq_num
+                        dfix.append(book)
         data = sorted(dfix, key=lambda s: s["seq_num"] or -1)
     elif timeorder:
         data = sorted(data, key=lambda s: unicode_upper(s["date_time"]))
@@ -646,14 +668,14 @@ def books_list(
         data = sorted(data, key=cmp_to_key(custom_alphabet_book_title_cmp))
     else:  # seq_id == None
         dfix = []
-        for d in data:
-            if d["sequences"] is None or len(d["sequences"]) == 0:
-                dfix.append(d)
+        for book in data:
+            if book["sequences"] is None or len(book["sequences"]) == 0:
+                dfix.append(book)
         data = sorted(dfix, key=cmp_to_key(custom_alphabet_book_title_cmp))
     if paginate:
-        next = None
+        next_link = None
         if len(data) >= limit:
-            next = page + 1
+            next_link = page + 1
         prev = page - 1
         if prev > 0:
             ret["feed"]["link"].append(
@@ -671,31 +693,31 @@ def books_list(
                     "@type": "application/atom+xml;profile=opds-catalog"
                 }
             )
-        if next is not None:
+        if next_link is not None:
             ret["feed"]["link"].append(
                 {
-                    "@href": approot + self + "/" + str(next),
+                    "@href": approot + self + "/" + str(next_link),
                     "@rel": "next",
                     "@type": "application/atom+xml;profile=opds-catalog"
                 }
             )
-    for d in data:
-        book_title = d["book_title"]
-        book_id = d["book_id"]
-        lang = d["lang"]
-        annotation = html_refine(d["annotation"])
-        size = int(d["size"])
-        date_time = d["date_time"]
-        zipfile = d["zipfile"]
-        filename = d["filename"]
-        genres = d["genres"]
+    for book in data:  # pylint: disable=R1702
+        book_title = book["book_title"]
+        book_id = book["book_id"]
+        lang = book["lang"]
+        annotation = html_refine(book["annotation"])
+        size = int(book["size"])
+        date_time = book["date_time"]
+        zipfile = book["zipfile"]
+        filename = book["filename"]
+        genres = book["genres"]
 
         authors = []
         links = []
         category = []
         seq_name = ""
         seq_num = ""
-        for author in d["authors"]:
+        for author in book["authors"]:
             authors.append(
                 {
                     "uri": approot + authref + id2path(author["id"]),
@@ -717,8 +739,8 @@ def books_list(
                     "@term": gen
                 }
             )
-        if d["sequences"] is not None and d["sequences"] != '-':
-            for seq in d["sequences"]:
+        if book["sequences"] is not None and book["sequences"] != '-':
+            for seq in book["sequences"]:
                 s_id = seq.get("id")
                 if s_id is not None:
                     links.append(get_seq_link(approot, seqref, id2path(s_id), seq["name"]))
@@ -741,15 +763,24 @@ def books_list(
             <p class=\"book\"> %s </p>\n<br/>формат: fb2<br/>
             размер: %s<br/>
             """ % (annotation, sizeof_fmt(size))
-        if "pub_info" in d:
-            annotext = annotext + pubinfo_anno(d["pub_info"])
+        if "pub_info" in book:
+            annotext = annotext + pubinfo_anno(book["pub_info"])
         ret["feed"]["entry"].append(
             get_book_entry(date_time, book_id, book_title, authors, links, category, lang, annotext)
         )
     return ret
 
 
-def main_author(tag: str, title: str, self: str, upref: str, authref: str, seqref: str, auth_id: str):
+def main_author(
+    tag: str,
+    title: str,
+    self: str,
+    upref: str,
+    authref: str,
+    seqref: str,
+    auth_id: str
+):  # pylint: disable=R0913
+    """main author page"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     auth_name = ""
@@ -759,8 +790,8 @@ def main_author(tag: str, title: str, self: str, upref: str, authref: str, seqre
         dbdata = db.get_author(auth_id)
         auth_name = dbdata[0][1]
         auth_info = dbdata[0][2]
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         auth_name = ""
     ret = ret_hdr()
     ret["feed"]["updated"] = dtiso
@@ -847,7 +878,8 @@ def main_author(tag: str, title: str, self: str, upref: str, authref: str, seqre
 def author_seqs(
     tag: str, title: str, baseref: str, self: str, upref: str,
     authref: str, seqref: str, subtag: str, auth_id: str
-):
+):  # pylint: disable=R0913,R0914
+    """list author's sequences"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -873,35 +905,35 @@ def author_seqs(
         dbauthdata = db.get_author(auth_id)
         auth_name = dbauthdata[0][1]
         dbdata = db.get_author_seqs(auth_id)
-        for d in dbdata:
-            seq_id = d[0]
-            seq_name = d[1]
-            seq_cnt = d[2]
+        for seq in dbdata:
+            seq_id = seq[0]
+            seq_name = seq[1]
+            seq_cnt = seq[2]
             data.append({
                 "id": seq_id,
                 "name": seq_name,
                 "cnt": seq_cnt
             })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         return ret
 
     ret["feed"]["title"] = title + auth_name
-    for d in sorted(data, key=cmp_to_key(custom_alphabet_name_cmp)):
-        name = d["name"]
-        id = d["id"]
-        cnt = d["cnt"]
+    for seq in sorted(data, key=cmp_to_key(custom_alphabet_name_cmp)):
+        name = seq["name"]
+        seq_id = seq["id"]
+        cnt = seq["cnt"]
         ret["feed"]["entry"].append(
             {
                 "updated": dtiso,
-                "id": subtag + urllib.parse.quote(id),
+                "id": subtag + urllib.parse.quote(seq_id),
                 "title": name,
                 "content": {
                     "@type": "text",
                     "#text": str(cnt) + " книг(и) в серии"
                 },
                 "link": {
-                    "@href": approot + baseref + urllib.parse.quote(id),
+                    "@href": approot + baseref + urllib.parse.quote(seq_id),
                     "@type": "application/atom+xml;profile=opds-catalog"
                 }
             }
@@ -914,7 +946,8 @@ def name_list(
         tag: str, title: str, baseref: str,
         self: str, upref: str, subtag: str, subtitle: str,
         subdata=None, meta_id=None
-):
+):  # pylint: disable=R0913,R0914
+    """simple name list (genres or metas)"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -945,30 +978,30 @@ def name_list(
                 dbdata = db.get_genres_meta()
             elif subdata == "genres":
                 dbdata = db.get_genres(meta_id)
-            for d in dbdata:
-                id = d[0]
-                name = d[1]
+            for i in dbdata:
+                elem_id = i[0]
+                name = i[1]
                 data.append({
-                    "id": id,
+                    "id": elem_id,
                     "name": name
                 })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         return ret
-    for d in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
-        name = d["name"]
-        id = d["id"]
+    for elem in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
+        name = elem["name"]
+        elem_id = elem["id"]
         ret["feed"]["entry"].append(
             {
                 "updated": dtiso,
-                "id": subtag + urllib.parse.quote(str(id)),
+                "id": subtag + urllib.parse.quote(str(elem_id)),
                 "title": name,
                 "content": {
                     "@type": "text",
                     "#text": name
                 },
                 "link": {
-                    "@href": approot + baseref + urllib.parse.quote(str(id)),
+                    "@href": approot + baseref + urllib.parse.quote(str(elem_id)),
                     "@type": "application/atom+xml;profile=opds-catalog"
                 }
             }
@@ -981,7 +1014,8 @@ def name_cnt_list(
         tag: str, title: str, baseref: str,
         self: str, upref: str, subtag: str, subtitle: str,
         subdata=None, tpl="%d книг(и)", meta_id=None
-):
+):  # pylint: disable=R0913,R0914
+    """names list with counts"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -1010,36 +1044,36 @@ def name_cnt_list(
         if subdata is not None and subdata == "genres":
             if meta_id is not None:
                 dbdata = db.get_genres(meta_id)
-        for d in dbdata:
-            id = d[0]
-            name = d[1]
-            cnt = d[2]
+        for gen in dbdata:
+            gen_id = gen[0]
+            name = gen[1]
+            cnt = gen[2]
             data.append({
-                "id": id,
+                "id": gen_id,
                 "name": name,
                 "cnt": cnt
             })
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
         return ret
-    for d in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
-        name = d["name"]
-        id = d["id"]
-        if "cnt" in d:
-            cnt = d["cnt"]
+    for elem in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
+        name = elem["name"]
+        elem_id = elem["id"]
+        if "cnt" in elem:
+            cnt = elem["cnt"]
         else:
             cnt = 0
         ret["feed"]["entry"].append(
             {
                 "updated": dtiso,
-                "id": subtag + urllib.parse.quote(str(id)),
+                "id": subtag + urllib.parse.quote(str(elem_id)),
                 "title": name,
                 "content": {
                     "@type": "text",
                     "#text": tpl % cnt
                 },
                 "link": {
-                    "@href": approot + baseref + urllib.parse.quote(str(id)),
+                    "@href": approot + baseref + urllib.parse.quote(str(elem_id)),
                     "@type": "application/atom+xml;profile=opds-catalog"
                 }
             }
@@ -1047,7 +1081,6 @@ def name_cnt_list(
     return ret
 
 
-# ToDo: get data from postgres
 def random_data(
             tag: str,
             title: str,
@@ -1059,7 +1092,8 @@ def random_data(
             subtag: str,
             books: bool,  # books or seqs
             gen_id=None
-        ):
+        ):  # pylint: disable=R0912,R0913,R0914,R0915
+    """return random books/sequences list"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -1081,7 +1115,7 @@ def random_data(
         }
     )
     cnt = 0
-    try:
+    try:  # pylint: disable=R1702
         if books:
             data = []
             try:
@@ -1093,8 +1127,8 @@ def random_data(
                     dbdata = db.get_rnd_genre_books(gen_id, limit)
 
                 book_ids = []
-                for d in dbdata:
-                    book_ids.append(d[3])
+                for book in dbdata:
+                    book_ids.append(book[3])
 
                 book_descr = get_books_descr(book_ids)
 
@@ -1102,22 +1136,22 @@ def random_data(
 
                 book_seqs = get_books_seqs(book_ids)
 
-                for d in dbdata:
-                    zipfile = d[0]
-                    filename = d[1]
-                    genres = d[2]
-                    book_id = d[3]
-                    lang = d[4]
-                    date = str(d[5])
-                    size = d[6]
-                    deleted = d[7]
+                for book in dbdata:
+                    zipfile = book[0]
+                    filename = book[1]
+                    genres = book[2]
+                    book_id = book[3]
+                    lang = book[4]
+                    date = str(book[5])
+                    size = book[6]
+                    deleted = book[7]
                     if current_app.config['HIDE_DELETED'] and deleted:
                         continue
                     authors = []
-                    if book_id in book_authors:
+                    if book_id in book_authors:  # pylint: disable=R1715
                         authors = book_authors[book_id]
                     sequences = None
-                    if book_id in book_seqs:
+                    if book_id in book_seqs:  # pylint: disable=R1715
                         sequences = book_seqs[book_id]
                     (
                         book_title,
@@ -1150,25 +1184,25 @@ def random_data(
                         "deleted": deleted
                     })
 
-            except Exception as e:
-                logging.error(e)
+            except Exception as ex:
+                logging.error(ex)
                 return ret
 
-            for d in data:
-                book_title = d["book_title"]
-                book_id = d["book_id"]
-                lang = d["lang"]
-                annotation = html_refine(d["annotation"])
-                size = int(d["size"])
-                date_time = d["date_time"]
-                zipfile = d["zipfile"]
-                filename = d["filename"]
-                genres = d["genres"]
+            for book in data:
+                book_title = book["book_title"]
+                book_id = book["book_id"]
+                lang = book["lang"]
+                annotation = html_refine(book["annotation"])
+                size = int(book["size"])
+                date_time = book["date_time"]
+                zipfile = book["zipfile"]
+                filename = book["filename"]
+                genres = book["genres"]
 
                 authors = []
                 links = []
                 category = []
-                for author in d["authors"]:
+                for author in book["authors"]:
                     authors.append(
                         {
                             "uri": approot + authref + id2path(author["id"]),
@@ -1191,8 +1225,8 @@ def random_data(
                         }
                     )
 
-                if d["sequences"] is not None:
-                    for seq in d["sequences"]:
+                if book["sequences"] is not None:
+                    for seq in book["sequences"]:
                         if seq.get("id") is not None:
                             links.append(get_seq_link(approot, seqref, id2path(seq["id"]), seq["name"]))
 
@@ -1203,8 +1237,8 @@ def random_data(
                 <p class=\"book\"> %s </p>\n<br/>формат: fb2<br/>
                 размер: %s<br/>
                 """ % (annotation, sizeof_fmt(size))
-                if "pub_info" in d:
-                    annotext = annotext + pubinfo_anno(d["pub_info"])
+                if "pub_info" in book:
+                    annotext = annotext + pubinfo_anno(book["pub_info"])
                 ret["feed"]["entry"].append(
                     get_book_entry(date_time, book_id, book_title, authors, links, category, lang, annotext)
                 )
@@ -1214,41 +1248,42 @@ def random_data(
                 db = dbconnect()
                 limit = int(current_app.config['PAGE_SIZE'])
                 dbdata = db.get_rnd_seqs(limit)
-                for d in dbdata:
+                for seq in dbdata:
                     data.append({
-                        "id": d[0],
-                        "name": d[1],
-                        "cnt": d[2]
+                        "id": seq[0],
+                        "name": seq[1],
+                        "cnt": seq[2]
                     })
-            except Exception as e:
-                logging.error(e)
+            except Exception as ex:
+                logging.error(ex)
                 return ret
 
-            for d in data:
-                name = d["name"]
-                id = d["id"]
-                cnt = d["cnt"]
+            for seq in data:
+                name = seq["name"]
+                seq_id = seq["id"]
+                cnt = seq["cnt"]
                 ret["feed"]["entry"].append(
                     {
                         "updated": dtiso,
-                        "id": subtag + urllib.parse.quote(id),
+                        "id": subtag + urllib.parse.quote(seq_id),
                         "title": name,
                         "content": {
                             "@type": "text",
                             "#text": str(cnt) + " книг(и) в серии"
                         },
                         "link": {
-                            "@href": approot + seqref + urllib.parse.quote(id2path(id)),
+                            "@href": approot + seqref + urllib.parse.quote(id2path(seq_id)),
                             "@type": "application/atom+xml;profile=opds-catalog"
                         }
                     }
                 )
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:
+        logging.error(ex)
     return ret
 
 
 def search_main(s_term: str, tag: str, title: str, self: str, upref: str):
+    """opds main search page"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -1339,7 +1374,8 @@ def search_main(s_term: str, tag: str, title: str, self: str, upref: str):
 def search_term(
     s_term: str, tag: str, title: str, baseref: str,
     self: str, upref: str, subtag: str, restype: str
-):
+):  # pylint: disable=R0912,R0913,R0914,R0915
+    """search function"""
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -1359,7 +1395,7 @@ def search_term(
             "@type": "application/atom+xml;profile=opds-catalog"
         }
     )
-    if s_term is None:
+    if s_term is None:  # pylint: disable=R1702
         ret["feed"]["id"] = tag
     else:
         s_terms = s_term.split()
@@ -1369,37 +1405,37 @@ def search_term(
 
         try:
             db = dbconnect()
-            if restype == "book" or restype == "bookanno":
+            if restype in ("book", "bookanno"):
                 book_ids = []
                 if restype == "book":
                     dbdata = db.get_search_titles(s_terms, maxres)
                 else:
                     dbdata = db.get_search_anno(s_terms, maxres)
 
-                for d in dbdata:
-                    book_ids.append(d[0])
+                for book in dbdata:
+                    book_ids.append(book[0])
 
                 dbdata = db.get_books_byids(book_ids)
                 book_descr = get_books_descr(book_ids)
                 book_authors = get_books_authors(book_ids)
                 book_seqs = get_books_seqs(book_ids)
 
-                for d in dbdata:
-                    zipfile = d[0]
-                    filename = d[1]
-                    genres = d[2]
-                    book_id = d[3]
-                    lang = d[4]
-                    date = str(d[5])
-                    size = d[6]
-                    deleted = d[7]
+                for book in dbdata:
+                    zipfile = book[0]
+                    filename = book[1]
+                    genres = book[2]
+                    book_id = book[3]
+                    lang = book[4]
+                    date = str(book[5])
+                    size = book[6]
+                    deleted = book[7]
                     if current_app.config['HIDE_DELETED'] and deleted:
                         continue
                     authors = []
-                    if book_id in book_authors:
+                    if book_id in book_authors:  # pylint: disable=R1715
                         authors = book_authors[book_id]
                     sequences = None
-                    if book_id in book_seqs:
+                    if book_id in book_seqs:  # pylint: disable=R1715
                         sequences = book_seqs[book_id]
                     (
                         book_title,
@@ -1433,78 +1469,78 @@ def search_term(
                     })
             elif restype == "seq":
                 dbdata = db.get_search_seqs(s_terms, maxres)
-                for d in dbdata:
+                for seq in dbdata:
                     data.append({
-                        "id": d[0],
-                        "name": d[1],
-                        "cnt": d[2]
+                        "id": seq[0],
+                        "name": seq[1],
+                        "cnt": seq[2]
                     })
             elif restype == "auth":
                 dbdata = db.get_search_authors(s_terms, maxres)
-                for d in dbdata:
+                for auth in dbdata:
                     data.append({
-                        "id": d[0],
-                        "name": d[1]
+                        "id": auth[0],
+                        "name": auth[1]
                     })
-            if restype == "auth" or restype == "seq":
+            if restype in ("auth", "seq"):
                 data = sorted(data, key=lambda s: unicode_upper(s["name"]) or -1)
             elif restype == "book":
                 data = sorted(data, key=lambda s: unicode_upper(s["book_title"]) or -1)
-        except Exception as e:
-            logging.error(e)
-        for d in data:
+        except Exception as ex:
+            logging.error(ex)
+        for i in data:
             if restype == "auth":
-                name = d["name"]
-                id = d["id"]
+                name = i["name"]
+                auth_id = i["id"]
                 ret["feed"]["entry"].append(
                     {
                         "updated": dtiso,
-                        "id": subtag + urllib.parse.quote(id),
+                        "id": subtag + urllib.parse.quote(auth_id),
                         "title": name,
                         "content": {
                             "@type": "text",
                             "#text": name
                         },
                         "link": {
-                            "@href": approot + baseref + id2path(id),
+                            "@href": approot + baseref + id2path(auth_id),
                             "@type": "application/atom+xml;profile=opds-catalog"
                         }
                     }
                 )
             elif restype == "seq":
-                name = d["name"]
-                id = d["id"]
-                cnt = d["cnt"]
+                name = i["name"]
+                seq_id = i["id"]
+                cnt = i["cnt"]
                 ret["feed"]["entry"].append(
                     {
                         "updated": dtiso,
-                        "id": subtag + urllib.parse.quote(id),
+                        "id": subtag + urllib.parse.quote(seq_id),
                         "title": name,
                         "content": {
                             "@type": "text",
                             "#text": str(cnt) + " книг(и) в серии"
                         },
                         "link": {
-                            "@href": approot + baseref + urllib.parse.quote(id2path(id)),
+                            "@href": approot + baseref + urllib.parse.quote(id2path(seq_id)),
                             "@type": "application/atom+xml;profile=opds-catalog"
                         }
                     }
                 )
-            elif restype == "book" or restype == "bookanno":
-                book_title = d["book_title"]
-                book_id = d["book_id"]
-                lang = d["lang"]
-                annotation = html_refine(d["annotation"])
-                size = int(d["size"])
-                date_time = d["date_time"]
-                zipfile = d["zipfile"]
-                filename = d["filename"]
-                genres = d["genres"]
+            elif restype in ("book", "bookanno"):
+                book_title = i["book_title"]
+                book_id = i["book_id"]
+                lang = i["lang"]
+                annotation = html_refine(i["annotation"])
+                size = int(i["size"])
+                date_time = i["date_time"]
+                zipfile = i["zipfile"]
+                filename = i["filename"]
+                genres = i["genres"]
 
                 authors = []
                 links = []
                 category = []
-                for author in d["authors"]:
+                for author in i["authors"]:
                     authors.append(
                         {
                             "uri": approot + baseref + id2path(author["id"]),
@@ -1527,8 +1563,8 @@ def search_term(
                             "@term": gen
                         }
                     )
-                if d["sequences"] is not None:
-                    for seq in d["sequences"]:
+                if i["sequences"] is not None:
+                    for seq in i["sequences"]:
                         if seq.get("id") is not None:
                             links.append(get_seq_link(approot, baseref, id2path(seq["id"]), seq["name"]))
 
@@ -1539,8 +1575,8 @@ def search_term(
                 <p class=\"book\"> %s </p>\n<br/>формат: fb2<br/>
                 размер: %s<br/>
                 """ % (annotation, sizeof_fmt(size))
-                if "pub_info" in d:
-                    annotext = annotext + pubinfo_anno(d["pub_info"])
+                if "pub_info" in i:
+                    annotext = annotext + pubinfo_anno(i["pub_info"])
                 ret["feed"]["entry"].append(
                     get_book_entry(date_time, book_id, book_title, authors, links, category, lang, annotext)
                 )

@@ -1,67 +1,74 @@
 # -*- coding: utf-8 -*-
 
+"""non-database data manipulation functions"""
+
+# pylint: disable=C0325
+
 import hashlib
 import json
 import os
 import logging
 
+# pylint: disable=E0402
 from .strings import strlist, strip_quotes, unicode_upper
 
 
-# will be normalize string for make_id and compare
-def str_normalize(s: str):
-    ret = unicode_upper(s)
+def str_normalize(string: str):
+    """will be normalize string for make_id and compare"""
+    ret = unicode_upper(string)
     return ret
 
 
-# get name, strip quotes from begin/end, return md5
 def make_id(name):
-    n = "--- unknown ---"
+    """get name, strip quotes from begin/end, return md5"""
+    name_str = "--- unknown ---"
     if name is not None and name != "":
         if isinstance(name, str):
-            n = str(name).strip("'").strip('"')
+            name_str = str(name).strip("'").strip('"')
         else:
-            n = str(name, encoding='utf-8').strip("'").strip('"')
-    nn = str_normalize(n)
-    return hashlib.md5(nn.encode('utf-8').upper()).hexdigest()
+            name_str = str(name, encoding='utf-8').strip("'").strip('"')
+    norm_name = str_normalize(name_str)
+    return hashlib.md5(norm_name.encode('utf-8').upper()).hexdigest()
 
 
-# return array of genres
 def get_genre(genr):
-    g = []
+    """return array of genres from sometimes strange struct"""
+    # pylint: disable=C0103,R0912
+    ret = []
     if isinstance(genr, dict):
-        for k, v in genr.items():
-            if type(v) is str and not v.isdigit() and v != "":
-                g.append(v)
+        for _, v in genr.items():
+            if isinstance(v, str) and not v.isdigit() and v != "":
+                ret.append(v)
             elif isinstance(v, dict):
-                for k, v2 in v.items():
+                for _, v2 in v.items():
                     if not v2.isdigit() and v2 != "":
-                        g.append(v2)
+                        ret.append(v2)
             elif isinstance(v, list):
                 for v2 in v:
                     if not v2.isdigit() and v2 != "":
-                        g.append(v2)
+                        ret.append(v2)
     elif isinstance(genr, list):
         for i in genr:
-            if type(i) is str and not i.isdigit() and i != "":
-                g.append(i)
+            if isinstance(i, str) and not i.isdigit() and i != "":
+                ret.append(i)
             elif isinstance(i, dict):
-                for k, v in i.items():
+                for _, v in i.items():
                     if not v.isdigit() and v != "":
-                        g.append(v)
+                        ret.append(v)
             elif isinstance(i, list):
                 for v in i:
                     if not v.isdigit() and v != "":
-                        g.append(v)
+                        ret.append(v)
     else:
-        g.append(genr)
-    return g
+        ret.append(genr)
+    return ret
 
 
-# return [{"name": "Name", "id": "id"}, ...]
 def get_author_struct(author):
+    """return [{"name": "Name", "id": "id"}, ...] for author(s)"""
+    # pylint: disable=R0912
     ret = [{"name": '--- unknown ---', "id": make_id('--- unknown ---')}]  # default
-    g = []
+    aret = []
     if isinstance(author, list):
         for i in author:
             a_tmp = []
@@ -81,9 +88,9 @@ def get_author_struct(author):
                 a_tmp2 = strip_quotes(a_tmp2).strip('|')
                 a_tmp2 = a_tmp2.strip()
                 if len(a_tmp2) > 0:
-                    g.append({"name": a_tmp2, "id": make_id(a_tmp2.ljust(4))})
-        if len(g) > 0:
-            ret = g
+                    aret.append({"name": a_tmp2, "id": make_id(a_tmp2.ljust(4))})
+        if len(aret) > 0:
+            ret = aret
     else:
         a_tmp = []
         if author is not None:
@@ -98,71 +105,79 @@ def get_author_struct(author):
                     a_tmp.append('(' + strlist(author['nickname']) + ')')
                 else:
                     a_tmp.append(strlist(author['nickname']))
-        r = " ".join(a_tmp)
-        r = strip_quotes(r).strip('|')
-        r = r.strip()
-        if len(r) > 0:
-            ret = [{"name": r, "id": make_id(r.ljust(4))}]
+        aret = " ".join(a_tmp)
+        aret = strip_quotes(aret).strip('|')
+        aret = aret.strip()
+        if len(aret) > 0:
+            ret = [{"name": aret, "id": make_id(aret.ljust(4))}]
     return ret
 
 
 def num2int(num: str, context: str):
+    """number in string or something to integer"""
     try:
         ret = int(num)
         return ret
-    except Exception as e:
-        logging.error("Error: " + str(e) + " context: " + context)  # not exception, but error in data
+    # pylint: disable=W0703
+    except Exception as ex:  # not exception, but error in data
+        logging.error(
+            "Error: %s \nContext: %s", str(ex), context
+        )
         return -1
 
 
-# return struct: [{"name": "SomeName", "id": "id...", num: 3}, ...]
 def get_sequence(seq, zip_file, filename):
+    """
+    return struct: [{"name": "SomeName", "id": "id...", num: 3}, ...]
+    for sequence(s) in data
+    """
+    # pylint: disable=R0912
     ret = []
     context = "get seq for file '" + filename + "'"
     if isinstance(seq, str):
-        id = make_id(seq)
-        ret.append({"name": seq, "id": id})
+        seq_id = make_id(seq)
+        ret.append({"name": seq, "id": seq_id})
     elif isinstance(seq, dict):
         name = None
         num = None
         if '@name' in seq:
             name = strip_quotes(seq['@name'].strip('|').replace('«', '"').replace('»', '"'))
             name = name.strip()
-            id = make_id(name)
+            seq_id = make_id(name)
             if name == "":
                 name = None
         if '@number' in seq:
             num = seq['@number']
         if name is not None and num is not None:
-            ret.append({"name": name, "id": id, "num": num2int(num, context)})
+            ret.append({"name": name, "id": seq_id, "num": num2int(num, context)})
         elif name is not None:
-            ret.append({"name": name, "id": id})
+            ret.append({"name": name, "id": seq_id})
         elif num is not None:
             if num.find('« name=»') != -1:
                 name = num.replace('« name=»', '')
-                id = make_id(name)
-                ret.append({"name": name, "id": id})
+                seq_id = make_id(name)
+                ret.append({"name": name, "id": seq_id})
             else:
                 ret.append({"num": num2int(num, context)})
     elif isinstance(seq, list):
-        for s in seq:
+        for single_seq in seq:
             name = None
             num = None
-            if '@name' in s:
-                name = strip_quotes(s['@name'].strip('|').replace('«', '"').replace('»', '"'))
+            if '@name' in single_seq:
+                name = strip_quotes(single_seq['@name'].strip('|').replace('«', '"').replace('»', '"'))
                 name = name.strip()
-                id = make_id(name)
-            if '@number' in s:
-                num = s['@number']
+                seq_id = make_id(name)
+            if '@number' in single_seq:
+                num = single_seq['@number']
             if name is not None and num is not None:
-                ret.append({"name": name, "id": id, "num": num2int(num, context)})
+                ret.append({"name": name, "id": seq_id, "num": num2int(num, context)})
             elif name is not None:
-                ret.append({"name": name, "id": id})
+                ret.append({"name": name, "id": seq_id})
             elif num is not None:
                 if num.find('« name=»') != -1:
                     name = num.replace('« name=»', '')
-                    id = make_id(name)
-                    ret.append({"name": name, "id": id})
+                    seq_id = make_id(name)
+                    ret.append({"name": name, "id": seq_id})
                 else:
                     ret.append({"num": num2int(num, context)})
     else:
@@ -171,6 +186,7 @@ def get_sequence(seq, zip_file, filename):
 
 
 def get_lang(lng):
+    """return lang id(s) string"""
     ret = ""
     rets = {}
     if isinstance(lng, list):
@@ -182,41 +198,40 @@ def get_lang(lng):
     return ret
 
 
-# ret substr by key
 def get_struct_by_key(key, struct):
+    """ret substr by key"""
     if key in struct:
         return struct[key]
     if isinstance(struct, list):
         for k in struct:
-            r = get_struct_by_key(key, k)
-            if r is not None:
-                return r
+            ret = get_struct_by_key(key, k)
+            if ret is not None:
+                return ret
     if isinstance(struct, dict):
         for k, v in struct.items():
-            r = get_struct_by_key(key, v)
-            if r is not None:
-                return r
+            ret = get_struct_by_key(key, v)
+            if ret is not None:
+                return ret
     return None
 
 
-# return None or struct from .zip.replace
 def get_replace_list(zip_file):
+    """return None or struct from .zip.replace"""
     ret = None
     replace_list = zip_file + ".replace"
     if os.path.isfile(replace_list):
         try:
-            rl = open(replace_list)
-            r = json.load(rl)
-            rl.close()
-            ret = r
-        except Exception as e:
+            rlist = open(replace_list)
+            ret = json.load(rlist)
+            rlist.close()
+        except Exception as ex:  # pylint: disable=W0703
             # used error() because error in file data, not in program
-            logging.error("Can't load json from '" + replace_list + "': " + str(e))
+            logging.error("Can't load json from '%s': %s", replace_list, str(ex))
     return ret
 
 
-# get book struct, if exists replacement, replace some fields from it
 def replace_book(filename, book, replace_data):
+    """get book struct, if exists replacement, replace some fields from it"""
     # filename = book["filename"]
     if filename in replace_data:
         replace = replace_data[filename]
@@ -226,6 +241,7 @@ def replace_book(filename, book, replace_data):
 
 
 def get_title(title):
+    """get stripped title from struct"""
     if isinstance(title, str):
         return title.replace('«', '"').replace('»', '"')
     if isinstance(title, dict):
@@ -237,16 +253,18 @@ def get_title(title):
 
 
 def array2string(arr):
+    """array of any to string"""
     ret = []
     if arr is None:
         return None  # ashes to ashes dust to dust
-    for a in arr:
-        if a is not None:
-            ret.append(str(a))
+    for elem in arr:
+        if elem is not None:
+            ret.append(str(elem))
     return "".join(ret)
 
 
 def get_pub_info(pubinfo):
+    """get publishing vars from pubinfo"""
     isbn = None
     year = None
     publisher = None
@@ -266,8 +284,8 @@ def get_pub_info(pubinfo):
             if isinstance(publisher, list):
                 publisher = array2string(publisher)
         elif isinstance(pubinfo, list):
-            for p in pubinfo:
-                tmpisbn, tmpyear, tmppub = get_pub_info(p)
+            for pub in pubinfo:
+                tmpisbn, tmpyear, tmppub = get_pub_info(pub)
                 if tmpisbn is not None:
                     isbn = tmpisbn
                 if tmpyear is not None:

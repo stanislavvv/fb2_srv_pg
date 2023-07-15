@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""some string constats"""
+
 CREATE_REQ = [
     """
     CREATE TABLE IF NOT EXISTS books (

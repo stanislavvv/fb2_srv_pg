@@ -20,6 +20,9 @@ clean:
 flakeall:
 	find . -name '*.py' -print0 | xargs -0 -n 100 flake8 $(FLAKE8_ARGS)
 
+lintall:
+	find . -name '*.py' -print0 | xargs -0 -n 100 pylint
+
 newpages:
 	@echo "--- rename old pages ---"
 	mv -f data/pages "$(DATA)/pages.rm" ||:

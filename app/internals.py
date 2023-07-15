@@ -1,46 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from flask import current_app
 from bs4 import BeautifulSoup
 from functools import cmp_to_key
+from .consts import URL, alphabet_1, alphabet_2
 
 import datetime
 import urllib
 import unicodedata as ud
-
-
-alphabet_1 = [  # first letters in main authors/sequences page
-    'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й',
-    'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф',
-    'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я'
-]
-
-alphabet_2 = [  # second letters in main authors/sequences page
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-    'U', 'V', 'W', 'X', 'Y', 'Z'
-]
-
-URL = {
-    "start": "/opds/",
-    "author": "/opds/author/",
-    "authidx": "/opds/authorsindex/",
-    "seq": "/opds/sequence/",
-    "seqidx": "/opds/sequencesindex/",
-    "genre": "/opds/genre/",
-    "genidx": "/opds/genresindex/",
-    "search": "/opds/search",  # main search page, no last '/' in search
-    "srchauth": "/opds/search-authors",
-    "srchseq": "/opds/search-sequences",
-    "srchbook": "/opds/search-books",
-    "srchbookanno": "/opds/search-booksanno",
-    "rndbook": "/opds/random-books/",
-    "rndseq": "/opds/random-sequences/",
-    "rndgen": "/opds/rnd-genre/",
-    "rndgenidx": "/opds/rnd-genresindex/",
-    "read": "/read/",  # read book
-    "dl": "/fb2/"  # download book
-}
 
 
 def tpl_headers_symbols(s: str):
@@ -201,7 +167,7 @@ def get_book_entry(
         "dc:format": "fb2",
         "content": {
             "@type": "text/html",
-            "#text": annotext
+            "#text": html_refine(annotext)
         }
     }
     return ret
@@ -263,17 +229,6 @@ def url_str(s: str):
                 c = tr[c]
             ret = ret + c
     return urllib.parse.quote(ret, encoding='utf-8')
-
-
-def paginate_array(data, page: int):
-    pagesize = int(current_app.config['PAGE_SIZE'])
-    begin = page * pagesize
-    end = (page + 1)*pagesize
-    ret = data[begin:end]
-    next = page + 1
-    if len(ret) < pagesize:
-        next = None
-    return ret, next
 
 
 def html_refine(txt: str):

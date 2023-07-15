@@ -40,29 +40,6 @@ def strlist(s):
     return strnull(str(s))
 
 
-# quote string for sql
-def quote_identifier(s, errors="strict"):
-    encodable = s.encode("utf-8", errors).decode("utf-8")
-
-    nul_index = encodable.find("\x00")
-
-    if nul_index >= 0:
-        error = UnicodeEncodeError("NUL-terminated utf-8", encodable,
-                                   nul_index, nul_index + 1, "NUL not allowed")
-        error_handler = codecs.lookup_error(errors)
-        replacement, _ = error_handler(error)
-        encodable = encodable.replace("\x00", replacement)
-
-    return "\"" + encodable.replace("\"", "\"\"") + "\""
-
-
-# remove trailing suffix
-def rchop(s, suffix):
-    if suffix and s.endswith(suffix):
-        return s[:-len(suffix)]
-    return s
-
-
 # '"word word"' -> 'word word'
 # '"word" word' -> '`word` word'
 def strip_quotes(s: str):
@@ -118,14 +95,6 @@ def get_genres_replace():
     data.close()
 
 
-# print unknown genres
-def check_genres(zipfile, filename, genrs):
-    global genres
-    for i in genrs:
-        if i not in genres and i != "":
-            logging.warning("unknown genre in " + zipfile + "/" + filename + " : " + i)
-
-
 def genres_replace(zipfile, filename, genrs):
     global genres_replacements
     ret = []
@@ -140,39 +109,6 @@ def genres_replace(zipfile, filename, genrs):
         else:
             ret.append(i)
     return ret
-
-
-def get_genre_name(gen_id):
-    if gen_id in genres and genres[gen_id] is not None:
-        return genres[gen_id]["descr"]
-    else:
-        return gen_id
-
-
-def get_genre_meta(gen_id):
-    if gen_id in genres and genres[gen_id] is not None:
-        return genres[gen_id]["meta_id"]
-    else:
-        return 0
-
-
-def get_meta_name(meta_id):
-    if meta_id in genres_meta and genres_meta[meta_id] is not None:
-        return genres_meta[meta_id]
-    else:
-        return "--"
-
-
-def id2path(id: str):
-    first = id[:2]
-    second = id[2:4]
-    return first + "/" + second + "/" + id
-
-
-def id2pathonly(id: str):
-    first = id[:2]
-    second = id[2:4]
-    return first + "/" + second
 
 
 # quote string for sql

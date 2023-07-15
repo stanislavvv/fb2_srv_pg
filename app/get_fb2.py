@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""interface for fb2 output for download and read"""
 
 import zipfile
 import lxml.etree as et
@@ -11,6 +12,7 @@ transform = ''
 
 
 def init_xslt(xsltfile):
+    """init xslt data from file"""
     global xslt
     global transform
     xslt = et.parse(xsltfile)
@@ -18,6 +20,7 @@ def init_xslt(xsltfile):
 
 
 def fb2_out(zip_file: str, filename: str):
+    """return .fb2.zip for downloading"""
     if filename.endswith('.zip'):  # will accept any of .fb2 or .fb2.zip
         filename = filename[:-4]
     zipdir = current_app.config['ZIPS']
@@ -34,6 +37,7 @@ def fb2_out(zip_file: str, filename: str):
 
 
 def html_out(zip_file: str, filename: str):
+    """create html from fb2 for reading"""
     zipdir = current_app.config['ZIPS']
     zippath = zipdir + "/" + zip_file
     try:

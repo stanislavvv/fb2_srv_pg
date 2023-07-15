@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+"""library html view"""
 
 from flask import Blueprint, Response, render_template, request, redirect, url_for
+
+# pylint: disable=E0402
 from .opds import main_opds, str_list, seq_cnt_list, books_list, auth_list, main_author
 from .opds import author_seqs, name_list, name_cnt_list, random_data
 from .opds import search_main, search_term, get_author_name, get_seq_name, get_meta_name, get_genre_name
@@ -11,18 +14,20 @@ from .internals import id2path, URL
 
 html = Blueprint("html", __name__)
 
-redir_all = "html.html_root"
+REDIR_ALL = "html.html_root"
 
 
 @html.route("/", methods=['GET'])
 def hello_world():
-    location = url_for(redir_all)
+    """library root redirect to html iface"""
+    location = url_for(REDIR_ALL)
     code = 301
     return redirect(location, code, Response=None)
 
 
 @html.route(URL["start"].replace("/opds", "/html", 1), methods=['GET'])
 def html_root():
+    """root"""
     data = main_opds()
     title = data['feed']['title']
     updated = data['feed']['updated']
@@ -34,6 +39,7 @@ def html_root():
 
 @html.route(URL["seqidx"].replace("/opds", "/html", 1), methods=['GET'])
 def html_seq_root():
+    """sequences root (letters)"""
     self = URL["seqidx"]
     baseref = self
     upref = URL["start"]
@@ -52,6 +58,7 @@ def html_seq_root():
 
 @html.route(URL["seqidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
 def html_seq_sub(sub):
+    """three-letters links to lists or lists of sequences"""
     sub = validate_prefix(sub)
     data = []
     title = "Серии на '" + sub + "'"
@@ -78,6 +85,7 @@ def html_seq_sub(sub):
 
 @html.route(URL["seq"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>", methods=['GET'])
 def html_seq(sub1, sub2, id):
+    """list books in sequence"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
     id = validate_id(id)
@@ -98,6 +106,7 @@ def html_seq(sub1, sub2, id):
 
 @html.route(URL["authidx"].replace("/opds", "/html", 1), methods=['GET'])
 def html_auth_root():
+    """authors root (letters)"""
     self = URL["authidx"]
     baseref = self
     upref = URL["start"]
@@ -116,6 +125,7 @@ def html_auth_root():
 
 @html.route(URL["authidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
 def html_auth_sub(sub):
+    """three-letters links to lists or lists of authors"""
     sub = validate_prefix(sub)
     data = []
     self = URL["authidx"] + sub
@@ -143,6 +153,7 @@ def html_auth_sub(sub):
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>", methods=['GET'])
 def html_author(sub1, sub2, id):
+    """author main page"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
     id = validate_id(id)
@@ -163,6 +174,7 @@ def html_author(sub1, sub2, id):
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/sequences", methods=['GET'])
 def html_author_seqs(sub1, sub2, id):
+    """sequences of author"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
     id = validate_id(id)
@@ -185,6 +197,7 @@ def html_author_seqs(sub1, sub2, id):
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/<seq_id>", methods=['GET'])
 def html_author_seq(sub1, sub2, id, seq_id):
+    """book in sequence of author"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
     id = validate_id(id)
@@ -206,6 +219,7 @@ def html_author_seq(sub1, sub2, id, seq_id):
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/sequenceless", methods=['GET'])
 def html_author_nonseq(sub1, sub2, id):
+    """books of author not belong to any sequence"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
     id = validate_id(id)
@@ -226,6 +240,7 @@ def html_author_nonseq(sub1, sub2, id):
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/alphabet", methods=['GET'])
 def html_author_alphabet(sub1, sub2, id):
+    """all books of author order by book title"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
     id = validate_id(id)
@@ -246,6 +261,7 @@ def html_author_alphabet(sub1, sub2, id):
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/time", methods=['GET'])
 def html_author_time(sub1, sub2, id):
+    """all books of author order by date"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
     id = validate_id(id)
@@ -266,6 +282,7 @@ def html_author_time(sub1, sub2, id):
 
 @html.route(URL["genidx"].replace("/opds", "/html", 1), methods=['GET'])
 def html_gen_root():
+    """genres meta list"""
     self = URL["genidx"]
     baseref = self
     upref = URL["start"]
@@ -284,6 +301,7 @@ def html_gen_root():
 
 @html.route(URL["genidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
 def html_gen_meta(sub):
+    """genres meta"""
     sub = validate_genre_meta(sub)
     data = []
     self = URL["genidx"] + sub
@@ -305,6 +323,7 @@ def html_gen_meta(sub):
 @html.route(URL["genre"].replace("/opds", "/html", 1) + "<id>", methods=['GET'])
 @html.route(URL["genre"].replace("/opds", "/html", 1) + "<id>/<int:page>", methods=['GET'])
 def html_genre(id, page=0):
+    """books in genre, paginated"""
     id = validate_genre(id)
     self = URL["genre"] + id
     upref = URL["genidx"]
@@ -323,6 +342,7 @@ def html_genre(id, page=0):
 
 @html.route(URL["rndbook"].replace("/opds", "/html", 1), methods=['GET'])
 def html_random_books():
+    """random books"""
     baseref = ""  # not for books
     self = URL["rndbook"]
     upref = URL["start"]
@@ -351,6 +371,7 @@ def html_random_books():
 
 @html.route(URL["rndseq"].replace("/opds", "/html", 1), methods=['GET'])
 def html_random_seqs():
+    """random sequences"""
     baseref = URL["start"]
     self = URL["rndseq"]
     upref = URL["start"]
@@ -379,6 +400,7 @@ def html_random_seqs():
 
 @html.route(URL["search"].replace("/opds", "/html", 1), methods=['GET'])
 def html_search():
+    """main search page"""
     s_term = request.args.get('searchTerm')
     s_term = validate_search(s_term)
     self = URL["search"]
@@ -396,6 +418,7 @@ def html_search():
 
 @html.route(URL["srchauth"].replace("/opds", "/html", 1), methods=['GET'])
 def html_search_authors():
+    """list of found authors"""
     s_term = request.args.get('searchTerm')
     s_term = validate_search(s_term)
     baseref = URL["author"]
@@ -415,6 +438,7 @@ def html_search_authors():
 
 @html.route(URL["srchseq"].replace("/opds", "/html", 1), methods=['GET'])
 def html_search_sequences():
+    """list of found sequences"""
     s_term = request.args.get('searchTerm')
     s_term = validate_search(s_term)
     baseref = URL["seq"]
@@ -434,6 +458,7 @@ def html_search_sequences():
 
 @html.route(URL["srchbook"].replace("/opds", "/html", 1), methods=['GET'])
 def html_search_books():
+    """list of found books (search in book title)"""
     s_term = request.args.get('searchTerm')
     s_term = validate_search(s_term)
     baseref = URL["author"]
@@ -453,6 +478,7 @@ def html_search_books():
 
 @html.route(URL["srchbookanno"].replace("/opds", "/html", 1), methods=['GET'])
 def html_search_books_anno():
+    """list of found books (search in annotation)"""
     s_term = request.args.get('searchTerm')
     s_term = validate_search(s_term)
     baseref = URL["author"]
@@ -472,6 +498,7 @@ def html_search_books_anno():
 
 @html.route(URL["rndgenidx"].replace("/opds", "/html", 1), methods=['GET'])
 def html_rnd_gen_root():
+    """genres meta list for random books in genre"""
     self = URL["rndgenidx"]
     baseref = self
     upref = URL["start"]
@@ -490,6 +517,7 @@ def html_rnd_gen_root():
 
 @html.route(URL["rndgenidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
 def html_rnd_gen_meta(sub):
+    """genres list for random books in genre"""
     sub = validate_genre_meta(sub)
     data = []
     self = URL["rndgenidx"] + sub
@@ -510,6 +538,7 @@ def html_rnd_gen_meta(sub):
 
 @html.route(URL["rndgen"].replace("/opds", "/html", 1) + "<id>", methods=['GET'])
 def html_rnd_genre(id, page=0):
+    """random books in genre"""
     id = validate_genre(id)
     baseref = ""  # not for books
     self = URL["rndgen"] + id

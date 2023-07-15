@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""some internal module constant strings"""
 
 alphabet_1 = [  # first letters in main authors/sequences page
     'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й',
@@ -48,7 +49,6 @@ BOOK_REQ = {
     "get_author": """
         SELECT id, name, info FROM authors WHERE id = '%s';
     """,
-    # ToDo: get author's book count in sequence
     "get_auth_seqs": """
         SELECT id, name, cnt
         FROM sequences

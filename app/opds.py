@@ -14,7 +14,17 @@ from .db import dbconnect
 import json
 import logging
 import urllib
-import random
+
+
+def get_author_name(auth_id):
+    ret = ""
+    try:
+        db = dbconnect()
+        dbauthdata = db.get_author(auth_id)
+        ret = dbauthdata[0][1]
+    except Exception as e:
+        logging.error(e)
+    return ret
 
 
 def get_meta_name(meta_id):
@@ -304,7 +314,7 @@ def main_opds():
     return json.loads(data)
 
 
-def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str, subtag: str, subtitle: str, req=None):
+def str_list(tag: str, title: str, baseref: str, self: str, upref: str, subtag: str, subtitle: str, req=None):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     ret = ret_hdr()
@@ -363,7 +373,7 @@ def str_list(idx: str, tag: str, title: str, baseref: str, self: str, upref: str
 
 # ToDo: get data from postgres
 def seq_cnt_list(
-    idx: str, tag: str, title: str, baseref: str, self: str,
+    tag: str, title: str, baseref: str, self: str,
     upref: str, subtag: str, subtitle: str, tpl="%d книг(и) в серии",
     layout=None, sub=None
 ):
@@ -444,7 +454,7 @@ def seq_cnt_list(
 
 
 def auth_list(
-    idx: str, tag: str, title: str, baseref: str, self: str,
+    tag: str, title: str, baseref: str, self: str,
     upref: str, subtag: str, subtitle: str, tpl="%d", sub=None, layout=None
 ):
     dtiso = get_dtiso()
@@ -520,7 +530,7 @@ def auth_list(
 
 
 def books_list(
-    idx: str, tag: str, title: str, self: str, upref: str, authref: str,
+    tag: str, title: str, self: str, upref: str, authref: str,
     seqref: str, seq_id: str, timeorder=False, page=0, paginate=False, auth_id=None, gen_id=None
 ):
     dtiso = get_dtiso()
@@ -739,7 +749,7 @@ def books_list(
     return ret
 
 
-def main_author(idx: str, tag: str, title: str, self: str, upref: str, authref: str, seqref: str, auth_id: str):
+def main_author(tag: str, title: str, self: str, upref: str, authref: str, seqref: str, auth_id: str):
     dtiso = get_dtiso()
     approot = current_app.config['APPLICATION_ROOT']
     auth_name = ""
@@ -835,7 +845,7 @@ def main_author(idx: str, tag: str, title: str, self: str, upref: str, authref: 
 
 
 def author_seqs(
-    idx: str, tag: str, title: str, baseref: str, self: str, upref: str,
+    tag: str, title: str, baseref: str, self: str, upref: str,
     authref: str, seqref: str, subtag: str, auth_id: str
 ):
     dtiso = get_dtiso()
@@ -899,34 +909,9 @@ def author_seqs(
     return ret
 
 
-# ToDo: get data from postgres
-def get_main_name(idx: str):
-    ret = ""
-    rootdir = current_app.config['STATIC']
-    workfile = rootdir + "/" + idx + ".json"
-    try:
-        with open(workfile) as jsfile:
-            data = json.load(jsfile)["name"]
-    except Exception as e:
-        logging.error(e)
-        return ret
-    return data
-
-
-def get_author_name(auth_id):
-    ret = ""
-    try:
-        db = dbconnect()
-        dbauthdata = db.get_author(auth_id)
-        ret = dbauthdata[0][1]
-    except Exception as e:
-        logging.error(e)
-    return ret
-
-
 # for [{name: ..., id: ...}, ...]
 def name_list(
-        idx: str, tag: str, title: str, baseref: str,
+        tag: str, title: str, baseref: str,
         self: str, upref: str, subtag: str, subtitle: str,
         subdata=None, meta_id=None
 ):
@@ -993,7 +978,7 @@ def name_list(
 
 # for [{name: ..., id: ..., cnt: ...}, ...]
 def name_cnt_list(
-        idx: str, tag: str, title: str, baseref: str,
+        tag: str, title: str, baseref: str,
         self: str, upref: str, subtag: str, subtitle: str,
         subdata=None, tpl="%d книг(и)", meta_id=None
 ):
@@ -1063,54 +1048,7 @@ def name_cnt_list(
 
 
 # ToDo: get data from postgres
-def get_randoms(num: int, maxrand: int):
-    ret = []
-    random.seed()
-    for i in range(1, num):
-        ret.append(random.randint(0, maxrand))
-    return ret
-
-
-# ToDo: get data from postgres
-# read items with num in nums from jsonl
-def read_data(idx: str, nums):
-    ret = []
-    num = 0
-    try:
-        with open(idx, "rb") as f:
-            for b in f:
-                if num in nums:
-                    d = json.loads(b)
-                    ret.append(d)
-                num = num + 1
-    except Exception as e:
-        logging.error(e)
-    return ret
-
-
-# ToDo: get data from postgres
-# return items with num in nums from entire json
-def get_data(idx: str, nums, books=True):
-    ret = []
-    num = 0
-    try:
-        with open(idx, "rb") as f:
-            data = json.load(f)
-            if books:
-                data = data["books"]
-            for d in data:
-                if num in nums:
-                    ret.append(d)
-                num = num + 1
-    except Exception as e:
-        logging.error(e)
-    return ret
-
-
-# ToDo: get data from postgres
 def random_data(
-            datafile: str,
-            cntfile: str,
             tag: str,
             title: str,
             baseref: str,
@@ -1397,10 +1335,9 @@ def search_main(s_term: str, tag: str, title: str, self: str, upref: str):
     return ret
 
 
-# ToDo: get data from postgres
-# restype = (auth|seq|book)
+# restype = (auth|seq|book|bookanno)
 def search_term(
-    s_term: str, idx: str, tag: str, title: str, baseref: str,
+    s_term: str, tag: str, title: str, baseref: str,
     self: str, upref: str, subtag: str, restype: str
 ):
     dtiso = get_dtiso()

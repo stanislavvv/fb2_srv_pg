@@ -26,41 +26,6 @@ def make_id(name):
     return hashlib.md5(nn.encode('utf-8').upper()).hexdigest()
 
 
-# return pipe-separated string of genres from input struct
-def get_genre_pipe(genr):
-    genre = ""  # default
-    g = []
-    if isinstance(genr, dict):
-        for k, v in genr.items():
-            if type(v) is str and not v.isdigit() and v != "":
-                g.append(v.ljust(4))
-            elif isinstance(v, dict):
-                for k, v2 in v.items():
-                    if not v2.isdigit() and v2 != "":
-                        g.append(v2.ljust(4))
-            elif isinstance(v, list):
-                for v2 in v:
-                    if not v2.isdigit() and v2 != "":
-                        g.append(v2.ljust(4))
-        genre = "|".join(g)
-    elif isinstance(genr, list):
-        for i in genr:
-            if type(i) is str and not i.isdigit() and i != "":
-                g.append(i.ljust(4))
-            elif isinstance(i, dict):
-                for k, v in i.items():
-                    if not v.isdigit() and v != "":
-                        g.append(v.ljust(4))
-            elif isinstance(i, list):
-                for v in i:
-                    if not v.isdigit() and v != "":
-                        g.append(v.ljust(4))
-        genre = "|".join(g)
-    else:
-        genre = str(genr.ljust(4))
-    return genre
-
-
 # return array of genres
 def get_genre(genr):
     g = []
@@ -269,52 +234,6 @@ def get_title(title):
         if 'p' in title:
             return(str(title['p']).replace('«', '"').replace('»', '"'))
     return(str(title).replace('«', '"').replace('»', '"'))
-
-
-# return [{"name": "...", "id": "...", "cnt": 1}, ...]
-def seqs_in_data(data):
-    ret = []
-    seq_idx = {}
-    for book in data:
-        if book["sequences"] is not None:
-            for seq in book["sequences"]:
-                seq_id = seq.get("id")
-                if seq_id is not None:
-                    seq_name = seq["name"]
-                    if seq_id in seq_idx:
-                        s = seq_idx[seq_id]
-                        count = s["cnt"]
-                        count = count + 1
-                        s["cnt"] = count
-                        seq_idx[seq_id] = s
-                    else:
-                        s = {"name": seq_name, "id": seq_id, "cnt": 1}
-                        seq_idx[seq_id] = s
-    for seq in seq_idx:
-        ret.append(seq_idx[seq])
-    return ret
-
-
-# return books[] with seq_id
-def seq_from_data(seq_id, data):
-    ret = []
-    for book in data:
-        if book["sequences"] is not None:
-            for seq in book["sequences"]:
-                id = seq.get("id")
-                if seq_id is not None and seq_id == id:
-                    ret.append(book)
-    return ret
-
-
-# return books_id[] without sequences
-def nonseq_from_data(data):
-    ret = []
-    for book in data:
-        if book["sequences"] is None:
-            book_id = book["book_id"]
-            ret.append(book_id)
-    return ret
 
 
 def array2string(arr):

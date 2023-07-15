@@ -1,5 +1,38 @@
 # -*- coding: utf-8 -*-
 
+alphabet_1 = [  # first letters in main authors/sequences page
+    'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й',
+    'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф',
+    'Х', 'Ц', 'Ч', 'Ш', 'Щ', 'Ъ', 'Ы', 'Ь', 'Э', 'Ю', 'Я'
+]
+
+alphabet_2 = [  # second letters in main authors/sequences page
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+    'U', 'V', 'W', 'X', 'Y', 'Z'
+]
+
+URL = {
+    "start": "/opds/",
+    "author": "/opds/author/",
+    "authidx": "/opds/authorsindex/",
+    "seq": "/opds/sequence/",
+    "seqidx": "/opds/sequencesindex/",
+    "genre": "/opds/genre/",
+    "genidx": "/opds/genresindex/",
+    "search": "/opds/search",  # main search page, no last '/' in search
+    "srchauth": "/opds/search-authors",
+    "srchseq": "/opds/search-sequences",
+    "srchbook": "/opds/search-books",
+    "srchbookanno": "/opds/search-booksanno",
+    "rndbook": "/opds/random-books/",
+    "rndseq": "/opds/random-sequences/",
+    "rndgen": "/opds/rnd-genre/",
+    "rndgenidx": "/opds/rnd-genresindex/",
+    "read": "/read/",  # read book
+    "dl": "/fb2/"  # download book
+}
+
 BOOK_REQ = {
     "get_authors_one": """
         SELECT upper(substring(name, 1, 1)) as name1 FROM authors GROUP BY name1;

@@ -1,8 +1,8 @@
 # ToDo
 
-- partial [re]indexing
+- code review: function parameters and other — in progress
 
 # ToDo sometimes
 
-- code review: function parameters and other
 - cover pictures
+- partial [re]indexing

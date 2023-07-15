@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""main indexing script"""
+
 import sys
-# import os
 import glob
-# import sqlite3
-# import json
 import logging
-import shutil
 
 from app import create_app
 from data_chew import INPX
@@ -20,6 +18,7 @@ DBLOGLEVEL = logging.DEBUG
 
 
 def usage():
+    """print help"""
     print("Usage: managedb.py <command>")
     print("Commands:")
     print(" clean       -- remove static data from disk")
@@ -30,35 +29,33 @@ def usage():
 
 
 def clean():
-    workdir = app.config['STATIC']
-    logging.info("cleanup static data...")
-    try:
-        shutil.rmtree(workdir)
-    except Exception as e:
-        logging.fatal(e)
+    """clean index data"""
 
 
 def renew_lists():
+    """recreate all .list's from .zip's"""
     zipdir = app.config['ZIPS']
     inpx_data = zipdir + "/" + INPX
     i = 0
     for zip_file in glob.glob(zipdir + '/*.zip'):
         i += 1
-        logging.info("[" + str(i) + "] ")
-        create_booklist(inpx_data, zip_file, DEBUG)
+        logging.info("[%s] ", str(i))
+        create_booklist(inpx_data, zip_file)
 
 
 def new_lists():
+    """create .list's for new or updated .zip's"""
     zipdir = app.config['ZIPS']
     inpx_data = zipdir + "/" + INPX
     i = 0
     for zip_file in glob.glob(zipdir + '/*.zip'):
         i += 1
-        logging.info("[" + str(i) + "] ")
-        update_booklist(inpx_data, zip_file, DEBUG)
+        logging.info("[%s] ", str(i))
+        update_booklist(inpx_data, zip_file)
 
 
 def fromlists(stage):
+    """index .lists to database"""
     zipdir = app.config['ZIPS']
     pg_host = app.config['PG_HOST']
     pg_base = app.config['PG_BASE']
@@ -67,8 +64,8 @@ def fromlists(stage):
     db = BookDB(pg_host, pg_base, pg_user, pg_pass)
     try:
         process_lists(db, zipdir, stage)
-    except Exception as e:
-        logging.error(e)
+    except Exception as ex:  # pylint: disable=broad-except
+        logging.error(ex)
         logging.error("data rollbacked")
     db.conn.close()
 

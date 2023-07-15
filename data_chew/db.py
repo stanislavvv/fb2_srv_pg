@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import psycopg2
-import logging
+"""database interface"""
 
+import logging
+import psycopg2
+
+
+# pylint: disable=E0402
 from .consts import CREATE_REQ, INSERT_REQ, GET_REQ
 from .strings import quote_string, genres_meta, genres
 
@@ -11,18 +15,20 @@ from .strings import quote_string, genres_meta, genres
 
 
 def sarray2pg(arr):
+    """array of any to postgres request substring"""
     rarr = []
-    for a in arr:
-        rarr.append("'%s'" % str(a))
+    for elem in arr:
+        rarr.append("'%s'" % str(elem))
     return "ARRAY [%s]" % ",".join(rarr)
 
 
-# string 2008-07-05_00:00 -> 2008-07-05
-def bdatetime2date(dt):
-    return dt.split("_")[0]
+def bdatetime2date(date_time):
+    """string 2008-07-05_00:00 -> 2008-07-05"""
+    return date_time.split("_")[0]
 
 
-class BookDB(object):
+class BookDB():
+    """books database interface class"""
 
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
@@ -36,12 +42,12 @@ class BookDB(object):
         logging.info("connected to db")
 
     def __add_book(self, book):
-        genres = sarray2pg(book["genres"])
+        gnrs = sarray2pg(book["genres"])
         bdate = bdatetime2date(book["date_time"])
         data = (
             book["zipfile"],
             book["filename"],
-            genres,
+            gnrs,
             book["book_id"],
             book["lang"],
             bdate,
@@ -53,12 +59,12 @@ class BookDB(object):
         self.cur.execute(req)
 
     def __replace_book(self, book):
-        genres = sarray2pg(book["genres"])
+        gnrs = sarray2pg(book["genres"])
         bdate = bdatetime2date(book["date_time"])
         data = (
             book["zipfile"],
             book["filename"],
-            genres,
+            gnrs,
             book["lang"],
             bdate,
             int(book["size"]),
@@ -68,7 +74,6 @@ class BookDB(object):
         req = INSERT_REQ["book_replace"] % data
         # logging.debug("replace req: %s" % req)
         self.cur.execute(req)
-        pass
 
     def __book_exist(self, book):
         self.cur.execute(GET_REQ["book_exist"] % str(book["book_id"]))
@@ -134,7 +139,6 @@ class BookDB(object):
         req = INSERT_REQ["bookdescr_replace"] % data
         # logging.debug("replace req: %s" % req)
         self.cur.execute(req)
-        pass
 
     def __author_exist(self, author):
         self.cur.execute(GET_REQ["author_exist"] % str(author["id"]))
@@ -143,8 +147,8 @@ class BookDB(object):
 
     def __add_author(self, author):
         name = quote_string(author["name"])
-        id = author["id"]
-        req = INSERT_REQ["author"] % (id, name)
+        auth_id = author["id"]
+        req = INSERT_REQ["author"] % (auth_id, name)
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)
 
@@ -164,7 +168,7 @@ class BookDB(object):
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)
 
-    def __replace_book2author(self, book, author):  # ToDo
+    def __replace_book2author(self, book, author):  # To Do
         # logging.debug("NOT IMPLEMENTED: %s" % inspect.currentframe().f_code.co_name)
         pass
 
@@ -193,8 +197,8 @@ class BookDB(object):
 
     def __add_seq(self, seq):
         name = quote_string(seq["name"])
-        id = seq["id"]
-        req = INSERT_REQ["sequences"] % (id, name)
+        seq_id = seq["id"]
+        req = INSERT_REQ["sequences"] % (seq_id, name)
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)
 
@@ -249,31 +253,30 @@ class BookDB(object):
 
     def __add_genre(self, genre):
         info = genres[genre]
-        id = genre
         meta_id = info["meta_id"]
         descr = info["descr"]
         self.__add_meta(meta_id)
-        req = INSERT_REQ["genres"] % (id, meta_id, descr, 1, '')
+        req = INSERT_REQ["genres"] % (genre, meta_id, descr, 1, '')
         # logging.debug("insert req: %s" % req)
         self.cur.execute(req)
 
     def __replace_genre(self, genre):  # simply increment
-        id = genre
-        self.cur.execute(GET_REQ["get_genre_cnt"] % id)
+        self.cur.execute(GET_REQ["get_genre_cnt"] % genre)
         cnt = self.cur.fetchone()[0]
-        self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt + 1, id))
+        self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt + 1, genre))
 
     def __replace_genre_cnt(self, genre, cnt):  # set cnt
         self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt, genre))
 
     def add_genre(self, genre):
-        # ToDo: meta list in DB
+        """add/update known genre data to db"""
         if self.__genre_exist(genre):
             self.__replace_genre(genre)
         else:
             self.__add_genre(genre)
 
     def add_sequence(self, seq):
+        """add/update sequence data to db, if valid"""
         if "id" in seq:
             if self.__seq_exist(seq):
                 self.__replace_seq(seq)
@@ -281,12 +284,14 @@ class BookDB(object):
                 self.__add_seq(seq)
 
     def add_author(self, author):
+        """add/update author data to db"""
         if self.__author_exist(author):
             self.__replace_author(author)
         else:
             self.__add_author(author)
 
     def add_seq2author(self, author, seq):
+        """add/update sequence/author relation"""
         if "id" in seq:
             if self.__seq_in_author(seq, author):
                 self.__replace_seq2author(seq, author)
@@ -298,6 +303,7 @@ class BookDB(object):
     #     pass
 
     def add_book(self, book):
+        """add books metadata and relations to db"""
         # fixes:
         if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
             book["genres"] = ["other"]
@@ -308,9 +314,9 @@ class BookDB(object):
                 for genre in book["genres"]:
                     self.add_genre(genre)
 
-        except Exception as e:
-            logging.error("FAIL in add_book (genres): %s", e)
-            logging.error("param: %s" % book)
+        except Exception as ex:
+            logging.error("FAIL in add_book (genres): %s", ex)
+            logging.error("param: %s", book)
             raise
 
         try:
@@ -319,9 +325,9 @@ class BookDB(object):
                 self.__add_book(book)
             else:
                 self.__replace_book(book)
-        except Exception as e:
-            logging.error("FAIL in add_book (book): %s", e)
-            logging.error("param: %s" % book)
+        except Exception as ex:
+            logging.error("FAIL in add_book (book): %s", ex)
+            logging.error("param: %s", book)
             raise
 
         try:
@@ -330,9 +336,9 @@ class BookDB(object):
                 self.__add_bookdescr(book)
             else:
                 self.__replace_bookdescr(book)
-        except Exception as e:
-            logging.error("FAIL in add_book (descr): %s", e)
-            logging.error("param: %s" % book)
+        except Exception as ex:
+            logging.error("FAIL in add_book (descr): %s", ex)
+            logging.error("param: %s", book)
             raise
 
         try:
@@ -343,9 +349,9 @@ class BookDB(object):
                         self.__add_book2author(book, author)
                     else:
                         self.__replace_book2author(book, author)
-        except Exception as e:
-            logging.error("FAIL in add_book (book author): %s", e)
-            logging.error("param: %s" % book)
+        except Exception as ex:
+            logging.error("FAIL in add_book (book author): %s", ex)
+            logging.error("param: %s", book)
             raise
 
         try:
@@ -360,30 +366,33 @@ class BookDB(object):
                         for author in book["authors"]:
                             if "id" in seq:
                                 self.add_seq2author(author, seq)
-        except Exception as e:
-            logging.error("FAIL in add_book (sequences): %s", e)
-            logging.error("param: %s" % book)
+        except Exception as ex:
+            logging.error("FAIL in add_book (sequences): %s", ex)
+            logging.error("param: %s", book)
             raise
         return book  # success
 
     def recalc_authors_books(self):
-        pass
+        """recalc author's books count"""
 
     def recalc_seqs_books(self):
-        pass
+        """recalc books count in sequences"""
 
-    def recal_genres_books(self):
+    def recalc_genres_books(self):
+        """recalc books count in genres"""
         self.cur.execute(GET_REQ["get_seqs_ids"])
         ids = self.cur.fetchall()
-        for id in ids:
+        for gen_id in ids:
             self.cur.execute(GET_REQ["get_seq_books_cnt"])
             cnt = self.cur.fetchone()[0]
-            self.__replace_genre_cnt(id[0], cnt)
+            self.__replace_genre_cnt(gen_id[0], cnt)
 
     def commit(self):
+        """send COMMIT to database"""
         self.conn.commit()
 
     def create_tables(self):
+        """create tables/indexes"""
         logging.info("creating tables...")
         for req in CREATE_REQ:
             # logging.debug("query: %s" % str(req))

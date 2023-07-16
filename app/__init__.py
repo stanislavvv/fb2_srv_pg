@@ -19,6 +19,6 @@ def create_app():
     app.register_blueprint(dl, url_prefix=app.config['APPLICATION_ROOT'])
     app.register_blueprint(opds, url_prefix=app.config['APPLICATION_ROOT'])
     app.register_blueprint(html, url_prefix=app.config['APPLICATION_ROOT'])
-    xslt = init_xslt(app.config['FB2_XSLT'])
+    init_xslt(app.config['FB2_XSLT'])
     app.jinja_env.filters['head2sym'] = tpl_headers_symbols  # pylint: disable=E1101
     return app

@@ -83,19 +83,19 @@ def html_seq_sub(sub):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["seq"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>", methods=['GET'])
-def html_seq(sub1, sub2, id):
+@html.route(URL["seq"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<seq_id>", methods=['GET'])
+def html_seq(sub1, sub2, seq_id):
     """list books in sequence"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
-    id = validate_id(id)
-    self = URL["seq"] + "%s/%s/%s" % (sub1, sub2, id)
+    seq_id = validate_id(seq_id)
+    self = URL["seq"] + "%s/%s/%s" % (sub1, sub2, seq_id)
     upref = URL["seqidx"]
-    tag = "tag:root:sequence:" + id
-    title = "Серия '" + get_seq_name(id) + "'"
+    tag = "tag:root:sequence:" + seq_id
+    title = "Серия '" + get_seq_name(seq_id) + "'"
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, id)
+    data = books_list(tag, title, self, upref, authref, seqref, seq_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -151,19 +151,19 @@ def html_auth_sub(sub):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>", methods=['GET'])
-def html_author(sub1, sub2, id):
+@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>", methods=['GET'])
+def html_author(sub1, sub2, auth_id):
     """author main page"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
-    id = validate_id(id)
-    self = URL["author"] + "%s/%s/%s" % (sub1, sub2, id)
+    auth_id = validate_id(auth_id)
+    self = URL["author"] + "%s/%s/%s" % (sub1, sub2, auth_id)
     upref = URL["authidx"]
-    tag = "tag:root:author:" + id
+    tag = "tag:root:author:" + auth_id
     title = "Автор "
     authref = URL["author"]
     seqref = URL["seq"]
-    data = main_author(tag, title, self, upref, authref, seqref, id)
+    data = main_author(tag, title, self, upref, authref, seqref, auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -172,21 +172,21 @@ def html_author(sub1, sub2, id):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/sequences", methods=['GET'])
-def html_author_seqs(sub1, sub2, id):
+@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/sequences", methods=['GET'])
+def html_author_seqs(sub1, sub2, auth_id):
     """sequences of author"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
-    id = validate_id(id)
-    self = URL["author"] + "%s/%s/%s" % (sub1, sub2, id)
+    auth_id = validate_id(auth_id)
+    self = URL["author"] + "%s/%s/%s" % (sub1, sub2, auth_id)
     baseref = self + "/"
     upref = URL["authidx"]
-    tag = "tag:root:author:" + id
+    tag = "tag:root:author:" + auth_id
     title = "Серии автора "
     authref = URL["author"]
     seqref = URL["seq"]
-    subtag = "tag:author:" + id + ":sequence:"
-    data = author_seqs(tag, title, baseref, self, upref, authref, seqref, subtag, id)
+    subtag = "tag:author:" + auth_id + ":sequence:"
+    data = author_seqs(tag, title, baseref, self, upref, authref, seqref, subtag, auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -195,20 +195,20 @@ def html_author_seqs(sub1, sub2, id):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/<seq_id>", methods=['GET'])
-def html_author_seq(sub1, sub2, id, seq_id):
+@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/<seq_id>", methods=['GET'])
+def html_author_seq(sub1, sub2, auth_id, seq_id):
     """book in sequence of author"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
-    id = validate_id(id)
+    auth_id = validate_id(auth_id)
     seq_id = validate_id(seq_id)
-    self = URL["author"] + "%s/%s/%s/%s" % (sub1, sub2, id, seq_id)
-    upref = URL["author"] + "%s/%s/%s" % (sub1, sub2, id)
-    tag = "tag:root:author:" + id + ":sequence:" + seq_id
-    title = "Автор '" + get_author_name(id) + "', серия '" + get_seq_name(seq_id) + "'"
+    self = URL["author"] + "%s/%s/%s/%s" % (sub1, sub2, auth_id, seq_id)
+    upref = URL["author"] + "%s/%s/%s" % (sub1, sub2, auth_id)
+    tag = "tag:root:author:" + auth_id + ":sequence:" + seq_id
+    title = "Автор '" + get_author_name(auth_id) + "', серия '" + get_seq_name(seq_id) + "'"
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, seq_id, auth_id=id)
+    data = books_list(tag, title, self, upref, authref, seqref, seq_id, auth_id=auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -217,19 +217,19 @@ def html_author_seq(sub1, sub2, id, seq_id):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/sequenceless", methods=['GET'])
-def html_author_nonseq(sub1, sub2, id):
+@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/sequenceless", methods=['GET'])
+def html_author_nonseq(sub1, sub2, auth_id):
     """books of author not belong to any sequence"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
-    id = validate_id(id)
-    self = URL["author"] + "%s/%s/%s/sequenceless" % (sub1, sub2, id)
-    upref = URL["author"] + id2path(id)
-    tag = "tag:root:author:" + id
-    title = "Книги вне серий автора " + get_author_name(id)
+    auth_id = validate_id(auth_id)
+    self = URL["author"] + "%s/%s/%s/sequenceless" % (sub1, sub2, auth_id)
+    upref = URL["author"] + id2path(auth_id)
+    tag = "tag:root:author:" + auth_id
+    title = "Книги вне серий автора " + get_author_name(auth_id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, None, auth_id=id)
+    data = books_list(tag, title, self, upref, authref, seqref, None, auth_id=auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -238,19 +238,19 @@ def html_author_nonseq(sub1, sub2, id):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/alphabet", methods=['GET'])
-def html_author_alphabet(sub1, sub2, id):
+@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/alphabet", methods=['GET'])
+def html_author_alphabet(sub1, sub2, auth_id):
     """all books of author order by book title"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
-    id = validate_id(id)
-    self = URL["author"] + "%s/%s/%s/alphabet" % (sub1, sub2, id)
-    upref = URL["author"] + id2path(id)
-    tag = "tag:root:author:" + id + ":alphabet"
-    title = "Книги по алфавиту автора " + get_author_name(id)
+    auth_id = validate_id(auth_id)
+    self = URL["author"] + "%s/%s/%s/alphabet" % (sub1, sub2, auth_id)
+    upref = URL["author"] + id2path(auth_id)
+    tag = "tag:root:author:" + auth_id + ":alphabet"
+    title = "Книги по алфавиту автора " + get_author_name(auth_id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, '', auth_id=id)
+    data = books_list(tag, title, self, upref, authref, seqref, '', auth_id=auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -259,19 +259,19 @@ def html_author_alphabet(sub1, sub2, id):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<id>/time", methods=['GET'])
-def html_author_time(sub1, sub2, id):
+@html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/time", methods=['GET'])
+def html_author_time(sub1, sub2, auth_id):
     """all books of author order by date"""
     sub1 = validate_id(sub1)
     sub2 = validate_id(sub2)
-    id = validate_id(id)
-    self = URL["author"] + "%s/%s/%s/time" % (sub1, sub2, id)
-    upref = URL["author"] + id2path(id)
-    tag = "tag:root:author:" + id + ":time"
-    title = "Книги по дате добавления, автор " + get_author_name(id)
+    auth_id = validate_id(auth_id)
+    self = URL["author"] + "%s/%s/%s/time" % (sub1, sub2, auth_id)
+    upref = URL["author"] + id2path(auth_id)
+    tag = "tag:root:author:" + auth_id + ":time"
+    title = "Книги по дате добавления, автор " + get_author_name(auth_id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, None, True, auth_id=id)
+    data = books_list(tag, title, self, upref, authref, seqref, None, True, auth_id=auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -320,18 +320,18 @@ def html_gen_meta(sub):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["genre"].replace("/opds", "/html", 1) + "<id>", methods=['GET'])
-@html.route(URL["genre"].replace("/opds", "/html", 1) + "<id>/<int:page>", methods=['GET'])
-def html_genre(id, page=0):
+@html.route(URL["genre"].replace("/opds", "/html", 1) + "<gen_id>", methods=['GET'])
+@html.route(URL["genre"].replace("/opds", "/html", 1) + "<gen_id>/<int:page>", methods=['GET'])
+def html_genre(gen_id, page=0):
     """books in genre, paginated"""
-    id = validate_genre(id)
-    self = URL["genre"] + id
+    gen_id = validate_genre(gen_id)
+    self = URL["genre"] + gen_id
     upref = URL["genidx"]
-    tag = "tag:root:genre:" + id
-    title = "Жанр " + get_genre_name(id)
+    tag = "tag:root:genre:" + gen_id
+    title = "Жанр " + get_genre_name(gen_id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, '', page=page, paginate=True, gen_id=id)
+    data = books_list(tag, title, self, upref, authref, seqref, '', page=page, paginate=True, gen_id=gen_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -536,15 +536,15 @@ def html_rnd_gen_meta(sub):
     return Response(page, mimetype='text/html')
 
 
-@html.route(URL["rndgen"].replace("/opds", "/html", 1) + "<id>", methods=['GET'])
-def html_rnd_genre(id, page=0):
+@html.route(URL["rndgen"].replace("/opds", "/html", 1) + "<gen_id>", methods=['GET'])
+def html_rnd_genre(gen_id, page=0):
     """random books in genre"""
-    id = validate_genre(id)
+    gen_id = validate_genre(gen_id)
     baseref = ""  # not for books
-    self = URL["rndgen"] + id
+    self = URL["rndgen"] + gen_id
     upref = URL["rndgenidx"]
-    tag = "tag:rnd:genre:" + id
-    title = "Случайные книги, жанр '" + get_genre_name(id) + "'"
+    tag = "tag:rnd:genre:" + gen_id
+    title = "Случайные книги, жанр '" + get_genre_name(gen_id) + "'"
     authref = URL["author"]
     seqref = URL["seq"]
     subtag = ""  # not for books
@@ -558,7 +558,7 @@ def html_rnd_genre(id, page=0):
                 seqref,
                 subtag,
                 True,
-                gen_id=id)
+                gen_id=gen_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']

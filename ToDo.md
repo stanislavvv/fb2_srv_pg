@@ -6,6 +6,7 @@
   3. too big `app/opds.py`
   4. unused functions parameters
   5. too complex functions
+  6. duplicated code (view_*.py)
 
 # ToDo sometimes
 

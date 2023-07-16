@@ -201,7 +201,7 @@ def process_lists(db, zipdir, stage):
         logging.info("recalc stored counts...")
         db.recalc_authors_books()
         db.recalc_seqs_books()
-        db.recal_genres_books()
+        db.recalc_genres_books()
         db.commit()
     except Exception as ex:  # pylint: disable=W0703
         db.conn.rollback()

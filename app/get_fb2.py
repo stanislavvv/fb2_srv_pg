@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """interface for fb2 output for download and read"""
 
+# pylint: disable=I1101
+
+import io
 import zipfile
 import lxml.etree as et
+
 from bs4 import BeautifulSoup
-import io
 from flask import current_app
 
 xslt = ''
@@ -27,12 +30,12 @@ def fb2_out(zip_file: str, filename: str):
     zippath = zipdir + "/" + zip_file
     try:
         data = ""
-        with zipfile.ZipFile(zippath) as z:
-            with z.open(filename) as fb2:
+        with zipfile.ZipFile(zippath) as z_file:
+            with z_file.open(filename) as fb2:
                 data = fb2.read()
         return data
-    except Exception as e:
-        print(e)
+    except Exception as ex:  # pylint: disable=W0703
+        print(ex)
         return None
 
 
@@ -41,14 +44,14 @@ def html_out(zip_file: str, filename: str):
     zipdir = current_app.config['ZIPS']
     zippath = zipdir + "/" + zip_file
     try:
-        with zipfile.ZipFile(zippath) as z:
-            with z.open(filename) as fb2:
+        with zipfile.ZipFile(zippath) as z_file:
+            with z_file.open(filename) as fb2:
                 data = io.BytesIO(fb2.read())
-                bs = BeautifulSoup(data, 'xml')
-                doc = bs.prettify()
+                b_soap = BeautifulSoup(data, 'xml')
+                doc = b_soap.prettify()
                 dom = et.fromstring(bytes(doc, encoding='utf8'))
                 html = transform(dom)
                 return str(html)
-    except Exception as e:
-        print(e)
+    except Exception as ex:  # pylint: disable=W0703
+        print(ex)
         return None

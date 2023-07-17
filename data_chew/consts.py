@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""some string constats"""
+"""some string constats for indexing"""
 
 CREATE_REQ = [
     """

@@ -3,6 +3,8 @@
 
 from flask import Flask
 
+# pylint does not import locals
+# pylint: disable=E0401
 from .config import config, SELECTED_CONFIG
 from .views_dl import dl
 from .views_opds import opds

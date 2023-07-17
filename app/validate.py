@@ -21,7 +21,7 @@ def unurl(string: str):
     }
     ret = string
     if ret is not None:
-        for k, v in translate.items():
+        for k, v in translate.items():  # pylint: disable=C0103
             ret = ret.replace(k, v)
     return ret
 

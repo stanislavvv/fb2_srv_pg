@@ -97,7 +97,7 @@ def get_line_fields(line):
                 ret["sequence"] = {"@name": line_arr[3]}
         try:
             ret["deleted"] = int(line_arr[8])
-        except Exception as ex:
+        except ValueError as ex:
             logging.warning(
                 "can't get deleted status for '%s.%s', set it to 0",
                 line_arr[5], line_arr[9]

@@ -14,6 +14,8 @@ import xmltodict
 
 from bs4 import BeautifulSoup
 
+# pylint can't import local's
+# pylint: disable=E0401
 from .strings import get_genres, get_genres_meta, get_genres_replace
 
 from .data import get_genre, get_author_struct, get_sequence, get_lang, get_title
@@ -24,17 +26,13 @@ from .inpx import get_inpx_meta
 
 from .idx import process_list_books
 
-# from .idx import auth_processed, seq_processed, gen_processed  # vars
-# from .idx import make_global_indexes, make_auth_data, make_auth_subindexes
-# from .idx import make_seq_data, make_seq_subindexes
-# from .idx import make_gen_data, make_gen_subindexes
-
 READ_SIZE = 20480  # description in 20kb...
 INPX = "flibusta_fb2_local.inpx"  # filename of metadata indexes zip
 
 
 def create_booklist(inpx_data, zip_file):
     """(re)create .list from .zip"""
+
     booklist = zip_file + ".list"
     listfile = ziplist(inpx_data, zip_file)
     blist = open(booklist, 'w')
@@ -44,6 +42,7 @@ def create_booklist(inpx_data, zip_file):
 
 def update_booklist(inpx_data, zip_file):
     """(re)create .list for new or updated .zip"""
+
     booklist = zip_file + ".list"
     replacelist = zip_file + ".replace"
     if os.path.exists(booklist):
@@ -58,9 +57,9 @@ def update_booklist(inpx_data, zip_file):
     return True
 
 
-def fb2parse(z_file, filename, replace_data, inpx_data):
+def fb2parse(z_file, filename, replace_data, inpx_data):  # pylint: disable=R0912,R0914,R0915
     """get filename in opened zip (assume filename format as fb2), return book struct"""
-    # pylint: disable=R0912,R0914,R0915
+
     file_info = z_file.getinfo(filename)
     zip_file = str(os.path.basename(z_file.filename))
     fb2dt = datetime(*file_info.date_time)
@@ -162,6 +161,7 @@ def fb2parse(z_file, filename, replace_data, inpx_data):
 
 def ziplist(inpx_data, zip_file):
     """iterate over files in zip, return array of book struct"""
+
     logging.info(zip_file)
     ret = []
     z_file = zipfile.ZipFile(zip_file)
@@ -175,12 +175,14 @@ def ziplist(inpx_data, zip_file):
     return ret
 
 
-# def process_lists(zipdir, pagesdir, stage):
-def process_lists(db, zipdir, stage):
+def process_lists(db, zipdir, stage):  # pylint: disable=C0103
     """process .list's to database"""
+
+    # load genres info from files
     get_genres_meta()
     get_genres()
     get_genres_replace()
+
     if stage == "all":
         try:
             db.create_tables()
@@ -196,8 +198,9 @@ def process_lists(db, zipdir, stage):
             return False
     elif stage == "newonly":
         logging.error("NOT IMPLEMENTED")
-        # return False
+
     try:
+        # recalc counts with any parameters
         logging.info("recalc stored counts...")
         db.recalc_authors_books()
         db.recalc_seqs_books()

@@ -61,7 +61,7 @@ def fromlists(stage):
     pg_base = app.config['PG_BASE']
     pg_user = app.config['PG_USER']
     pg_pass = app.config['PG_PASS']
-    db = BookDB(pg_host, pg_base, pg_user, pg_pass)
+    db = BookDB(pg_host, pg_base, pg_user, pg_pass)  # pylint: disable=C0103
     try:
         process_lists(db, zipdir, stage)
     except Exception as ex:  # pylint: disable=broad-except

@@ -23,10 +23,10 @@ def get_author_name(auth_id: str):
     """author name by id"""
     ret = ""
     try:
-        db = dbconnect()
-        dbauthdata = db.get_author(auth_id)
+        db_conn = dbconnect()
+        dbauthdata = db_conn.get_author(auth_id)
         ret = dbauthdata[0][1]
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
     return ret
 
@@ -34,8 +34,8 @@ def get_author_name(auth_id: str):
 def get_meta_name(meta_id):
     """author name by id"""
     ret = meta_id
-    db = dbconnect()
-    dbdata = db.get_meta_name(meta_id)
+    db_conn = dbconnect()
+    dbdata = db_conn.get_meta_name(meta_id)
     if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
         ret = dbdata[0]
     return ret
@@ -44,8 +44,8 @@ def get_meta_name(meta_id):
 def get_genre_name(gen_id: str):
     """genre name by id"""
     ret = gen_id
-    db = dbconnect()
-    dbdata = db.get_genre_name(gen_id)
+    db_conn = dbconnect()
+    dbdata = db_conn.get_genre_name(gen_id)
     if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
         ret = dbdata[0]
     return ret
@@ -53,16 +53,16 @@ def get_genre_name(gen_id: str):
 
 def get_seq_name(seq_id: str):
     """sequence name by id"""
-    db = dbconnect()
-    return db.get_seq_name(seq_id)
+    db_conn = dbconnect()
+    return db_conn.get_seq_name(seq_id)
 
 
 def get_book_authors(book_id: str):
     """one book authors"""
     ret = []
     try:
-        db = dbconnect()
-        dbdata = db.get_book_authors(book_id)
+        db_conn = dbconnect()
+        dbdata = db_conn.get_book_authors(book_id)
         for auth in dbdata:
             ret.append({
                 "id": auth[0],
@@ -77,8 +77,8 @@ def get_books_authors(book_ids):
     """books authors"""
     ret = {}
     try:
-        db = dbconnect()
-        dbdata = db.get_books_authors(book_ids)
+        db_conn = dbconnect()
+        dbdata = db_conn.get_books_authors(book_ids)
         for auth in dbdata:
             book_id = auth[0]
             if book_id not in ret:
@@ -96,8 +96,8 @@ def get_book_seqs(book_id: str):
     """one book sequences"""
     ret = []
     try:
-        db = dbconnect()
-        dbdata = db.get_book_seqs(book_id)
+        db_conn = dbconnect()
+        dbdata = db_conn.get_book_seqs(book_id)
         for seq in dbdata:
             ret.append({
                 "id": seq[0],
@@ -113,8 +113,8 @@ def get_books_seqs(book_ids):
     """books sequences"""
     ret = {}
     try:
-        db = dbconnect()
-        dbdata = db.get_books_seqs(book_ids)
+        db_conn = dbconnect()
+        dbdata = db_conn.get_books_seqs(book_ids)
         for seq in dbdata:
             book_id = seq[0]
             if book_id not in ret:
@@ -138,8 +138,8 @@ def get_book_descr(book_id: str):
     publisher_id = None
     annotation = ""
     try:
-        db = dbconnect()
-        binfo = db.get_book_descr(book_id)
+        db_conn = dbconnect()
+        binfo = db_conn.get_book_descr(book_id)
         book_title = binfo[0]
         pub_isbn = binfo[1]
         pub_year = binfo[2]
@@ -155,8 +155,8 @@ def get_books_descr(book_ids):
     """many books title/publication/annotation"""
     ret = {}
     try:
-        db = dbconnect()
-        dbdata = db.get_books_descr(book_ids)
+        db_conn = dbconnect()
+        dbdata = db_conn.get_books_descr(book_ids)
         for binfo in dbdata:
             book_id = binfo[0]
             ret[book_id] = (binfo[1], binfo[2], binfo[3], binfo[4], binfo[5], binfo[6])
@@ -358,13 +358,13 @@ def str_list(
 
     data = []
     try:
-        db = dbconnect()
+        db_conn = dbconnect()
         if req == "auth_1":
-            data = db.get_authors_one()
+            data = db_conn.get_authors_one()
         elif req == "seq_1":
-            data = db.get_seqs_one()
+            data = db_conn.get_seqs_one()
         else:
-            data = db.get_authors_three("AAA")  # placeholder
+            data = db_conn.get_authors_three("AAA")  # placeholder
     except Exception as ex:
         logging.error(ex)
         return ret
@@ -393,7 +393,7 @@ def str_list(
 
 def seq_cnt_list(
     tag: str, title: str, baseref: str, self: str,
-    upref: str, subtag: str, subtitle: str, tpl="%d книг(и) в серии",
+    upref: str, subtag: str, tpl="%d книг(и) в серии",
     layout=None, sub=None
 ):  # pylint: disable=R0913,R0914
     """return for opds list of sequences with book count"""
@@ -420,9 +420,9 @@ def seq_cnt_list(
 
     data = []
     try:
-        db = dbconnect()
+        db_conn = dbconnect()
         if len(sub) < 3:
-            dbdata = db.get_seqs_three(sub)
+            dbdata = db_conn.get_seqs_three(sub)
             for seq in dbdata:
                 name = seq[0]
                 seq_id = name
@@ -433,7 +433,7 @@ def seq_cnt_list(
                     "cnt": cnt
                 })
         else:
-            dbdata = db.get_seqs_list(sub)
+            dbdata = db_conn.get_seqs_list(sub)
             for seq in dbdata:
                 name = seq[1]
                 seq_id = seq[0]
@@ -475,7 +475,7 @@ def seq_cnt_list(
 
 def auth_list(
     tag: str, title: str, baseref: str, self: str,
-    upref: str, subtag: str, subtitle: str, tpl="%d", sub=None, layout=None
+    upref: str, subtag: str, tpl="%d", sub=None, layout=None
 ):  # pylint: disable=R0913,R0914
     """opds authors list"""
     dtiso = get_dtiso()
@@ -501,9 +501,9 @@ def auth_list(
 
     data = []
     try:
-        db = dbconnect()
+        db_conn = dbconnect()
         if layout == 'simple':
-            dbdata = db.get_authors_three(sub)
+            dbdata = db_conn.get_authors_three(sub)
             for auth in dbdata:
                 data.append({
                     "id": auth[0],
@@ -511,7 +511,7 @@ def auth_list(
                     "cnt": auth[1]
                 })
         else:
-            dbdata = db.get_authors_list(sub)
+            dbdata = db_conn.get_authors_list(sub)
             for auth in dbdata:
                 data.append({
                     "id": auth[0],
@@ -579,20 +579,20 @@ def books_list(
     limit = int(current_app.config['PAGE_SIZE'])
     offset = limit * page
     try:
-        db = dbconnect()
+        db_conn = dbconnect()
         dbdata = []
         limit = int(current_app.config['PAGE_SIZE'])
         offset = limit * page
         if seq_id is not None and seq_id != '':  # author's books in seq
             if auth_id is not None and auth_id != '':
-                dbdata = db.get_author_seq(auth_id, seq_id)
+                dbdata = db_conn.get_author_seq(auth_id, seq_id)
             else:
-                dbdata = db.get_seq(seq_id)
+                dbdata = db_conn.get_seq(seq_id)
         else:  # all books (nonseq will be filtered later)
             if auth_id is not None and auth_id != '':
-                dbdata = db.get_author_books(auth_id)
+                dbdata = db_conn.get_author_books(auth_id)
             elif gen_id is not None and gen_id != '':
-                dbdata = db.get_genre_books(gen_id, paginate, limit, offset)
+                dbdata = db_conn.get_genre_books(gen_id, paginate, limit, offset)
             else:
                 name = "'" + "DUMMY" + "'"
         book_ids = []
@@ -776,8 +776,6 @@ def main_author(
     title: str,
     self: str,
     upref: str,
-    authref: str,
-    seqref: str,
     auth_id: str
 ):  # pylint: disable=R0913
     """main author page"""
@@ -786,8 +784,8 @@ def main_author(
     auth_name = ""
     auth_info = ""
     try:
-        db = dbconnect()
-        dbdata = db.get_author(auth_id)
+        db_conn = dbconnect()
+        dbdata = db_conn.get_author(auth_id)
         auth_name = dbdata[0][1]
         auth_info = dbdata[0][2]
     except Exception as ex:
@@ -877,7 +875,7 @@ def main_author(
 
 def author_seqs(
     tag: str, title: str, baseref: str, self: str, upref: str,
-    authref: str, seqref: str, subtag: str, auth_id: str
+    subtag: str, auth_id: str
 ):  # pylint: disable=R0913,R0914
     """list author's sequences"""
     dtiso = get_dtiso()
@@ -901,10 +899,10 @@ def author_seqs(
     )
     data = []
     try:
-        db = dbconnect()
-        dbauthdata = db.get_author(auth_id)
+        db_conn = dbconnect()
+        dbauthdata = db_conn.get_author(auth_id)
         auth_name = dbauthdata[0][1]
-        dbdata = db.get_author_seqs(auth_id)
+        dbdata = db_conn.get_author_seqs(auth_id)
         for seq in dbdata:
             seq_id = seq[0]
             seq_name = seq[1]
@@ -944,7 +942,7 @@ def author_seqs(
 # for [{name: ..., id: ...}, ...]
 def name_list(
         tag: str, title: str, baseref: str,
-        self: str, upref: str, subtag: str, subtitle: str,
+        self: str, upref: str, subtag: str,
         subdata=None, meta_id=None
 ):  # pylint: disable=R0913,R0914
     """simple name list (genres or metas)"""
@@ -972,12 +970,12 @@ def name_list(
     data = []
     try:
         if subdata is not None:
-            db = dbconnect()
+            db_conn = dbconnect()
             dbdata = []
             if subdata == "genresroot":
-                dbdata = db.get_genres_meta()
+                dbdata = db_conn.get_genres_meta()
             elif subdata == "genres":
-                dbdata = db.get_genres(meta_id)
+                dbdata = db_conn.get_genres(meta_id)
             for i in dbdata:
                 elem_id = i[0]
                 name = i[1]
@@ -1012,7 +1010,7 @@ def name_list(
 # for [{name: ..., id: ..., cnt: ...}, ...]
 def name_cnt_list(
         tag: str, title: str, baseref: str,
-        self: str, upref: str, subtag: str, subtitle: str,
+        self: str, upref: str, subtag: str,
         subdata=None, tpl="%d книг(и)", meta_id=None
 ):  # pylint: disable=R0913,R0914
     """names list with counts"""
@@ -1039,11 +1037,11 @@ def name_cnt_list(
 
     data = []
     try:
-        db = dbconnect()
+        db_conn = dbconnect()
         dbdata = []
         if subdata is not None and subdata == "genres":
             if meta_id is not None:
-                dbdata = db.get_genres(meta_id)
+                dbdata = db_conn.get_genres(meta_id)
         for gen in dbdata:
             gen_id = gen[0]
             name = gen[1]
@@ -1084,7 +1082,6 @@ def name_cnt_list(
 def random_data(
             tag: str,
             title: str,
-            baseref: str,
             self: str,
             upref: str,
             authref: str,
@@ -1119,12 +1116,12 @@ def random_data(
         if books:
             data = []
             try:
-                db = dbconnect()
+                db_conn = dbconnect()
                 limit = int(current_app.config['PAGE_SIZE'])
                 if gen_id is None:
-                    dbdata = db.get_rnd_books(limit)
+                    dbdata = db_conn.get_rnd_books(limit)
                 else:
-                    dbdata = db.get_rnd_genre_books(gen_id, limit)
+                    dbdata = db_conn.get_rnd_genre_books(gen_id, limit)
 
                 book_ids = []
                 for book in dbdata:
@@ -1245,9 +1242,9 @@ def random_data(
         else:  # seq
             data = []
             try:
-                db = dbconnect()
+                db_conn = dbconnect()
                 limit = int(current_app.config['PAGE_SIZE'])
-                dbdata = db.get_rnd_seqs(limit)
+                dbdata = db_conn.get_rnd_seqs(limit)
                 for seq in dbdata:
                     data.append({
                         "id": seq[0],
@@ -1404,18 +1401,18 @@ def search_term(
         maxres = current_app.config['MAX_SEARCH_RES']
 
         try:
-            db = dbconnect()
+            db_conn = dbconnect()
             if restype in ("book", "bookanno"):
                 book_ids = []
                 if restype == "book":
-                    dbdata = db.get_search_titles(s_terms, maxres)
+                    dbdata = db_conn.get_search_titles(s_terms, maxres)
                 else:
-                    dbdata = db.get_search_anno(s_terms, maxres)
+                    dbdata = db_conn.get_search_anno(s_terms, maxres)
 
                 for book in dbdata:
                     book_ids.append(book[0])
 
-                dbdata = db.get_books_byids(book_ids)
+                dbdata = db_conn.get_books_byids(book_ids)
                 book_descr = get_books_descr(book_ids)
                 book_authors = get_books_authors(book_ids)
                 book_seqs = get_books_seqs(book_ids)
@@ -1468,7 +1465,7 @@ def search_term(
                         "deleted": deleted
                     })
             elif restype == "seq":
-                dbdata = db.get_search_seqs(s_terms, maxres)
+                dbdata = db_conn.get_search_seqs(s_terms, maxres)
                 for seq in dbdata:
                     data.append({
                         "id": seq[0],
@@ -1476,7 +1473,7 @@ def search_term(
                         "cnt": seq[2]
                     })
             elif restype == "auth":
-                dbdata = db.get_search_authors(s_terms, maxres)
+                dbdata = db_conn.get_search_authors(s_terms, maxres)
                 for auth in dbdata:
                     data.append({
                         "id": auth[0],

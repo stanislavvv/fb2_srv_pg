@@ -1,4 +1,5 @@
 FLAKE8_ARGS=--max-line-length=120
+PYLINT_ARGS=--max-line-length=120
 DATA=data
 export FLASK_ENV=prod
 
@@ -21,7 +22,7 @@ flakeall:
 	find . -name '*.py' -print0 | xargs -0 -n 100 flake8 $(FLAKE8_ARGS)
 
 lintall:
-	find . -name '*.py' -print0 | xargs -0 -n 100 pylint
+	find . -name '*.py' -print0 | xargs -0 -n 100 pylint $(PYLINT_ARGS)
 
 newpages:
 	@echo "--- rename old pages ---"

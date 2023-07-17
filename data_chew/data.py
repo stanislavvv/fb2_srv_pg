@@ -133,7 +133,7 @@ def get_sequence(seq, zip_file, filename):
     """
     # pylint: disable=R0912
     ret = []
-    context = "get seq for file '" + filename + "'"
+    context = "get seq for file '%s/%s'", (zip_file, filename)
     if isinstance(seq, str):
         seq_id = make_id(seq)
         ret.append({"name": seq, "id": seq_id})
@@ -208,8 +208,8 @@ def get_struct_by_key(key, struct):
             if ret is not None:
                 return ret
     if isinstance(struct, dict):
-        for k, v in struct.items():
-            ret = get_struct_by_key(key, v)
+        for _, val in struct.items():
+            ret = get_struct_by_key(key, val)
             if ret is not None:
                 return ret
     return None
@@ -235,8 +235,8 @@ def replace_book(filename, book, replace_data):
     # filename = book["filename"]
     if filename in replace_data:
         replace = replace_data[filename]
-        for k, v in replace.items():
-            book[k] = v
+        for key, val in replace.items():
+            book[key] = val
     return book
 
 

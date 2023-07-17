@@ -11,7 +11,7 @@ MAX_PASS_LENGTH = 1000
 MAX_PASS_LENGTH_GEN = 5
 
 
-def process_list_books(db, booklist):
+def process_list_books(db, booklist):  # pylint: disable=C0103
     """index .list to database"""
     with open(booklist) as lst:
         data = json.load(lst)

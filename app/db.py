@@ -265,5 +265,4 @@ def dbconnect():
     pg_base = current_app.config['PG_BASE']
     pg_user = current_app.config['PG_USER']
     pg_pass = current_app.config['PG_PASS']
-    db = BookDBro(pg_host, pg_base, pg_user, pg_pass)
-    return db
+    return BookDBro(pg_host, pg_base, pg_user, pg_pass)

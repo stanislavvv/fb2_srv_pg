@@ -302,7 +302,7 @@ class BookDB():
     #     logging.debug("NOT IMPLEMENTED: %s" % inspect.currentframe().f_code.co_name)
     #     pass
 
-    def add_book(self, book):
+    def add_book(self, book):  # pylint: disable=R0912,R0915
         """add books metadata and relations to db"""
         # fixes:
         if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
@@ -354,7 +354,7 @@ class BookDB():
             logging.error("param: %s", book)
             raise
 
-        try:
+        try:  # pylint: disable=R1702
             if "sequences" in book and book["sequences"] is not None:
                 for seq in book["sequences"]:
                     self.add_sequence(seq)

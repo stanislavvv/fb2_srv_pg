@@ -68,13 +68,11 @@ def html_seq_sub(sub):
     if len(sub) >= 3:
         baseref = URL["seq"]
         subtag = "tag:sequences:"
-        subtitle = "Книги на "
-        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, subtitle, "%d книг(и) в серии", sub=sub)
+        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, tpl="%d книг(и) в серии", sub=sub)
     else:
         baseref = URL["seqidx"]
         subtag = "tag:sequence:"
-        subtitle = "Серия "
-        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, subtitle, "серий: %d", "simple", sub=sub)
+        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, tpl="серий: %d", layout="simple", sub=sub)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -135,14 +133,12 @@ def html_auth_sub(sub):
         baseref = URL["author"]
         tag = "tag:authors:" + sub
         subtag = "tag:authors:"
-        subtitle = "Авторы на "
-        data = auth_list(tag, title, baseref, self, upref, subtag, subtitle, "%s", sub=sub)
+        data = auth_list(tag, title, baseref, self, upref, subtag, "%s", sub=sub)
     else:
         baseref = URL["authidx"]
         tag = "tag:authors:" + sub
         subtag = "tag:author:"
-        subtitle = ""
-        data = auth_list(tag, title, baseref, self, upref, subtag, subtitle, "%d aвт.", sub=sub, layout="simple")
+        data = auth_list(tag, title, baseref, self, upref, subtag, "%d aвт.", sub=sub, layout="simple")
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -161,9 +157,7 @@ def html_author(sub1, sub2, auth_id):
     upref = URL["authidx"]
     tag = "tag:root:author:" + auth_id
     title = "Автор "
-    authref = URL["author"]
-    seqref = URL["seq"]
-    data = main_author(tag, title, self, upref, authref, seqref, auth_id)
+    data = main_author(tag, title, self, upref, auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -183,10 +177,8 @@ def html_author_seqs(sub1, sub2, auth_id):
     upref = URL["authidx"]
     tag = "tag:root:author:" + auth_id
     title = "Серии автора "
-    authref = URL["author"]
-    seqref = URL["seq"]
     subtag = "tag:author:" + auth_id + ":sequence:"
-    data = author_seqs(tag, title, baseref, self, upref, authref, seqref, subtag, auth_id)
+    data = author_seqs(tag, title, baseref, self, upref, subtag, auth_id)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -289,8 +281,7 @@ def html_gen_root():
     tag = "tag:root:genres"
     title = "Группы жанров"
     subtag = "tag:genres:"
-    subtitle = "Книги на "
-    data = name_list(tag, title, baseref, self, upref, subtag, subtitle, "genresroot")
+    data = name_list(tag, title, baseref, self, upref, subtag, subdata="genresroot")
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -310,8 +301,7 @@ def html_gen_meta(sub):
     tag = "tag:genres:" + sub
     title = get_meta_name(sub)
     subtag = "tag:genres:"
-    subtitle = "Книги на "
-    data = name_cnt_list(tag, title, baseref, self, upref, subtag, subtitle, "genres", meta_id=sub)
+    data = name_cnt_list(tag, title, baseref, self, upref, subtag, subdata="genres", meta_id=sub)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -343,7 +333,6 @@ def html_genre(gen_id, page=0):
 @html.route(URL["rndbook"].replace("/opds", "/html", 1), methods=['GET'])
 def html_random_books():
     """random books"""
-    baseref = ""  # not for books
     self = URL["rndbook"]
     upref = URL["start"]
     tag = "tag:search:books:random:"
@@ -354,7 +343,6 @@ def html_random_books():
     data = random_data(
                 tag,
                 title,
-                baseref,
                 self,
                 upref,
                 authref,
@@ -372,7 +360,6 @@ def html_random_books():
 @html.route(URL["rndseq"].replace("/opds", "/html", 1), methods=['GET'])
 def html_random_seqs():
     """random sequences"""
-    baseref = URL["start"]
     self = URL["rndseq"]
     upref = URL["start"]
     tag = "tag:search:sequences:random:"
@@ -383,7 +370,6 @@ def html_random_seqs():
     data = random_data(
                 tag,
                 title,
-                baseref,
                 self,
                 upref,
                 authref,
@@ -505,8 +491,7 @@ def html_rnd_gen_root():
     tag = "tag:rnd:genres"
     title = "Группы жанров"
     subtag = "tag:rnd:genres:"
-    subtitle = "Книги на "
-    data = name_list(tag, title, baseref, self, upref, subtag, subtitle, "genresroot")
+    data = name_list(tag, title, baseref, self, upref, subtag, subdata="genresroot")
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -526,8 +511,7 @@ def html_rnd_gen_meta(sub):
     tag = "tag:rnd:genres:" + sub
     title = get_meta_name(sub)
     subtag = "tag:genres:"
-    subtitle = "Книги на "
-    data = name_cnt_list(tag, title, baseref, self, upref, subtag, subtitle, "genres", meta_id=sub)
+    data = name_cnt_list(tag, title, baseref, self, upref, subtag, subdata="genres", meta_id=sub)
     title = data['feed']['title']
     updated = data['feed']['updated']
     entry = data['feed']['entry']
@@ -540,7 +524,6 @@ def html_rnd_gen_meta(sub):
 def html_rnd_genre(gen_id, page=0):
     """random books in genre"""
     gen_id = validate_genre(gen_id)
-    baseref = ""  # not for books
     self = URL["rndgen"] + gen_id
     upref = URL["rndgenidx"]
     tag = "tag:rnd:genre:" + gen_id
@@ -551,7 +534,6 @@ def html_rnd_genre(gen_id, page=0):
     data = random_data(
                 tag,
                 title,
-                baseref,
                 self,
                 upref,
                 authref,

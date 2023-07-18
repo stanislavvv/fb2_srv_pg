@@ -16,8 +16,6 @@ from bs4 import BeautifulSoup
 
 # pylint can't import local's
 # pylint: disable=E0401
-from .strings import get_genres, get_genres_meta, get_genres_replace
-
 from .data import get_genre, get_author_struct, get_sequence, get_lang, get_title
 from .data import get_struct_by_key, make_id, get_replace_list, replace_book
 from .data import get_pub_info
@@ -179,9 +177,9 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
     """process .list's to database"""
 
     # load genres info from files
-    get_genres_meta()
-    get_genres()
-    get_genres_replace()
+    # get_genres_meta()
+    # get_genres()
+    # get_genres_replace()
 
     if stage == "all":
         try:

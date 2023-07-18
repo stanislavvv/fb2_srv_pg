@@ -4,9 +4,6 @@
 import json
 import logging
 
-# pylint: disable=E0402
-from .strings import genres_replace
-
 MAX_PASS_LENGTH = 1000
 MAX_PASS_LENGTH_GEN = 5
 
@@ -18,7 +15,6 @@ def process_list_books(db, booklist):  # pylint: disable=C0103
     for book in data:
         if book is None:
             continue
-        book["genres"] = genres_replace(book["zipfile"], book["filename"], book["genres"])
         if "deleted" not in book:
             book["deleted"] = 0
 

@@ -10,17 +10,6 @@ import lxml.etree as et
 from bs4 import BeautifulSoup
 from flask import current_app
 
-xslt = ''
-transform = ''
-
-
-def init_xslt(xsltfile):
-    """init xslt data from file"""
-    global xslt
-    global transform
-    xslt = et.parse(xsltfile)
-    transform = et.XSLT(xslt)
-
 
 def fb2_out(zip_file: str, filename: str):
     """return .fb2.zip for downloading"""
@@ -41,6 +30,7 @@ def fb2_out(zip_file: str, filename: str):
 
 def html_out(zip_file: str, filename: str):
     """create html from fb2 for reading"""
+    transform = current_app.config['TRANSFORM']
     zipdir = current_app.config['ZIPS']
     zippath = zipdir + "/" + zip_file
     try:

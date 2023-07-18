@@ -8,7 +8,7 @@ import psycopg2
 
 # pylint: disable=E0402
 from .consts import CREATE_REQ, INSERT_REQ, GET_REQ
-from .strings import quote_string, genres_meta, genres
+from .strings import quote_string
 
 # for DEBUG:
 # import inspect
@@ -30,6 +30,72 @@ def bdatetime2date(date_time):
 class BookDB():
     """books database interface class"""
 
+    # genres meta (see get_genres_meta())
+    genres_meta = {}
+
+    # genres (see get_genres())
+    genres = {}
+
+    # fix some wrong genres
+    genres_replacements = {}
+
+    def __get_genres_meta(self):
+        """init genres meta dict"""
+        data = open('genres_meta.list', 'r')
+        while True:
+            line = data.readline()
+            if not line:
+                break
+            meta_line = line.strip('\n').split('|')
+            if len(meta_line) > 1:
+                self.genres_meta[meta_line[0]] = meta_line[1]
+        data.close()
+
+    def __get_genres(self):
+        """init genres dict"""
+        data = open('genres.list', 'r')
+        while True:
+            line = data.readline()
+            if not line:
+                break
+            genre_line = line.strip('\n').split('|')
+            if len(genre_line) > 1:
+                self.genres[genre_line[1]] = {"descr": genre_line[2], "meta_id": genre_line[0]}
+        data.close()
+
+    def __get_genres_replace(self):
+        """init genres_replace dict"""
+        data = open('genres_replace.list', 'r')
+        while True:
+            line = data.readline()
+            if not line:
+                break
+            replace_line = line.strip('\n').split('|')
+            if len(replace_line) > 1:
+                replacement = replace_line[1].split(",")
+                self.genres_replacements[replace_line[0]] = '|'.join(replacement)
+        data.close()
+
+    def __genres_replace(self, book, genrs):
+        """return genre or replaced genre"""
+        ret = []
+        for i in genrs:
+            if i not in self.genres and i != "":
+                if i in self.genres_replacements:
+                    if self.genres_replacements[i] is not None and self.genres_replacements[i] != "":
+                        ret.append(self.genres_replacements[i])
+                else:
+                    logging.warning(
+                        "unknown genre '%s' replaced to 'other' for %s/%s",
+                        i,
+                        book["zipfile"],
+                        book["filename"]
+                    )
+                    ret.append('other')
+            else:
+                ret.append(i)
+        return ret
+
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
         self.conn = psycopg2.connect(
@@ -40,6 +106,10 @@ class BookDB():
         )
         self.cur = self.conn.cursor()
         logging.info("connected to db")
+        self.__get_genres_meta()
+        self.__get_genres()
+        self.__get_genres_replace()
+        logging.info("genres data loaded to vars")
 
     def __add_book(self, book):
         gnrs = sarray2pg(book["genres"])
@@ -246,13 +316,13 @@ class BookDB():
     def __add_meta(self, meta):
         if not self.__meta_exists(meta):
             meta_id = str(meta)
-            descr = quote_string(genres_meta[meta_id])
+            descr = quote_string(self.genres_meta[meta_id])
             req = INSERT_REQ["meta"] % (meta_id, descr, '')
             # logging.debug("insert req: %s" % req)
             self.cur.execute(req)
 
     def __add_genre(self, genre):
-        info = genres[genre]
+        info = self.genres[genre]
         meta_id = info["meta_id"]
         descr = info["descr"]
         self.__add_meta(meta_id)
@@ -307,6 +377,7 @@ class BookDB():
         # fixes:
         if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
             book["genres"] = ["other"]
+        book["genres"] = self.__genres_replace(book, book["genres"])
         # /fixes
 
         try:

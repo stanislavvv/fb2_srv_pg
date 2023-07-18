@@ -11,158 +11,13 @@ from flask import current_app
 
 # pylint: disable=E0402
 from .internals import get_dtiso, id2path, get_book_entry, sizeof_fmt, get_seq_link
-from .internals import get_book_link, url_str
+from .internals import get_book_link, url_str, get_books_descr, get_books_authors
+from .internals import get_books_seqs, get_genre_name
 from .internals import unicode_upper, html_refine, pubinfo_anno
 from .internals import custom_alphabet_sort, custom_alphabet_name_cmp, custom_alphabet_book_title_cmp
 from .internals import URL
 
 from .db import dbconnect
-
-
-def get_author_name(auth_id: str):
-    """author name by id"""
-    ret = ""
-    try:
-        db_conn = dbconnect()
-        dbauthdata = db_conn.get_author(auth_id)
-        ret = dbauthdata[0][1]
-    except Exception as ex:  # pylint: disable=W0703
-        logging.error(ex)
-    return ret
-
-
-def get_meta_name(meta_id):
-    """author name by id"""
-    ret = meta_id
-    db_conn = dbconnect()
-    dbdata = db_conn.get_meta_name(meta_id)
-    if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
-        ret = dbdata[0]
-    return ret
-
-
-def get_genre_name(gen_id: str):
-    """genre name by id"""
-    ret = gen_id
-    db_conn = dbconnect()
-    dbdata = db_conn.get_genre_name(gen_id)
-    if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
-        ret = dbdata[0]
-    return ret
-
-
-def get_seq_name(seq_id: str):
-    """sequence name by id"""
-    db_conn = dbconnect()
-    return db_conn.get_seq_name(seq_id)
-
-
-def get_book_authors(book_id: str):
-    """one book authors"""
-    ret = []
-    try:
-        db_conn = dbconnect()
-        dbdata = db_conn.get_book_authors(book_id)
-        for auth in dbdata:
-            ret.append({
-                "id": auth[0],
-                "name": auth[1]
-            })
-    except Exception as ex:
-        logging.error(ex)
-    return ret
-
-
-def get_books_authors(book_ids):
-    """books authors"""
-    ret = {}
-    try:
-        db_conn = dbconnect()
-        dbdata = db_conn.get_books_authors(book_ids)
-        for auth in dbdata:
-            book_id = auth[0]
-            if book_id not in ret:
-                ret[book_id] = []
-            ret[book_id].append({
-                "id": auth[1],
-                "name": auth[2]
-            })
-    except Exception as ex:
-        logging.error(ex)
-    return ret
-
-
-def get_book_seqs(book_id: str):
-    """one book sequences"""
-    ret = []
-    try:
-        db_conn = dbconnect()
-        dbdata = db_conn.get_book_seqs(book_id)
-        for seq in dbdata:
-            ret.append({
-                "id": seq[0],
-                "name": seq[1],
-                "num": seq[2]
-            })
-    except Exception as ex:
-        logging.error(ex)
-    return ret
-
-
-def get_books_seqs(book_ids):
-    """books sequences"""
-    ret = {}
-    try:
-        db_conn = dbconnect()
-        dbdata = db_conn.get_books_seqs(book_ids)
-        for seq in dbdata:
-            book_id = seq[0]
-            if book_id not in ret:
-                ret[book_id] = []
-            ret[book_id].append({
-                "id": seq[1],
-                "name": seq[2],
-                "num": seq[3]
-            })
-    except Exception as ex:
-        logging.error(ex)
-    return ret
-
-
-def get_book_descr(book_id: str):
-    """one book title/publication/annotation"""
-    book_title = ""
-    pub_isbn = None
-    pub_year = None
-    publisher = None
-    publisher_id = None
-    annotation = ""
-    try:
-        db_conn = dbconnect()
-        binfo = db_conn.get_book_descr(book_id)
-        book_title = binfo[0]
-        pub_isbn = binfo[1]
-        pub_year = binfo[2]
-        publisher = binfo[3]
-        publisher_id = binfo[4]
-        annotation = binfo[5]
-    except Exception as ex:
-        logging.error(ex)
-    return book_title, pub_isbn, pub_year, publisher, publisher_id, annotation
-
-
-def get_books_descr(book_ids):
-    """many books title/publication/annotation"""
-    ret = {}
-    try:
-        db_conn = dbconnect()
-        dbdata = db_conn.get_books_descr(book_ids)
-        for binfo in dbdata:
-            book_id = binfo[0]
-            ret[book_id] = (binfo[1], binfo[2], binfo[3], binfo[4], binfo[5], binfo[6])
-    except Exception as ex:
-        logging.error(ex)
-    return ret
 
 
 def ret_hdr():  # python does not have constants
@@ -365,7 +220,7 @@ def str_list(
             data = db_conn.get_seqs_one()
         else:
             data = db_conn.get_authors_three("AAA")  # placeholder
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         return ret
     data_prepared = {}
@@ -443,7 +298,7 @@ def seq_cnt_list(
                     "name": name,
                     "cnt": cnt
                 })
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         return ret
     for seq in sorted(data, key=cmp_to_key(custom_alphabet_name_cmp)):
@@ -518,7 +373,7 @@ def auth_list(
                     "name": auth[1]
                 })
 
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         return ret
     for auth in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
@@ -645,7 +500,7 @@ def books_list(
                 },
                 "deleted": deleted
             })
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         return ret
     ret["feed"]["title"] = title + name
@@ -788,7 +643,7 @@ def main_author(
         dbdata = db_conn.get_author(auth_id)
         auth_name = dbdata[0][1]
         auth_info = dbdata[0][2]
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         auth_name = ""
     ret = ret_hdr()
@@ -912,7 +767,7 @@ def author_seqs(
                 "name": seq_name,
                 "cnt": seq_cnt
             })
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         return ret
 
@@ -983,7 +838,7 @@ def name_list(
                     "id": elem_id,
                     "name": name
                 })
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         return ret
     for elem in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
@@ -1051,7 +906,7 @@ def name_cnt_list(
                 "name": name,
                 "cnt": cnt
             })
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
         return ret
     for elem in sorted(data, key=lambda s: unicode_upper(s["name"]) or -1):
@@ -1181,7 +1036,7 @@ def random_data(
                         "deleted": deleted
                     })
 
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=W0703
                 logging.error(ex)
                 return ret
 
@@ -1251,7 +1106,7 @@ def random_data(
                         "name": seq[1],
                         "cnt": seq[2]
                     })
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=W0703
                 logging.error(ex)
                 return ret
 
@@ -1274,7 +1129,7 @@ def random_data(
                         }
                     }
                 )
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
     return ret
 
@@ -1483,7 +1338,7 @@ def search_term(
                 data = sorted(data, key=lambda s: unicode_upper(s["name"]) or -1)
             elif restype == "book":
                 data = sorted(data, key=lambda s: unicode_upper(s["book_title"]) or -1)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=W0703
             logging.error(ex)
         for i in data:
             if restype == "auth":

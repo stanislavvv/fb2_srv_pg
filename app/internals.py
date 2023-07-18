@@ -4,11 +4,14 @@
 import datetime
 import urllib
 import unicodedata as ud
+import logging
+
 from functools import cmp_to_key
 from bs4 import BeautifulSoup
 
 # pylint: disable=E0402
 from .consts import URL, alphabet_1, alphabet_2
+from .db import dbconnect
 
 
 def tpl_headers_symbols(link: str):
@@ -264,4 +267,150 @@ def pubinfo_anno(pubinfo):
         ret = ret + "<p>Год публикации: %s</p>" % pubinfo["year"]
     if pubinfo["publisher"] is not None and pubinfo["year"] != 'None':
         ret = ret + "<p>Издательство: %s</p>" % pubinfo["publisher"]
+    return ret
+
+
+def get_author_name(auth_id: str):
+    """author name by id"""
+    ret = ""
+    try:
+        db_conn = dbconnect()
+        dbauthdata = db_conn.get_author(auth_id)
+        ret = dbauthdata[0][1]
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
+    return ret
+
+
+def get_meta_name(meta_id):
+    """author name by id"""
+    ret = meta_id
+    db_conn = dbconnect()
+    dbdata = db_conn.get_meta_name(meta_id)
+    if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
+        ret = dbdata[0]
+    return ret
+
+
+def get_genre_name(gen_id: str):
+    """genre name by id"""
+    ret = gen_id
+    db_conn = dbconnect()
+    dbdata = db_conn.get_genre_name(gen_id)
+    if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
+        ret = dbdata[0]
+    return ret
+
+
+def get_seq_name(seq_id: str):
+    """sequence name by id"""
+    db_conn = dbconnect()
+    return db_conn.get_seq_name(seq_id)
+
+
+def get_book_authors(book_id: str):
+    """one book authors"""
+    ret = []
+    try:
+        db_conn = dbconnect()
+        dbdata = db_conn.get_book_authors(book_id)
+        for auth in dbdata:
+            ret.append({
+                "id": auth[0],
+                "name": auth[1]
+            })
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
+    return ret
+
+
+def get_books_authors(book_ids):
+    """books authors"""
+    ret = {}
+    try:
+        db_conn = dbconnect()
+        dbdata = db_conn.get_books_authors(book_ids)
+        for auth in dbdata:
+            book_id = auth[0]
+            if book_id not in ret:
+                ret[book_id] = []
+            ret[book_id].append({
+                "id": auth[1],
+                "name": auth[2]
+            })
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
+    return ret
+
+
+def get_book_seqs(book_id: str):
+    """one book sequences"""
+    ret = []
+    try:
+        db_conn = dbconnect()
+        dbdata = db_conn.get_book_seqs(book_id)
+        for seq in dbdata:
+            ret.append({
+                "id": seq[0],
+                "name": seq[1],
+                "num": seq[2]
+            })
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
+    return ret
+
+
+def get_books_seqs(book_ids):
+    """books sequences"""
+    ret = {}
+    try:
+        db_conn = dbconnect()
+        dbdata = db_conn.get_books_seqs(book_ids)
+        for seq in dbdata:
+            book_id = seq[0]
+            if book_id not in ret:
+                ret[book_id] = []
+            ret[book_id].append({
+                "id": seq[1],
+                "name": seq[2],
+                "num": seq[3]
+            })
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
+    return ret
+
+
+def get_book_descr(book_id: str):
+    """one book title/publication/annotation"""
+    book_title = ""
+    pub_isbn = None
+    pub_year = None
+    publisher = None
+    publisher_id = None
+    annotation = ""
+    try:
+        db_conn = dbconnect()
+        binfo = db_conn.get_book_descr(book_id)
+        book_title = binfo[0]
+        pub_isbn = binfo[1]
+        pub_year = binfo[2]
+        publisher = binfo[3]
+        publisher_id = binfo[4]
+        annotation = binfo[5]
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
+    return book_title, pub_isbn, pub_year, publisher, publisher_id, annotation
+
+
+def get_books_descr(book_ids):
+    """many books title/publication/annotation"""
+    ret = {}
+    try:
+        db_conn = dbconnect()
+        dbdata = db_conn.get_books_descr(book_ids)
+        for binfo in dbdata:
+            book_id = binfo[0]
+            ret[book_id] = (binfo[1], binfo[2], binfo[3], binfo[4], binfo[5], binfo[6])
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
     return ret

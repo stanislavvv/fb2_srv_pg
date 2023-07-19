@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 """library opds view"""
 
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response
 
 import xmltodict
 
-# pylint: disable=E0402
-from .opds import main_opds, str_list, seq_cnt_list, books_list, auth_list, main_author
-from .opds import author_seqs, name_list, name_cnt_list, random_data
-from .opds import search_main, search_term
-from .validate import validate_prefix, validate_id, validate_genre_meta, validate_genre, validate_search
-from .internals import id2path, URL, get_author_name, get_seq_name, get_meta_name, get_genre_name
+# pylint: disable=E0402,R0801
+from .internals import URL
+
+from .views_internals import view_main, view_seq_root, view_seq_sub, view_seq, view_auth_root
+from .views_internals import view_auth_sub, view_author, view_author_seqs, view_author_seq
+from .views_internals import view_author_nonseq, view_author_alphabet, view_author_time
+from .views_internals import view_gen_root, view_gen_meta, view_genre, view_random_books
+from .views_internals import view_random_seqs, view_search, view_search_authors, view_search_sequences
+from .views_internals import view_search_books, view_search_books_anno
+from .views_internals import view_rnd_gen_root, view_rnd_gen_meta, view_rnd_genre
 
 opds = Blueprint("opds", __name__)
 
@@ -20,21 +24,15 @@ REDIR_ALL = "opds.opds_root"
 @opds.route(URL["start"], methods=['GET'])
 def opds_root():
     """root"""
-    xml = xmltodict.unparse(main_opds(), pretty=True)
+    data = view_main()
+    xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
 
 @opds.route(URL["seqidx"], methods=['GET'])
 def opds_seq_root():
-    """sequences root (letters)"""
-    self = URL["seqidx"]
-    baseref = self
-    upref = URL["start"]
-    tag = "tag:root:sequences"
-    title = "Серии книг"
-    subtag = "tag:sequences:"
-    subtitle = "Книги на "
-    data = str_list(tag, title, baseref, self, upref, subtag, subtitle)
+    """sequences root (letters list)"""
+    data = view_seq_root()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -42,20 +40,7 @@ def opds_seq_root():
 @opds.route(URL["seqidx"] + "<sub>", methods=['GET'])
 def opds_seq_sub(sub):
     """three-letters links to lists or lists of sequences"""
-    sub = validate_prefix(sub)
-    data = []
-    self = URL["seqidx"] + sub
-    upref = URL["seqidx"]
-    tag = "tag:sequences:" + sub
-    title = "Серии на '" + sub + "'"
-    if len(sub) >= 3:
-        baseref = URL["seq"]
-        subtag = "tag:sequences:"
-        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, tpl="%d книг(и) в серии", sub=sub)
-    else:
-        baseref = URL["seqidx"]
-        subtag = "tag:sequence:"
-        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, tpl="серий: %d", layout="simple", sub=sub)
+    data = view_seq_sub(sub)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -63,16 +48,7 @@ def opds_seq_sub(sub):
 @opds.route(URL["seq"] + "<sub1>/<sub2>/<seq_id>", methods=['GET'])
 def opds_seq(sub1, sub2, seq_id):
     """list books in sequence"""
-    sub1 = validate_id(sub1)
-    sub2 = validate_id(sub2)
-    seq_id = validate_id(seq_id)
-    self = URL["seq"] + "%s/%s/%s" % (sub1, sub2, seq_id)
-    upref = URL["start"]
-    tag = "tag:root:sequence:" + id
-    title = "Серия '" + get_seq_name(seq_id) + "'"
-    authref = URL["author"]
-    seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, seq_id)
+    data = view_seq(sub1, sub2, seq_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -80,14 +56,7 @@ def opds_seq(sub1, sub2, seq_id):
 @opds.route(URL["authidx"], methods=['GET'])
 def opds_auth_root():
     """authors root (letters)"""
-    self = URL["authidx"]
-    baseref = self
-    upref = URL["start"]
-    tag = "tag:root:authors"
-    title = "Авторы"
-    subtag = "tag:authors:"
-    subtitle = "Авторы на "
-    data = str_list(tag, title, baseref, self, upref, subtag, subtitle, req="auth_1")
+    data = view_auth_root()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -95,21 +64,7 @@ def opds_auth_root():
 @opds.route(URL["authidx"] + "<sub>", methods=['GET'])
 def opds_auth_sub(sub):
     """three-letters links to lists or lists of authors"""
-    sub = validate_prefix(sub)
-    data = []
-    self = URL["authidx"] + sub
-    upref = URL["authidx"]
-    title = "Авторы на '" + sub + "'"
-    if len(sub) >= 3:
-        baseref = URL["author"]
-        tag = "tag:authors:" + sub
-        subtag = "tag:authors:"
-        data = auth_list(tag, title, baseref, self, upref, subtag, "%s", sub=sub)
-    else:
-        baseref = URL["authidx"]
-        tag = "tag:authors:" + sub
-        subtag = "tag:author:"
-        data = auth_list(tag, title, baseref, self, upref, subtag, "%d aвт.", sub=sub, layout="simple")
+    data = view_auth_sub(sub)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -117,14 +72,7 @@ def opds_auth_sub(sub):
 @opds.route(URL["author"] + "<sub1>/<sub2>/<auth_id>", methods=['GET'])
 def opds_author(sub1, sub2, auth_id):
     """author main page"""
-    sub1 = validate_id(sub1)
-    sub2 = validate_id(sub2)
-    auth_id = validate_id(auth_id)
-    self = URL["author"] + "%s/%s/%s" % (sub1, sub2, auth_id)
-    upref = URL["authidx"]
-    tag = "tag:root:author:" + auth_id
-    title = "Автор "
-    data = main_author(tag, title, self, upref, auth_id)
+    data = view_author(sub1, sub2, auth_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -132,16 +80,7 @@ def opds_author(sub1, sub2, auth_id):
 @opds.route(URL["author"] + "<sub1>/<sub2>/<auth_id>/sequences", methods=['GET'])
 def opds_author_seqs(sub1, sub2, auth_id):
     """sequences of author"""
-    sub1 = validate_id(sub1)
-    sub2 = validate_id(sub2)
-    auth_id = validate_id(auth_id)
-    self = URL["author"] + "%s/%s/%s" % (sub1, sub2, auth_id)
-    baseref = self + "/"
-    upref = URL["authidx"]
-    tag = "tag:root:author:" + auth_id
-    title = "Серии автора "
-    subtag = "tag:author:" + auth_id + ":sequence:"
-    data = author_seqs(tag, title, baseref, self, upref, subtag, auth_id)
+    data = view_author_seqs(sub1, sub2, auth_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -149,17 +88,7 @@ def opds_author_seqs(sub1, sub2, auth_id):
 @opds.route(URL["author"] + "<sub1>/<sub2>/<auth_id>/<seq_id>", methods=['GET'])
 def opds_author_seq(sub1, sub2, auth_id, seq_id):
     """book in sequence of author"""
-    sub1 = validate_id(sub1)
-    sub2 = validate_id(sub2)
-    auth_id = validate_id(auth_id)
-    seq_id = validate_id(seq_id)
-    self = URL["author"] + "%s/%s/%s/%s" % (sub1, sub2, auth_id, seq_id)
-    upref = URL["author"] + "%s/%s/%s" % (sub1, sub2, auth_id)
-    tag = "tag:root:author:" + auth_id + ":sequence:" + seq_id
-    title = "Автор '" + get_author_name(auth_id) + "', серия '" + get_seq_name(seq_id) + "'"
-    authref = URL["author"]
-    seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, seq_id, auth_id=auth_id)
+    data = view_author_seq(sub1, sub2, auth_id, seq_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -167,16 +96,7 @@ def opds_author_seq(sub1, sub2, auth_id, seq_id):
 @opds.route(URL["author"] + "<sub1>/<sub2>/<auth_id>/sequenceless", methods=['GET'])
 def opds_author_nonseq(sub1, sub2, auth_id):
     """books of author not belong to any sequence"""
-    sub1 = validate_id(sub1)
-    sub2 = validate_id(sub2)
-    auth_id = validate_id(auth_id)
-    self = URL["author"] + "%s/%s/%s/sequenceless" % (sub1, sub2, auth_id)
-    upref = URL["author"] + id2path(auth_id)
-    tag = "tag:root:author:" + auth_id
-    title = "Книги вне серий автора " + get_author_name(auth_id)
-    authref = URL["author"]
-    seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, None, auth_id=auth_id)
+    data = view_author_nonseq(sub1, sub2, auth_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -184,16 +104,7 @@ def opds_author_nonseq(sub1, sub2, auth_id):
 @opds.route(URL["author"] + "<sub1>/<sub2>/<auth_id>/alphabet", methods=['GET'])
 def opds_author_alphabet(sub1, sub2, auth_id):
     """all books of author order by book title"""
-    sub1 = validate_id(sub1)
-    sub2 = validate_id(sub2)
-    auth_id = validate_id(auth_id)
-    self = URL["author"] + "%s/%s/%s/alphabet" % (sub1, sub2, auth_id)
-    upref = URL["author"] + id2path(auth_id)
-    tag = "tag:root:author:" + auth_id + ":alphabet"
-    title = "Книги по алфавиту автора " + get_author_name(auth_id)
-    authref = URL["author"]
-    seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, '', auth_id=auth_id)
+    data = view_author_alphabet(sub1, sub2, auth_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -201,16 +112,7 @@ def opds_author_alphabet(sub1, sub2, auth_id):
 @opds.route(URL["author"] + "<sub1>/<sub2>/<auth_id>/time", methods=['GET'])
 def opds_author_time(sub1, sub2, auth_id):
     """all books of author order by date"""
-    sub1 = validate_id(sub1)
-    sub2 = validate_id(sub2)
-    auth_id = validate_id(auth_id)
-    self = URL["author"] + "%s/%s/%s/time" % (sub1, sub2, auth_id)
-    upref = URL["author"] + id2path(auth_id)
-    tag = "tag:root:author:" + auth_id + ":time"
-    title = "Книги по дате добавления, автор " + get_author_name(auth_id)
-    authref = URL["author"]
-    seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, None, True, auth_id=auth_id)
+    data = view_author_time(sub1, sub2, auth_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -218,13 +120,7 @@ def opds_author_time(sub1, sub2, auth_id):
 @opds.route(URL["genidx"], methods=['GET'])
 def opds_gen_root():
     """genres meta list"""
-    self = URL["genidx"]
-    baseref = self
-    upref = URL["start"]
-    tag = "tag:root:genres"
-    title = "Группы жанров"
-    subtag = "tag:genres:"
-    data = name_list(tag, title, baseref, self, upref, subtag, subdata="genresroot")
+    data = view_gen_root()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -232,15 +128,7 @@ def opds_gen_root():
 @opds.route(URL["genidx"] + "<sub>", methods=['GET'])
 def opds_gen_meta(sub):
     """genres meta"""
-    sub = validate_genre_meta(sub)
-    data = []
-    self = URL["genidx"] + sub
-    baseref = URL["genre"]
-    upref = URL["genidx"]
-    tag = "tag:genres:" + sub
-    title = get_meta_name(sub)
-    subtag = "tag:genres:"
-    data = name_cnt_list(tag, title, baseref, self, upref, subtag, subdata="genres", meta_id=sub)
+    data = view_gen_meta(sub)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -249,14 +137,7 @@ def opds_gen_meta(sub):
 @opds.route(URL["genre"] + "<gen_id>/<int:page>", methods=['GET'])
 def opds_genre(gen_id, page=0):
     """books in genre, paginated"""
-    gen_id = validate_genre(gen_id)
-    self = URL["genre"] + gen_id
-    upref = URL["start"]
-    tag = "tag:root:genre:" + gen_id
-    title = "Жанр " + get_genre_name(gen_id)
-    authref = URL["author"]
-    seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, '', page=page, paginate=True, gen_id=gen_id)
+    data = view_genre(gen_id, page)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -264,22 +145,7 @@ def opds_genre(gen_id, page=0):
 @opds.route(URL["rndbook"], methods=['GET'])
 def opds_random_books():
     """random books"""
-    self = URL["rndbook"]
-    upref = URL["start"]
-    tag = "tag:search:books:random:"
-    title = "Поиск случайных книг"
-    authref = URL["author"]
-    seqref = URL["seq"]
-    subtag = ""  # not for books
-    data = random_data(
-                tag,
-                title,
-                self,
-                upref,
-                authref,
-                seqref,
-                subtag,
-                True)
+    data = view_random_books()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -287,22 +153,7 @@ def opds_random_books():
 @opds.route(URL["rndseq"], methods=['GET'])
 def opds_random_seqs():
     """random sequences"""
-    self = URL["rndseq"]
-    upref = URL["start"]
-    tag = "tag:search:sequences:random:"
-    title = "Поиск случайных серий"
-    authref = URL["author"]
-    seqref = URL["seq"]
-    subtag = "tag:sequence:"
-    data = random_data(
-                tag,
-                title,
-                self,
-                upref,
-                authref,
-                seqref,
-                subtag,
-                False)
+    data = view_random_seqs()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -310,13 +161,7 @@ def opds_random_seqs():
 @opds.route(URL["search"], methods=['GET'])
 def opds_search():
     """main search page"""
-    s_term = request.args.get('searchTerm')
-    s_term = validate_search(s_term)
-    self = URL["search"]
-    upref = URL["start"]
-    tag = "tag:search::"
-    title = "Поиск по '" + s_term + "'"
-    data = search_main(s_term, tag, title, self, upref)
+    data = view_search()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -324,15 +169,7 @@ def opds_search():
 @opds.route(URL["srchauth"], methods=['GET'])
 def opds_search_authors():
     """list of found authors"""
-    s_term = request.args.get('searchTerm')
-    s_term = validate_search(s_term)
-    baseref = URL["author"]
-    self = URL["srchauth"]
-    upref = URL["start"]
-    tag = "tag:search:authors:"
-    subtag = "tag:author:"
-    title = "Поиск среди авторов по '" + s_term + "'"
-    data = search_term(s_term, tag, title, baseref, self, upref, subtag, "auth")
+    data = view_search_authors()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -340,15 +177,7 @@ def opds_search_authors():
 @opds.route(URL["srchseq"], methods=['GET'])
 def opds_search_sequences():
     """list of found sequences"""
-    s_term = request.args.get('searchTerm')
-    s_term = validate_search(s_term)
-    baseref = URL["seq"]
-    self = URL["srchseq"]
-    upref = URL["start"]
-    tag = "tag:search:sequences:"
-    subtag = "tag:sequence:"
-    title = "Поиск среди серий по '" + s_term + "'"
-    data = search_term(s_term, tag, title, baseref, self, upref, subtag, "seq")
+    data = view_search_sequences()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -356,15 +185,7 @@ def opds_search_sequences():
 @opds.route(URL["srchbook"], methods=['GET'])
 def opds_search_books():
     """list of found books (search in book title)"""
-    s_term = request.args.get('searchTerm')
-    s_term = validate_search(s_term)
-    baseref = URL["author"]
-    self = URL["srchbook"]
-    upref = URL["start"]
-    tag = "tag:search:books:"
-    subtag = "tag:book:"
-    title = "Поиск среди книг по '" + s_term + "'"
-    data = search_term(s_term, tag, title, baseref, self, upref, subtag, "book")
+    data = view_search_books()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -372,15 +193,7 @@ def opds_search_books():
 @opds.route(URL["srchbookanno"], methods=['GET'])
 def opds_search_books_anno():
     """list of found books (search in annotation)"""
-    s_term = request.args.get('searchTerm')
-    s_term = validate_search(s_term)
-    baseref = URL["author"]
-    self = URL["srchbook"]
-    upref = URL["start"]
-    tag = "tag:search:books:"
-    subtag = "tag:book:"
-    title = "Поиск среди книг по '" + s_term + "'"
-    data = search_term(s_term, tag, title, baseref, self, upref, subtag, "bookanno")
+    data = view_search_books_anno()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -388,13 +201,7 @@ def opds_search_books_anno():
 @opds.route(URL["rndgenidx"].replace("/opds", "/opds", 1), methods=['GET'])
 def opds_rnd_gen_root():
     """genres meta list for random books in genre"""
-    self = URL["rndgenidx"]
-    baseref = self
-    upref = URL["start"]
-    tag = "tag:rnd:genres"
-    title = "Группы жанров"
-    subtag = "tag:rnd:genres:"
-    data = name_list(tag, title, baseref, self, upref, subtag, subdata="genresroot")
+    data = view_rnd_gen_root()
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -402,15 +209,7 @@ def opds_rnd_gen_root():
 @opds.route(URL["rndgenidx"].replace("/opds", "/opds", 1) + "<sub>", methods=['GET'])
 def opds_rnd_gen_meta(sub):
     """genres list for random books in genre"""
-    sub = validate_genre_meta(sub)
-    data = []
-    self = URL["rndgenidx"] + sub
-    baseref = URL["rndgen"]
-    upref = URL["start"]
-    tag = "tag:rnd:genres:" + sub
-    title = get_meta_name(sub)
-    subtag = "tag:genres:"
-    data = name_cnt_list(tag, title, baseref, self, upref, subtag, subdata="genres", meta_id=sub)
+    data = view_rnd_gen_meta(sub)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')
 
@@ -418,23 +217,6 @@ def opds_rnd_gen_meta(sub):
 @opds.route(URL["rndgen"].replace("/opds", "/opds", 1) + "<id>", methods=['GET'])
 def opds_rnd_genre(gen_id):
     """random books in genre"""
-    gen_id = validate_genre(gen_id)
-    self = URL["rndgen"] + gen_id
-    upref = URL["rndgenidx"]
-    tag = "tag:rnd:genre:" + gen_id
-    title = "Случайные книги, жанр '" + get_genre_name(gen_id) + "'"
-    authref = URL["author"]
-    seqref = URL["seq"]
-    subtag = ""  # not for books
-    data = random_data(
-                tag,
-                title,
-                self,
-                upref,
-                authref,
-                seqref,
-                subtag,
-                True,
-                gen_id=gen_id)
+    data = view_rnd_genre(gen_id)
     xml = xmltodict.unparse(data, pretty=True)
     return Response(xml, mimetype='text/xml')

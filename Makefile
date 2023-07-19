@@ -1,5 +1,5 @@
 FLAKE8_ARGS=--max-line-length=120
-PYLINT_ARGS=--max-line-length=120
+PYLINT_ARGS=--max-line-length=120 --ignore-imports=yes --min-similarity-lines=8
 DATA=data
 export FLASK_ENV=prod
 

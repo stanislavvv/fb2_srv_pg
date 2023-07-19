@@ -14,6 +14,7 @@ from .consts import BOOK_REQ
 
 def quote_string(string: str, errors="strict"):
     """quote string for sql"""
+    # pylint: disable=R0801
     encodable = string.encode("utf-8", errors).decode("utf-8")
 
     nul_index = encodable.find("\x00")
@@ -33,6 +34,7 @@ class BookDBro():
     # pylint: disable=R0904
 
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
+        # pylint: disable=R0801
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
         self.conn = psycopg2.connect(
             host=pg_host,

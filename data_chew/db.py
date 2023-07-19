@@ -97,6 +97,7 @@ class BookDB():
         return ret
 
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
+        # pylint: disable=R0801
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
         self.conn = psycopg2.connect(
             host=pg_host,

@@ -8,7 +8,9 @@
   5. too complex functions — won't fix
   6. duplicated code (view_*.py) — done
 
+- renew `.list` format to jsonl (will be lower memory usage)
+- cover pictures
+
 # ToDo sometimes
 
-- cover pictures
 - partial [re]indexing

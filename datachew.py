@@ -8,9 +8,10 @@ import glob
 import logging
 
 from app import create_app
+
 from data_chew import INPX
 from data_chew import create_booklist, update_booklist
-from data_chew import process_lists
+from data_chew import process_lists, recalc_commit
 from data_chew.db import BookDB
 
 DEBUG = True  # default, configure in app/config.py
@@ -21,11 +22,13 @@ def usage():
     """print help"""
     print("Usage: managedb.py <command>")
     print("Commands:")
-    print(" clean       -- remove static data from disk")
-    print(" lists       -- make all lists from zips, does not touch static data")
-    print(" new_lists   -- update lists from updated/new zips, does not touch static data")
-    print(" fillall     -- (re)fill all lists to database")
-    # print(" fillnew     -- (re)fill only new/updated lists to database")
+    print(" clean          -- remove static data from disk")
+    print(" lists          -- make all lists from zips, does not touch database")
+    print(" new_lists      -- update lists from updated/new zips, does not touch database")
+    print(" fillall        -- (re)fill all existing lists to database")
+    print(" fillnew        -- NOT FULLY IMPLEMENTED (re)fill only new/updated lists to database")
+    print(" lists_fill     -- make all lists from zips and fill to database in parallel")
+    print(" new_lists_fill -- update lists from updated/new zips and fill to database in parallel")
 
 
 def clean():
@@ -40,7 +43,35 @@ def renew_lists():
     for zip_file in glob.glob(zipdir + '/*.zip'):
         i += 1
         logging.info("[%s] ", str(i))
-        create_booklist(inpx_data, zip_file)
+        create_booklist(None, inpx_data, zip_file)
+
+
+def renew_lists_fill():
+    """recreate all .list's from .zip's"""
+    ret = True
+    zipdir = app.config['ZIPS']
+    inpx_data = zipdir + "/" + INPX
+    pg_host = app.config['PG_HOST']
+    pg_base = app.config['PG_BASE']
+    pg_user = app.config['PG_USER']
+    pg_pass = app.config['PG_PASS']
+    i = 0
+    try:
+        db = BookDB(pg_host, pg_base, pg_user, pg_pass)  # pylint: disable=C0103
+        db.create_tables()
+        for zip_file in glob.glob(zipdir + '/*.zip'):
+            i += 1
+            logging.info("[%s] ", str(i))
+            create_booklist(db, inpx_data, zip_file)
+        recalc_commit(db)
+    except Exception as ex:  # pylint: disable=broad-except
+        logging.error(ex)
+        logging.error("data rollbacked")
+        db.conn.rollback()
+        logging.error(ex)
+        ret = False
+    db.conn.close()
+    return ret
 
 
 def new_lists():
@@ -51,7 +82,35 @@ def new_lists():
     for zip_file in glob.glob(zipdir + '/*.zip'):
         i += 1
         logging.info("[%s] ", str(i))
-        update_booklist(inpx_data, zip_file)
+        update_booklist(None, inpx_data, zip_file)
+
+
+def new_lists_fill():
+    """create .list's for new or updated .zip's"""
+    ret = True
+    zipdir = app.config['ZIPS']
+    inpx_data = zipdir + "/" + INPX
+    pg_host = app.config['PG_HOST']
+    pg_base = app.config['PG_BASE']
+    pg_user = app.config['PG_USER']
+    pg_pass = app.config['PG_PASS']
+    try:
+        db = BookDB(pg_host, pg_base, pg_user, pg_pass)  # pylint: disable=C0103
+        db.create_tables()
+        i = 0
+        for zip_file in glob.glob(zipdir + '/*.zip'):
+            i += 1
+            logging.info("[%s] ", str(i))
+            update_booklist(db, inpx_data, zip_file)
+        recalc_commit(db)
+    except Exception as ex:  # pylint: disable=broad-except
+        logging.error(ex)
+        logging.error("data rollbacked")
+        db.conn.rollback()
+        logging.error(ex)
+        ret = False
+    db.conn.close()
+    return ret
 
 
 def fromlists(stage):
@@ -85,10 +144,14 @@ if __name__ == "__main__":
             renew_lists()
         elif sys.argv[1] == "new_lists":
             new_lists()
+        elif sys.argv[1] == "lists_fill":
+            renew_lists_fill()
+        elif sys.argv[1] == "new_lists_fill":
+            new_lists_fill()
         elif sys.argv[1] == "fillall":
             fromlists("all")
-        # elif sys.argv[1] == "fillnew":
-        #     fromlists("newonly")
+        elif sys.argv[1] == "fillnew":
+            fromlists("newonly")
         else:
             usage()
     else:

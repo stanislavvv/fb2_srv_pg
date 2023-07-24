@@ -3,43 +3,68 @@
 """module for prepare and index data for opds library"""
 
 import os
+import sys
 import zipfile
 import glob
 import json
 import logging
 
-from datetime import datetime
-
-import xmltodict
-
-from bs4 import BeautifulSoup
-
 # pylint can't import local's
 # pylint: disable=E0401
-from .data import get_genre, get_author_struct, get_sequence, get_lang, get_title
-from .data import get_struct_by_key, make_id, get_replace_list, replace_book
-from .data import get_pub_info, get_image, get_fb2data
+from .data import get_replace_list, fb2parse
 
 from .inpx import get_inpx_meta
 
-from .idx import process_list_books
+from .idx import process_list_books, process_list_book
 
-READ_SIZE = 20480  # description in 20kb...
-# READ_SIZE = 81920000  # max 80MB for cover search
 INPX = "flibusta_fb2_local.inpx"  # filename of metadata indexes zip
 
 
-def create_booklist(inpx_data, zip_file):
+def recalc_commit(db):  # pylint: disable=C0103
+    """precalc some counts in database"""
+    logging.info("recalc stored counts...")
+    db.recalc_authors_books()
+    db.recalc_seqs_books()
+    db.recalc_genres_books()
+    db.commit()
+
+
+def create_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103
     """(re)create .list from .zip"""
 
     booklist = zip_file + ".list"
-    listfile = ziplist(inpx_data, zip_file)
-    blist = open(booklist, 'w')
-    blist.write(json.dumps(listfile, ensure_ascii=False))
+    try:
+        blist = open(booklist, 'w')
+
+        files = list_zip(zip_file)
+        z_file = zipfile.ZipFile(zip_file)
+        inpx_meta = get_inpx_meta(inpx_data, zip_file)
+        replace_data = get_replace_list(zip_file)
+
+        for filename in files:
+            logging.debug("%s/%s            ", zip_file, filename)
+            _, book = fb2parse(z_file, filename, replace_data, inpx_meta)
+            if book is None:
+                continue
+            blist.write(json.dumps(book, ensure_ascii=False))  # jsonl in blist
+            blist.write("\n")
+            if db is not None:
+                process_list_book(db, book)
+
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error("error processing zip_file: %s", ex)
+        logging.info("removing %s", booklist)
+        os.remove(booklist)
+        sys.exit(1)
+    except KeyboardInterrupt as ex:  # Ctrl-C
+        logging.error("error processing zip_file: %s", ex)
+        logging.info("removing %s", booklist)
+        os.remove(booklist)
+        sys.exit(1)
     blist.close()
 
 
-def update_booklist(inpx_data, zip_file):
+def update_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103
     """(re)create .list for new or updated .zip"""
 
     booklist = zip_file + ".list"
@@ -52,134 +77,18 @@ def update_booklist(inpx_data, zip_file):
             replacetime = os.path.getmtime(replacelist)
         if ziptime < listtime and replacetime < listtime:
             return False
-    create_booklist(inpx_data, zip_file)
+    create_booklist(db, inpx_data, zip_file)
     return True
 
 
-def fb2parse(z_file, filename, replace_data, inpx_data):  # pylint: disable=R0912,R0914,R0915
-    """get filename in opened zip (assume filename format as fb2), return book struct"""
-
-    file_info = z_file.getinfo(filename)
-    zip_file = str(os.path.basename(z_file.filename))
-    fb2dt = datetime(*file_info.date_time)
-    date_time = fb2dt.strftime("%F_%H:%M")
-    size = file_info.file_size
-
-    if size < 500:  # too small for real book
-        return None, None
-
-    fb2 = z_file.open(filename)
-    b_soap = BeautifulSoup(bytes(fb2.read(READ_SIZE)), 'xml')
-    # some data, taken from xml directly, so get_fb2data() can't be used
-    bs_descr = b_soap.FictionBook.description
-    tinfo = bs_descr.find("title-info")
-    bs_anno = str(tinfo.annotation)
-    bs_anno = bs_anno.replace("<annotation>", "").replace("</annotation>", "")
-
-    # as in get_fb2data()
-    doc = b_soap.prettify()
-    data = xmltodict.parse(doc)
-    if 'FictionBook' not in data:  # parse with namespace
-        data = xmltodict.parse(
-            doc,
-            process_namespaces=True,
-            namespaces={'http://www.gribuser.ru/xml/fictionbook/2.0': None}
-        )
-    if 'FictionBook' not in data:  # not fb2
-        logging.error("not fb2: %s/%s ", zip_file, filename)
-        return None, None
-    fb2data = get_struct_by_key('FictionBook', data)  # data['FictionBook']
-    descr = get_struct_by_key('description', fb2data)  # fb2data['description']
-    info = get_struct_by_key('title-info', descr)  # descr['title-info']
-
-    cover = None
-    if "coverpage" in info and info["coverpage"] is not None:
-        coverpage = info["coverpage"]
-        if "image" in coverpage and coverpage["image"] is not None:
-            fb2_full = z_file.open(filename)
-            fb2data_full = get_fb2data(fb2_full, zip_file, filename)
-            covermeta = coverpage["image"]
-            covername = None
-            if "@l:href" in covermeta:
-                covername = covermeta["@l:href"].lstrip('#')
-            elif "@xlink:href" in covermeta:
-                covername = covermeta["@xlink:href"].lstrip('#')
-            else:
-                logging.debug(coverpage)   # debug strange info
-            if "binary" in fb2data_full:
-                binary = fb2data_full["binary"]  # mostly images here
-                cover = get_image(covername, binary)  # get corresponding image
-    pubinfo = None
-    try:
-        pubinfo = get_struct_by_key('publish-info', descr)  # descr['publish-info']
-    except Exception as ex:  # pylint: disable=W0703
-        # get_struct_by_key must return None without stacktrace
-        if len(str(ex)) > 0:  # flake8...
-            logging.debug("No publish info in %s/%s", zip_file, filename)
-    if isinstance(pubinfo, list):
-        pubinfo = pubinfo[0]
-    if isinstance(info, list):
-        # see f.fb2-513034-516388.zip/513892.fb2
-        info = info[0]
-    if inpx_data is not None and filename in inpx_data:
-        info = replace_book(filename, info, inpx_data)
-    if replace_data is not None and filename in replace_data:
-        info = replace_book(filename, info, replace_data)
-
-    if "deleted" in info:
-        if info["deleted"] != 0:
-            logging.debug("%s/%s in deleted status", zip_file, filename)
-    else:
-        info["deleted"] = 0
-
-    if "date_time" in info and info["date_time"] is not None:
-        date_time = str(info["date_time"])
-    if 'genre' in info and info['genre'] is not None:
-        genre = get_genre(info['genre'])
-    else:
-        genre = ""
-    author = [{"name": '--- unknown ---', "id": make_id('--- unknown ---')}]
-    if 'author' in info and info['author'] is not None:
-        author = get_author_struct(info['author'])
-    sequence = None
-    if 'sequence' in info and info['sequence'] is not None:
-        sequence = get_sequence(info['sequence'], zip_file, filename)
-    book_title = ''
-    if 'book-title' in info and info['book-title'] is not None:
-        book_title = get_title(info['book-title'])
-    lang = ''
-    if 'lang' in info and info['lang'] is not None:
-        lang = get_lang(info['lang'])
-    annotext = ''
-    if 'annotation' in info and info['annotation'] is not None:
-        annotext = bs_anno
-
-    isbn, pub_year, publisher = get_pub_info(pubinfo)
-    pub_info = {
-        "isbn": isbn,
-        "year": pub_year,
-        "publisher": publisher,
-        "publisher_id": make_id(publisher)
-    }
-    book_path = str(os.path.basename(z_file.filename)) + "/" + filename
-    book_id = make_id(book_path)
-    out = {
-        "zipfile": zip_file,
-        "filename": filename,
-        "genres": genre,
-        "authors": author,
-        "sequences": sequence,
-        "book_title": str(book_title),
-        "cover": cover,
-        "book_id": book_id,
-        "lang": str(lang),
-        "date_time": date_time,
-        "size": str(size),
-        "annotation": str(annotext.replace('\n', " ").replace('|', " ")),
-        "pub_info": pub_info,
-        "deleted": info["deleted"]
-    }
-    return book_id, out
+def list_zip(zip_file):
+    """return list of files in zip_file"""
+    ret = []
+    z_file = zipfile.ZipFile(zip_file)
+    for filename in z_file.namelist():
+        if not os.path.isdir(filename):
+            ret.append(filename)
+    return ret
 
 
 def ziplist(inpx_data, zip_file):
@@ -223,12 +132,8 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
         logging.error("NOT IMPLEMENTED")
 
     try:
-        # recalc counts with any parameters
-        logging.info("recalc stored counts...")
-        db.recalc_authors_books()
-        db.recalc_seqs_books()
-        db.recalc_genres_books()
-        db.commit()
+        # recalc counts and commit
+        recalc_commit(db)
     except Exception as ex:  # pylint: disable=W0703
         db.conn.rollback()
         logging.error(ex)

@@ -7,7 +7,7 @@ import zipfile
 import time
 import base64
 
-from flask import Blueprint, Response, send_file, request, current_app
+from flask import Blueprint, Response, send_file, request, current_app, url_for, redirect
 
 # pylint: disable=E0402
 from .get_fb2 import fb2_out, html_out
@@ -17,7 +17,7 @@ from .internals import get_book_cover
 dl = Blueprint("dl", __name__)
 
 REDIR_ALL = "html.html_root"
-
+DEFAULT_IMAGE = "default-book-icon.jpg"
 
 def shutdown_server():
     """correctly shutdown app"""
@@ -82,6 +82,10 @@ def fb2_cover(book_id=None):
     if image_type is not None and image_data is not None:
         buf = io.BytesIO(base64.b64decode(image_data))
         return Response(buf, mimetype=image_type)
+    else:
+        location = url_for('static', filename=DEFAULT_IMAGE)
+        code = 302
+        return redirect(location, code, Response=None)
     return redir_invalid(REDIR_ALL)
 
 

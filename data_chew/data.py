@@ -8,6 +8,14 @@ import hashlib
 import json
 import os
 import logging
+import collections
+import base64
+import io
+import sys
+import xmltodict
+
+from bs4 import BeautifulSoup
+from PIL import Image
 
 # pylint: disable=E0402
 from .strings import strlist, strip_quotes, unicode_upper
@@ -293,3 +301,70 @@ def get_pub_info(pubinfo):
                 if tmppub is not None:
                     publisher = tmppub
     return isbn, year, publisher
+
+
+def get_image(name: str, binary, last=True):  # pylint: disable=R0912,R0914
+    """
+    return {"content-type": "image/jpeg", "data": "<image data in jpeg>"}
+    content-type must be correspond for image data format
+    """
+    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
+    ret = None
+    c_type = "image/jpeg"  # default
+    if name is not None:
+        if isinstance(binary, dict) and '@id' in binary and binary['@id'] == name:
+            if '@content-type' in binary:
+                c_type = binary['@content-type']
+            if '#text' in binary:
+                data = binary['#text']
+                ret = {
+                    "content-type": c_type,
+                    "data": data
+                }
+        elif isinstance(binary, list):
+            for item in binary:
+                tmp = get_image(name, item, False)
+                if tmp is not None:
+                    ret = tmp
+                    break
+        elif isinstance(binary, collections.OrderedDict):
+            for val in binary.values():
+                tmp = get_image(name, val, False)
+                if tmp is not None:
+                    ret = tmp
+                    break
+    if ret is not None and last is True:
+        try:
+            basewidth = 300
+            buf = io.BytesIO(base64.b64decode(ret["data"]))
+            img = Image.open(buf)
+            wpercent = (basewidth/float(img.size[0]))
+            if wpercent < 1:
+                hsize = int((float(img.size[1])*float(wpercent)))
+                img = img.resize((basewidth, hsize), Image.LANCZOS)
+                buffout = io.BytesIO()
+                img.save(buffout, format="JPEG", quality="web_medium")
+                data = base64.encodebytes(buffout.getvalue())
+                ret["data"] = data.decode("utf-8")
+        except Exception as ex:  # pylint: disable=W0703
+            logging.error(ex)
+    return ret
+
+
+def get_fb2data(fb2_fd, zip_file, filename):
+    """return FictionBook section from opened file fb2_fd"""
+    sys.setrecursionlimit(10000)  # for some strange fb2 with nested <p>
+    b_soap = BeautifulSoup(bytes(fb2_fd.read()), 'xml')
+    doc = b_soap.prettify()
+    xmldata = xmltodict.parse(doc)
+    if 'FictionBook' not in xmldata:  # parse with namespace
+        xmldata = xmltodict.parse(
+            doc,
+            process_namespaces=True,
+            namespaces={'http://www.gribuser.ru/xml/fictionbook/2.0': None}
+        )
+    if 'FictionBook' not in xmldata:  # not fb2
+        logging.error("not fb2: %s/%s ", zip_file, filename)
+        return None, None
+    fb2data = get_struct_by_key('FictionBook', xmldata)  # xmldata['FictionBook']
+    return fb2data

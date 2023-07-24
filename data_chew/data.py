@@ -347,11 +347,11 @@ def get_image(name: str, binary, last=True):  # pylint: disable=R0912,R0914
             if wpercent < 1:
                 hsize = int((float(img.size[1])*float(wpercent)))
                 img = img.resize((basewidth, hsize), Image.LANCZOS)
-                buffout = io.BytesIO()
-                img.save(buffout, format="JPEG", quality="web_medium")
-                data = base64.encodebytes(buffout.getvalue())
-                ret["@content-type"] = "image/jpeg"
-                ret["data"] = data.decode("utf-8")
+            buffout = io.BytesIO()
+            img.save(buffout, format="JPEG", quality="web_medium")
+            data = base64.encodebytes(buffout.getvalue())
+            ret["@content-type"] = "image/jpeg"
+            ret["data"] = data.decode("utf-8")
         except Exception as ex:  # pylint: disable=W0703
             logging.error(ex)
     return ret

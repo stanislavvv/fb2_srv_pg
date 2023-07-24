@@ -260,6 +260,12 @@ class BookDBro():
         data = self.cur.fetchall()
         return data
 
+    def get_book_cover(self, book_id):
+        """return image with type"""
+        self.cur.execute(BOOK_REQ["get_cover_data"] % book_id)
+        data = self.cur.fetchone()
+        return data
+
 
 def dbconnect():
     """return object for connected database"""

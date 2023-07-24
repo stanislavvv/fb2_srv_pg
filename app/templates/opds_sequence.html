@@ -11,9 +11,18 @@
                 <a href={{a.uri|replace('/opds', '/html', 1)}}>{{a.name}}</a>
             {% endfor %}
             </p>
+            <p>
+            {% for l in i.link %}
+                  {% if l['@type'] == 'image/jpeg' %}
+                        <img src={{l['@href']}} alt="{{l['@rel']}}">
+                  {% endif %}
+            {% endfor %}
+            </p>
             <p>Ссылки: 
             {% for l in i.link %}
-            <a href={{l['@href']|replace('/opds', '/html', 1)}}>{{l['@title']}}</a>
+                  {% if l['@type'] != 'image/jpeg' %}
+                        <a href={{l['@href']|replace('/opds', '/html', 1)}}>{{l['@title']}}</a>
+                  {% endif %}
             {% endfor %}
             </p>
             <p>

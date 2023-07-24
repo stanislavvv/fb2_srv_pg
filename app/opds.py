@@ -569,6 +569,12 @@ def books_list(
 
         authors = []
         links = []
+        links.append({
+            "@href": "/cover/%s/jpg" % book_id,
+            "@rel": "x-stanza-cover-image",
+            "@type": "image/jpeg"  # To Do get from db
+        })
+
         category = []
         seq_name = ""
         seq_num = ""
@@ -604,7 +610,6 @@ def books_list(
                         seq_num = seq.get("num")
                         if seq_num is None:
                             seq_num = "0"
-
         links.append(get_book_link(approot, zipfile, filename, 'dl'))
         links.append(get_book_link(approot, zipfile, filename, 'read'))
 

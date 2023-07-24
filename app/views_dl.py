@@ -5,12 +5,14 @@
 import io
 import zipfile
 import time
+import base64
 
 from flask import Blueprint, Response, send_file, request, current_app
 
 # pylint: disable=E0402
 from .get_fb2 import fb2_out, html_out
-from .validate import redir_invalid, validate_zip, validate_fb2
+from .validate import redir_invalid, validate_zip, validate_fb2, validate_id
+from .internals import get_book_cover
 
 dl = Blueprint("dl", __name__)
 
@@ -68,6 +70,19 @@ def fb2_read(zip_file=None, filename=None):
         return Response(data, mimetype='text/html')
     else:
         return Response("Book not found", status=404)
+
+
+@dl.route("/cover/<book_id>/jpg")
+def fb2_cover(book_id=None):
+    """return cover image for book"""
+    book_id = validate_id(book_id)
+    if book_id is None:
+        return Response("Cover not found", status=404)
+    image_type, image_data = get_book_cover(book_id)
+    if image_type is not None and image_data is not None:
+        buf = io.BytesIO(base64.b64decode(image_data))
+        return Response(buf, mimetype=image_type)
+    return redir_invalid(REDIR_ALL)
 
 
 @dl.route("/XaiJee6Fexoocoo1")

@@ -414,3 +414,16 @@ def get_books_descr(book_ids):
     except Exception as ex:  # pylint: disable=W0703
         logging.error(ex)
     return ret
+
+
+def get_book_cover(book_id):
+    """return content-type, image or None, None"""
+    ret = None, None
+    try:
+        db_conn = dbconnect()
+        dbdata = db_conn.get_book_cover(book_id)
+        if dbdata is not None and dbdata[1] is not None and dbdata[1] != '':
+            ret = dbdata[0], dbdata[1]
+    except Exception as ex:  # pylint: disable=W0703
+        logging.error(ex)
+    return ret

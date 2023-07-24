@@ -18,13 +18,14 @@ from bs4 import BeautifulSoup
 # pylint: disable=E0401
 from .data import get_genre, get_author_struct, get_sequence, get_lang, get_title
 from .data import get_struct_by_key, make_id, get_replace_list, replace_book
-from .data import get_pub_info
+from .data import get_pub_info, get_image, get_fb2data
 
 from .inpx import get_inpx_meta
 
 from .idx import process_list_books
 
 READ_SIZE = 20480  # description in 20kb...
+# READ_SIZE = 81920000  # max 80MB for cover search
 INPX = "flibusta_fb2_local.inpx"  # filename of metadata indexes zip
 
 
@@ -63,14 +64,19 @@ def fb2parse(z_file, filename, replace_data, inpx_data):  # pylint: disable=R091
     fb2dt = datetime(*file_info.date_time)
     date_time = fb2dt.strftime("%F_%H:%M")
     size = file_info.file_size
-    if size < 1000:
+
+    if size < 500:  # too small for real book
         return None, None
+
     fb2 = z_file.open(filename)
     b_soap = BeautifulSoup(bytes(fb2.read(READ_SIZE)), 'xml')
+    # some data, taken from xml directly, so get_fb2data() can't be used
     bs_descr = b_soap.FictionBook.description
     tinfo = bs_descr.find("title-info")
     bs_anno = str(tinfo.annotation)
     bs_anno = bs_anno.replace("<annotation>", "").replace("</annotation>", "")
+
+    # as in get_fb2data()
     doc = b_soap.prettify()
     data = xmltodict.parse(doc)
     if 'FictionBook' not in data:  # parse with namespace
@@ -85,6 +91,24 @@ def fb2parse(z_file, filename, replace_data, inpx_data):  # pylint: disable=R091
     fb2data = get_struct_by_key('FictionBook', data)  # data['FictionBook']
     descr = get_struct_by_key('description', fb2data)  # fb2data['description']
     info = get_struct_by_key('title-info', descr)  # descr['title-info']
+
+    cover = None
+    if "coverpage" in info and info["coverpage"] is not None:
+        coverpage = info["coverpage"]
+        if "image" in coverpage and coverpage["image"] is not None:
+            fb2_full = z_file.open(filename)
+            fb2data_full = get_fb2data(fb2_full, zip_file, filename)
+            covermeta = coverpage["image"]
+            covername = None
+            if "@l:href" in covermeta:
+                covername = covermeta["@l:href"].lstrip('#')
+            elif "@xlink:href" in covermeta:
+                covername = covermeta["@xlink:href"].lstrip('#')
+            else:
+                logging.debug(coverpage)   # debug strange info
+            if "binary" in fb2data_full:
+                binary = fb2data_full["binary"]  # mostly images here
+                cover = get_image(covername, binary)  # get corresponding image
     pubinfo = None
     try:
         pubinfo = get_struct_by_key('publish-info', descr)  # descr['publish-info']
@@ -146,6 +170,7 @@ def fb2parse(z_file, filename, replace_data, inpx_data):  # pylint: disable=R091
         "authors": author,
         "sequences": sequence,
         "book_title": str(book_title),
+        "cover": cover,
         "book_id": book_id,
         "lang": str(lang),
         "date_time": date_time,
@@ -192,7 +217,7 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
                 db.commit()
         except Exception as ex:  # pylint: disable=W0703
             db.conn.rollback()
-            print(ex)
+            logging.error(ex)
             return False
     elif stage == "newonly":
         logging.error("NOT IMPLEMENTED")
@@ -206,6 +231,6 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
         db.commit()
     except Exception as ex:  # pylint: disable=W0703
         db.conn.rollback()
-        print(ex)
+        logging.error(ex)
         return False
     return True

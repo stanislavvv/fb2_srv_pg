@@ -12,10 +12,9 @@
             {% endfor %}
             </p>
             <p>
+            <!---cover image here--->
             {% for l in i.link %}
-                  {% if l['@type'] == 'image/jpeg' %}
-                        <img src={{l['@href']}} alt="{{l['@rel']}}">
-                  {% endif %}
+                  {% if l['@type'] == 'image/jpeg' %}<img src={{l['@href']}} alt="{{l['@rel']}}">{% endif %}
             {% endfor %}
             </p>
             <p>Ссылки: 

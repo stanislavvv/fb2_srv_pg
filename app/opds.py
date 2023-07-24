@@ -1058,6 +1058,12 @@ def random_data(
 
                 authors = []
                 links = []
+                links.append({
+                    "@href": "/cover/%s/jpg" % book_id,
+                    "@rel": "x-stanza-cover-image",
+                    "@type": "image/jpeg"  # To Do get from db
+                })
+
                 category = []
                 for author in book["authors"]:
                     authors.append(

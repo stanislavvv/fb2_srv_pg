@@ -37,6 +37,13 @@ CREATE_REQ = [
     CREATE INDEX IF NOT EXISTS books_descr_anno ON books_descr USING GIN (to_tsvector('russian', annotation));
     """,
     """
+    CREATE TABLE IF NOT EXISTS books_covers (
+        book_id     char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
+        cover_ctype varchar,
+        cover       text
+    )
+    """,
+    """
     CREATE TABLE IF NOT EXISTS authors (
         id    char(32) UNIQUE NOT NULL,
         name  text,
@@ -121,6 +128,13 @@ INSERT_REQ = {
         publisher_id = %s, annotation = %s
         WHERE book_id = %s;
     """,
+    "cover": """
+        INSERT INTO books_covers(book_id, cover_ctype, cover)
+        VALUES ('%s', '%s', '%s');
+    """,
+    "cover_replace": """
+        UPDATE books_covers SET cover_ctype = '%s', cover = '%s' WHERE book_id = '%s';
+    """,
 
     #  no author info in books list, must be updated later
     # "authors": """
@@ -168,6 +182,9 @@ GET_REQ = {
     """,
     "bookdescr_exist": """
         SELECT 1 FROM books_descr WHERE book_id = '%s';
+    """,
+    "cover_exist": """
+        SELECT 1 FROM books_covers WHERE book_id = '%s';
     """,
     "author_exist": """
         SELECT 1 FROM authors WHERE id = '%s';

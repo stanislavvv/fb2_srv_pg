@@ -211,6 +211,27 @@ class BookDB():
         # logging.debug("replace req: %s" % req)
         self.cur.execute(req)
 
+    def __cover_exists(self, book):
+        self.cur.execute(GET_REQ["cover_exist"] % str(book["book_id"]))
+        data = self.cur.fetchone()
+        return data
+
+    def __add_cover(self, book):
+        book_id = book["book_id"]
+        cover = book["cover"]
+        cover_ctype = cover["content-type"]
+        cover_data = cover["data"]
+        req = INSERT_REQ["cover"] % (book_id, cover_ctype, cover_data)
+        self.cur.execute(req)
+
+    def __replace_cover(self, book):
+        book_id = book["book_id"]
+        cover = book["cover"]
+        cover_ctype = cover["content-type"]
+        cover_data = cover["data"]
+        req = INSERT_REQ["cover_replace"] % (cover_ctype, cover_data, book_id)
+        self.cur.execute(req)
+
     def __author_exist(self, author):
         self.cur.execute(GET_REQ["author_exist"] % str(author["id"]))
         data = self.cur.fetchone()
@@ -373,6 +394,13 @@ class BookDB():
     #     logging.debug("NOT IMPLEMENTED: %s" % inspect.currentframe().f_code.co_name)
     #     pass
 
+    def add_book_cover(self, book):
+        """add book cover to corresponding db table"""
+        if self.__cover_exists(book):
+            self.__replace_cover(book)
+        else:
+            self.__add_cover(book)
+
     def add_book(self, book):  # pylint: disable=R0912,R0915
         """add books metadata and relations to db"""
         # fixes:
@@ -399,6 +427,15 @@ class BookDB():
                 self.__replace_book(book)
         except Exception as ex:
             logging.error("FAIL in add_book (book): %s", ex)
+            logging.error("param: %s", book)
+            raise
+
+        try:
+            # book cover
+            if "cover" in book and book["cover"] is not None:
+                self.add_book_cover(book)
+        except Exception as ex:
+            logging.error("FAIL in add_book_cover (book): %s", ex)
             logging.error("param: %s", book)
             raise
 

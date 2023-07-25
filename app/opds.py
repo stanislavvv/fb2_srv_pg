@@ -570,7 +570,7 @@ def books_list(
         authors = []
         links = []
         links.append({
-            "@href": "/cover/%s/jpg" % book_id,
+            "@href": "%s/cover/%s/jpg" % (approot, book_id),
             "@rel": "x-stanza-cover-image",
             "@type": "image/jpeg"  # To Do get from db
         })
@@ -1059,7 +1059,7 @@ def random_data(
                 authors = []
                 links = []
                 links.append({
-                    "@href": "/cover/%s/jpg" % book_id,
+                    "@href": "%s/cover/%s/jpg" % (approot, book_id),
                     "@rel": "x-stanza-cover-image",
                     "@type": "image/jpeg"  # To Do get from db
                 })
@@ -1402,6 +1402,11 @@ def search_term(
 
                 authors = []
                 links = []
+                links.append({
+                    "@href": "%s/cover/%s/jpg" % (approot, book_id),
+                    "@rel": "x-stanza-cover-image",
+                    "@type": "image/jpeg"  # To Do get from db
+                })
                 category = []
                 for author in i["authors"]:
                     authors.append(

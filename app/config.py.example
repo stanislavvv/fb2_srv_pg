@@ -31,6 +31,7 @@ class DevelopmentConfig(Config):
     PG_USER = 'books'
     PG_PASS = 'ExamplePassword'
     HIDE_DELETED = False
+    PIC_WIDTH = 200
 
 
 class TestConfig(Config):
@@ -51,6 +52,7 @@ class TestConfig(Config):
     PG_USER = 'books'
     PG_PASS = 'ExamplePassword'
     HIDE_DELETED = False
+    PIC_WIDTH = 200
 
 
 class ProductionConfig(Config):
@@ -70,6 +72,7 @@ class ProductionConfig(Config):
     PG_USER = 'books'
     PG_PASS = 'ExamplePassword'
     HIDE_DELETED = False
+    PIC_WIDTH = 200
 
 
 config = {"development": DevelopmentConfig, "test": TestConfig, "prod": ProductionConfig}

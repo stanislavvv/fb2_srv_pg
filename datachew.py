@@ -13,6 +13,7 @@ from data_chew import INPX
 from data_chew import create_booklist, update_booklist
 from data_chew import process_lists, recalc_commit
 from data_chew.db import BookDB
+from data_chew.data import set_data_config
 
 DEBUG = True  # default, configure in app/config.py
 DBLOGLEVEL = logging.DEBUG
@@ -135,6 +136,9 @@ if __name__ == "__main__":
     DBLOGLEVEL = app.config['DBLOGLEVEL']
     DBLOGFORMAT = app.config['DBLOGFORMAT']
     logging.basicConfig(level=DBLOGLEVEL, format=DBLOGFORMAT)
+    if "PIC_WIDTH" in app.config:
+        set_data_config("width", app.config['PIC_WIDTH'])
+
     if len(sys.argv) > 1:
         if sys.argv[1] == "clean":
             clean()

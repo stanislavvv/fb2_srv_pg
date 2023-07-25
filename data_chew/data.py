@@ -25,6 +25,16 @@ from .strings import strlist, strip_quotes, unicode_upper
 
 READ_SIZE = 20480  # description in 20kb...
 
+data_config = {
+    "width": 200
+}
+
+
+def set_data_config(name, value):
+    """set internal configuration from main script"""
+    if name is not None and name in data_config:
+        data_config[name] = value
+
 
 def str_normalize(string: str):
     """will be normalize string for make_id and compare"""
@@ -340,7 +350,8 @@ def get_image(name: str, binary, last=True):  # pylint: disable=R0912,R0914
                     break
     if ret is not None and last is True:
         try:
-            basewidth = 300
+            # basewidth = 300
+            basewidth = data_config["width"]
             buf = io.BytesIO(base64.b64decode(ret["data"]))
             img = Image.open(buf).convert('RGB')
             wpercent = (basewidth/float(img.size[0]))

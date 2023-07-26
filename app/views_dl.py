@@ -19,6 +19,7 @@ dl = Blueprint("dl", __name__)
 REDIR_ALL = "html.html_root"
 DEFAULT_IMAGE = "default-book-icon.jpg"
 
+
 def shutdown_server():
     """correctly shutdown app"""
     func = request.environ.get('werkzeug.server.shutdown')
@@ -79,7 +80,7 @@ def fb2_cover(book_id=None):
     if book_id is None:
         return Response("Cover not found", status=404)
     image_type, image_data = get_book_cover(book_id)
-    if image_type is not None and image_data is not None:
+    if image_type is not None and image_data is not None:  # pylint: disable=R1705
         buf = io.BytesIO(base64.b64decode(image_data))
         return Response(buf, mimetype=image_type)
     else:

@@ -360,7 +360,7 @@ def get_image(name: str, binary, last=True, context=None):  # pylint: disable=R0
             buffout = io.BytesIO()
             img.save(buffout, format="JPEG", quality="web_medium")
             data = base64.encodebytes(buffout.getvalue())
-            ret["@content-type"] = "image/jpeg"
+            ret["content-type"] = "image/jpeg"
             ret["data"] = data.decode("utf-8")
         except Exception as ex:  # pylint: disable=W0703
             if context is not None:

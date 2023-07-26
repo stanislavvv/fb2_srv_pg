@@ -143,9 +143,8 @@ def num2int(num: str, context: str):
         return ret
     # pylint: disable=W0703
     except Exception as ex:  # not exception, but error in data
-        logging.error(
-            "Error: %s \nContext: %s", str(ex), context
-        )
+        logging.error("Error: %s", str(ex))
+        logging.error("Context: %s", context)
         return -1
 
 

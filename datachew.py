@@ -41,7 +41,7 @@ def renew_lists():
     zipdir = app.config['ZIPS']
     inpx_data = zipdir + "/" + INPX
     i = 0
-    for zip_file in glob.glob(zipdir + '/*.zip'):
+    for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
         i += 1
         logging.info("[%s] ", str(i))
         create_booklist(None, inpx_data, zip_file)
@@ -60,7 +60,7 @@ def renew_lists_fill():
     try:
         db = BookDB(pg_host, pg_base, pg_user, pg_pass)  # pylint: disable=C0103
         db.create_tables()
-        for zip_file in glob.glob(zipdir + '/*.zip'):
+        for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
             i += 1
             logging.info("[%s] ", str(i))
             create_booklist(db, inpx_data, zip_file)
@@ -80,7 +80,7 @@ def new_lists():
     zipdir = app.config['ZIPS']
     inpx_data = zipdir + "/" + INPX
     i = 0
-    for zip_file in glob.glob(zipdir + '/*.zip'):
+    for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
         i += 1
         logging.info("[%s] ", str(i))
         update_booklist(None, inpx_data, zip_file)
@@ -99,7 +99,7 @@ def new_lists_fill():
         db = BookDB(pg_host, pg_base, pg_user, pg_pass)  # pylint: disable=C0103
         db.create_tables()
         i = 0
-        for zip_file in glob.glob(zipdir + '/*.zip'):
+        for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
             i += 1
             logging.info("[%s] ", str(i))
             update_booklist(db, inpx_data, zip_file)

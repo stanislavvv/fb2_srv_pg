@@ -43,7 +43,7 @@ def renew_lists():
     i = 0
     for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
         i += 1
-        logging.info("[%s] ", str(i))
+        logging.info("[%s] %s", (str(i)), zip_file)
         create_booklist(None, inpx_data, zip_file)
 
 
@@ -62,7 +62,7 @@ def renew_lists_fill():
         db.create_tables()
         for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
             i += 1
-            logging.info("[%s] ", str(i))
+            logging.info("[%s] %s", (str(i)), zip_file)
             create_booklist(db, inpx_data, zip_file)
         recalc_commit(db)
     except Exception as ex:  # pylint: disable=broad-except
@@ -82,7 +82,7 @@ def new_lists():
     i = 0
     for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
         i += 1
-        logging.info("[%s] ", str(i))
+        logging.info("[%s] %s", (str(i)), zip_file)
         update_booklist(None, inpx_data, zip_file)
 
 
@@ -101,7 +101,7 @@ def new_lists_fill():
         i = 0
         for zip_file in sorted(glob.glob(zipdir + '/*.zip')):
             i += 1
-            logging.info("[%s] ", str(i))
+            logging.info("[%s] %s", (str(i)), zip_file)
             update_booklist(db, inpx_data, zip_file)
         recalc_commit(db)
     except Exception as ex:  # pylint: disable=broad-except

@@ -156,7 +156,7 @@ def get_sequence(seq, zip_file, filename):
     """
     # pylint: disable=R0912
     ret = []
-    context = "get seq for file '%s/%s'", (zip_file, filename)
+    context = "get seq for file '%s/%s'" % (zip_file, filename)
     if isinstance(seq, str):
         seq_id = make_id(seq)
         ret.append({"name": seq, "id": seq_id})
@@ -318,7 +318,7 @@ def get_pub_info(pubinfo):
     return isbn, year, publisher
 
 
-def get_image(name: str, binary, last=True):  # pylint: disable=R0912,R0914
+def get_image(name: str, binary, last=True, context=None):  # pylint: disable=R0912,R0914
     """
     return {"content-type": "image/jpeg", "data": "<image data in jpeg>"}
     content-type must be correspond for image data format
@@ -338,13 +338,13 @@ def get_image(name: str, binary, last=True):  # pylint: disable=R0912,R0914
                 }
         elif isinstance(binary, list):
             for item in binary:
-                tmp = get_image(name, item, False)
+                tmp = get_image(name, item, False, context)
                 if tmp is not None:
                     ret = tmp
                     break
         elif isinstance(binary, collections.OrderedDict):
             for val in binary.values():
-                tmp = get_image(name, val, False)
+                tmp = get_image(name, val, False, context)
                 if tmp is not None:
                     ret = tmp
                     break
@@ -364,6 +364,8 @@ def get_image(name: str, binary, last=True):  # pylint: disable=R0912,R0914
             ret["@content-type"] = "image/jpeg"
             ret["data"] = data.decode("utf-8")
         except Exception as ex:  # pylint: disable=W0703
+            if context is not None:
+                logging.error("Image error in: %s", context)
             logging.error(ex)
     return ret
 
@@ -444,7 +446,7 @@ def fb2parse(z_file, filename, replace_data, inpx_data):  # pylint: disable=R091
                 )
             if "binary" in fb2data_full:
                 binary = fb2data_full["binary"]  # mostly images here
-                cover = get_image(covername, binary)  # get corresponding image
+                cover = get_image(covername, binary, context="%s/%s" % (zip_file, filename))  # get corresponding image
     pubinfo = None
     try:
         pubinfo = get_struct_by_key('publish-info', descr)  # descr['publish-info']

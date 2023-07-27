@@ -45,6 +45,7 @@ def renew_lists():
         i += 1
         logging.info("[%s] %s", (str(i)), zip_file)
         create_booklist(None, inpx_data, zip_file)
+    logging.info("[end]")
 
 
 def renew_lists_fill():
@@ -73,6 +74,7 @@ def renew_lists_fill():
         ret = False
     db.conn.close()
     return ret
+    logging.info("[end]")
 
 
 def new_lists():
@@ -84,6 +86,7 @@ def new_lists():
         i += 1
         logging.info("[%s] %s", (str(i)), zip_file)
         update_booklist(None, inpx_data, zip_file)
+    logging.info("[end]")
 
 
 def new_lists_fill():
@@ -112,6 +115,7 @@ def new_lists_fill():
         ret = False
     db.conn.close()
     return ret
+    logging.info("[end]")
 
 
 def fromlists(stage):

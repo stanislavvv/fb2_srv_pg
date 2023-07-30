@@ -119,7 +119,7 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
         try:
             db.create_tables()
             i = 0
-            for booklist in glob.glob(zipdir + '/*.zip.list'):
+            for booklist in sorted(glob.glob(zipdir + '/*.zip.list')):
                 logging.info("[%s] %s", str(i), booklist)
                 process_list_books(db, booklist)
                 i = i + 1

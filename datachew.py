@@ -73,8 +73,8 @@ def renew_lists_fill():
         logging.error(ex)
         ret = False
     db.conn.close()
-    return ret
     logging.info("[end]")
+    return ret
 
 
 def new_lists():
@@ -114,8 +114,8 @@ def new_lists_fill():
         logging.error(ex)
         ret = False
     db.conn.close()
-    return ret
     logging.info("[end]")
+    return ret
 
 
 def fromlists(stage):

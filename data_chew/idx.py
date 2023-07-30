@@ -17,7 +17,7 @@ def process_list_books(db, booklist):  # pylint: disable=C0103
                 continue
             if "deleted" not in book:
                 book["deleted"] = 0
-
+            logger.debug("%s/%s", book["zipfile"], book["filename"])
             try:
                 db.add_book(book)
             except Exception as ex:

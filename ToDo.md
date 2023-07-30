@@ -1,8 +1,8 @@
 # ToDo
 
-- renew `.list` format to jsonl (will be lower memory usage) -- testing
-- cover pictures -- in progress
+- cover pictures -- testing
+- load `.list.gz` as alternative for `.list`
+- partial [re]indexing -- in progress
 
 # ToDo sometimes
 
-- partial [re]indexing

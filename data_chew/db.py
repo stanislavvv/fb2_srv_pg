@@ -186,9 +186,9 @@ class BookDB():
         self.cur.execute(req)
 
     def __replace_bookdescr(self, book):
-        pub_isdn = "NULL"
-        if "pub_isdn" in book:
-            pub_isdn = "'%s'" % quote_string(book["pub_isdn"])
+        pub_isbn = "NULL"
+        if "pub_isbn" in book:
+            pub_isbn = "'%s'" % quote_string(book["pub_isbn"])
         pub_year = "NULL"
         if "pub_year" in book:
             pub_year = "'%s'" % quote_string(book["pub_year"])
@@ -200,7 +200,7 @@ class BookDB():
             publisher_id = "'%s'" % quote_string(book["publisher_id"])
         data = (
             "'%s'" % quote_string(book["book_title"]),
-            pub_isdn,
+            pub_isbn,
             pub_year,
             publisher,
             publisher_id,

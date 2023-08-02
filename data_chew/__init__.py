@@ -15,7 +15,7 @@ from .data import get_replace_list, fb2parse
 
 from .inpx import get_inpx_meta
 
-from .idx import process_list_books, process_list_book
+from .idx import process_list_books, process_list_book, process_list_books_batch
 
 INPX = "flibusta_fb2_local.inpx"  # filename of metadata indexes zip
 
@@ -122,6 +122,19 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
             for booklist in sorted(glob.glob(zipdir + '/*.zip.list')):
                 logging.info("[%s] %s", str(i), booklist)
                 process_list_books(db, booklist)
+                i = i + 1
+                db.commit()
+        except Exception as ex:  # pylint: disable=W0703
+            db.conn.rollback()
+            logging.error(ex)
+            return False
+    elif stage == "batchnew":
+        try:
+            db.create_tables()
+            i = 0
+            for booklist in sorted(glob.glob(zipdir + '/*.zip.list')):
+                logging.info("[%s] %s", str(i), booklist)
+                process_list_books_batch(db, booklist)
                 i = i + 1
                 db.commit()
         except Exception as ex:  # pylint: disable=W0703

@@ -224,5 +224,25 @@ GET_REQ = {
     """,
     "get_genre_books_cnt": """
         SELECT count(book_id) as cnt FROM books WHERE '%s' = ANY (genres)
+    """,
+    "get_authors_ids": """
+        SELECT id FROM authors;
+    """,
+    "get_authors_ids_by_ids": """
+        SELECT id FROM authors WHERE id in ('%s');
+    """,
+    "get_auth_book_ids": """
+        SELECT book_id FROM books
+        WHERE book_id IN (SELECT book_id FROM books_authors WHERE author_id = '%s');
+    """,
+    "get_author_seq_ids": """
+        SELECT seq_id FROM author_seqs WHERE author_id = '%s';
+    """,
+    "get_auth_seq_cnt": """
+        SELECT count(*) as cnt FROM books INNER JOIN seq_books ON seq_books.book_id = books.book_id
+        WHERE seq_books.seq_id = '%s' AND books.book_id IN ('%s');
+    """,
+    "get_seq_ids_of_author": """
+        SELECT seq_id FROM author_seqs WHERE author_id = '%s';
     """
 }

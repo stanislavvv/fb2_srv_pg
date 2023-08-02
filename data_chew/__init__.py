@@ -27,6 +27,7 @@ def recalc_commit(db):  # pylint: disable=C0103
     db.recalc_seqs_books()
     db.recalc_genres_books()
     db.commit()
+    logging.info("end")
 
 
 def create_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103

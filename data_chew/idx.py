@@ -12,7 +12,7 @@ from .db import sarray2pg, bdatetime2date
 MAX_PASS_LENGTH = 1000
 MAX_PASS_LENGTH_GEN = 5
 
-PASS_SIZE_HINT = 1048576
+PASS_SIZE_HINT = 10485760
 
 authors_seqs = {}
 
@@ -247,14 +247,16 @@ def process_books_batch(db, booklines):  # pylint: disable=C0103,R0912,R0914
     if req != "":
         db.cur.execute(req)
 
-    logging.debug("end list")
+    logging.debug("end slice")
     return True
 
 
 def process_list_books_batch(db, booklist):  # pylint: disable=C0103,R0912,R0914
     """index .list to database"""
     with open(booklist) as lst:
-        process_books_batch(db, lst.readlines(PASS_SIZE_HINT))
+        while lst:
+            process_books_batch(db, lst.readlines(PASS_SIZE_HINT))
+            db.commit()
 
 
 def process_list_book(db, book):  # pylint: disable=C0103

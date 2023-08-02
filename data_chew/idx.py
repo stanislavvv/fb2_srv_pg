@@ -12,6 +12,8 @@ from .db import sarray2pg, bdatetime2date
 MAX_PASS_LENGTH = 1000
 MAX_PASS_LENGTH_GEN = 5
 
+PASS_SIZE_HINT = 1048576
+
 authors_seqs = {}
 
 
@@ -185,69 +187,74 @@ def make_insert_authors(db, authors):  # pylint: disable=C0103
     return "".join(inserts)
 
 
+def process_books_batch(db, booklines):  # pylint: disable=C0103,R0912,R0914
+    """index .list to database"""
+    books = []
+    book_ids = []
+    book_ids_exists = {}
+    book_update = []
+    book_insert = []
+    seqs = []
+    genres = {}
+    authors = {}
+    for line in booklines:
+        book = json.loads(line)
+        if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
+            book["genres"] = ["other"]
+        book["genres"] = db.genres_replace(book, book["genres"])
+        if book is None:
+            continue
+        if "deleted" not in book:
+            book["deleted"] = 0
+        books.append(book)
+        book_ids.append(book["book_id"])
+        if book["sequences"] is not None:
+            for seq in book["sequences"]:
+                seqs.append(seq)
+        for gen in book["genres"]:
+            genres[gen] = 1
+        for author in book["authors"]:
+            auth_id = author["id"]
+            authors[auth_id] = author
+    db.cur.execute("SELECT book_id FROM books WHERE book_id IN ('%s');" % "','".join(book_ids))
+    ret = db.cur.fetchall()
+    for row in ret:
+        book_ids_exists[row[0]] = 1
+
+    for book in books:
+        if book["book_id"] in book_ids_exists:
+            book_update.append(book)
+        else:
+            book_insert.append(book)
+
+    logging.debug("sequences...")
+    req = make_insert_seqs(db, seqs)
+    if req != "" and len(req) > 10:
+        db.cur.execute(req)
+
+    logging.debug("genres...")
+    insert_genres(db, genres.keys())
+
+    logging.debug("authors...")
+    req = make_insert_authors(db, authors)
+    # logging.debug(req)
+    if req != "":
+        db.cur.execute(req)
+
+    logging.debug("books...")
+    req = make_inserts(db, book_insert)
+    # logging.debug(req)
+    if req != "":
+        db.cur.execute(req)
+
+    logging.debug("end list")
+    return True
+
+
 def process_list_books_batch(db, booklist):  # pylint: disable=C0103,R0912,R0914
     """index .list to database"""
     with open(booklist) as lst:
-        books = []
-        book_ids = []
-        book_ids_exists = {}
-        book_update = []
-        book_insert = []
-        seqs = []
-        genres = {}
-        authors = {}
-        for line in lst:
-            book = json.loads(line)
-            if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
-                book["genres"] = ["other"]
-            book["genres"] = db.genres_replace(book, book["genres"])
-            if book is None:
-                continue
-            if "deleted" not in book:
-                book["deleted"] = 0
-            books.append(book)
-            book_ids.append(book["book_id"])
-            if book["sequences"] is not None:
-                for seq in book["sequences"]:
-                    seqs.append(seq)
-            for gen in book["genres"]:
-                genres[gen] = 1
-            for author in book["authors"]:
-                auth_id = author["id"]
-                authors[auth_id] = author
-        db.cur.execute("SELECT book_id FROM books WHERE book_id IN ('%s');" % "','".join(book_ids))
-        ret = db.cur.fetchall()
-        for row in ret:
-            book_ids_exists[row[0]] = 1
-
-        for book in books:
-            if book["book_id"] in book_ids_exists:
-                book_update.append(book)
-            else:
-                book_insert.append(book)
-
-        logging.debug("sequences...")
-        req = make_insert_seqs(db, seqs)
-        if req != "" and len(req) > 10:
-            db.cur.execute(req)
-
-        logging.debug("genres...")
-        insert_genres(db, genres.keys())
-
-        logging.debug("authors...")
-        req = make_insert_authors(db, authors)
-        # logging.debug(req)
-        if req != "":
-            db.cur.execute(req)
-
-        logging.debug("books...")
-        req = make_inserts(db, book_insert)
-        # logging.debug(req)
-        if req != "":
-            db.cur.execute(req)
-
-        logging.debug("end list")
-    return True
+        process_books_batch(db, lst.readlines(PASS_SIZE_HINT))
 
 
 def process_list_book(db, book):  # pylint: disable=C0103

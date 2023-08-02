@@ -254,8 +254,12 @@ def process_books_batch(db, booklines):  # pylint: disable=C0103,R0912,R0914
 def process_list_books_batch(db, booklist):  # pylint: disable=C0103,R0912,R0914
     """index .list to database"""
     with open(booklist) as lst:
+        count = 0
         while lst:
-            process_books_batch(db, lst.readlines(PASS_SIZE_HINT))
+            lines = lst.readlines(PASS_SIZE_HINT)
+            count = count + len(lines)
+            logger.debug("   %s", count)
+            process_books_batch(db, lines)
             db.commit()
 
 

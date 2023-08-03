@@ -35,6 +35,102 @@ def process_list_books(db, booklist):  # pylint: disable=C0103
     return True
 
 
+def make_update_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
+    """return updates/inserts/delete for book"""
+    req = []
+    global authors_seqs  # pylint: disable=W0603,C0103
+    gnrs = sarray2pg(book["genres"])
+    bdate = bdatetime2date(book["date_time"])
+    book_ins = (
+        book["zipfile"],
+        book["filename"],
+        gnrs,
+        book["lang"],
+        bdate,
+        int(book["size"]),
+        book["deleted"],
+        book["book_id"]
+    )
+    req.append(INSERT_REQ["book_replace"] % book_ins)
+    pub_isbn = "NULL"
+    pub_year = "NULL"
+    publisher = "NULL"
+    publisher_id = "NULL"
+    if "pub_info" in book and book["pub_info"] is not None:
+        bookpub = book["pub_info"]
+        if "isbn" in bookpub and bookpub["isbn"] is not None:
+            pub_isbn = "'%s'" % quote_string(bookpub["isbn"])
+        if "year" in bookpub and bookpub["year"] is not None:
+            pub_year = "'%s'" % quote_string(bookpub["year"])
+        if "publisher" in bookpub and bookpub["publisher"] is not None:
+            publisher = "'%s'" % quote_string(bookpub["publisher"])
+        if "publisher_id" in bookpub and bookpub["publisher_id"] is not None:
+            publisher_id = "'%s'" % quote_string(bookpub["publisher_id"])
+    bookdescr = (
+        "'%s'" % quote_string(book["book_title"]),
+        pub_isbn,
+        pub_year,
+        publisher,
+        publisher_id,
+        "'%s'" % quote_string(book["annotation"]),
+        "'%s'" % book["book_id"]
+    )
+    req.append(INSERT_REQ["bookdescr_replace"] % bookdescr)
+    book_id = book["book_id"]
+
+    if "cover" in book and book["cover"] is not None:
+        cover = book["cover"]
+        cover_ctype = cover["content-type"]
+        cover_data = cover["data"]
+        req.append(INSERT_REQ["cover_replace"] % (cover_ctype, cover_data, book_id))
+
+    if "authors" in book and book["authors"] is not None:
+        for author in book["authors"]:
+            db.cur.execute(GET_REQ["get_author_seq_ids"] % author["id"])
+            ids = db.cur.fetchall()
+            if len(ids) > 0:
+                for seq in ids:
+                    if author["id"] not in authors_seqs:
+                        authors_seqs[author["id"]] = {}
+                    authors_seqs[author["id"]][seq[0]] = 1
+            db.cur.execute(GET_REQ["book_of_author"] % (book["book_id"], author["id"]))
+            state = db.cur.fetchone()
+            if state is None:
+                req.append(INSERT_REQ["book_authors"] % (book["book_id"], author["id"]))
+    db.cur.execute(GET_REQ["get_seqs_of_book"] % book_id)
+    ids = db.cur.fetchall()
+    seqs_db = {}
+    for seq in ids:
+        seqs_db[seq[0]] = 1
+    if "sequences" in book and book["sequences"] is not None:  # pylint: disable=R1702
+        for seq in book["sequences"]:
+            if "id" in seq:
+                seq_id = seq["id"]
+                num = "NULL"
+                if "num" in seq and seq["num"] != 0:
+                    num = seq["num"]
+                if seq_id in seqs_db:
+                    req.append(INSERT_REQ["seq_books_replace"] % (num, seq_id, book_id))
+                else:
+                    req.append(INSERT_REQ["seq_books"] % (seq_id, book_id, num))
+                del seqs_db[seq_id]
+                if "authors" in book and book["authors"] is not None:
+                    for author in book["authors"]:
+                        if author["id"] not in authors_seqs:
+                            authors_seqs[author["id"]] = {}
+                        db.cur.execute(GET_REQ["get_author_seq_ids"] % author["id"])
+                        ids = db.cur.fetchall()
+                        for seq_db in ids:
+                            authors_seqs[author["id"]][seq_db[0]] = 1
+                        auth_seqs = {}
+                        if author["id"] in authors_seqs:
+                            auth_seqs = authors_seqs[author["id"]]
+                        if seq_id not in auth_seqs:
+                            req.append(INSERT_REQ["author_seqs"] % (author["id"], seq_id, 1))
+                            authors_seqs[author["id"]][seq_id] = 1
+    return "".join(req)
+
+
 def make_insert_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
     """return inserts for book"""
     req = []
@@ -129,6 +225,15 @@ def make_inserts(db, books):  # pylint: disable=C0103
     return "".join(inserts)
 
 
+def make_updates(db, books):  # pylint: disable=C0103
+    """create inserts for every book"""
+    inserts = []
+    for book in books:
+        ins = make_update_book(db, book)
+        inserts.append(ins)
+    return "".join(inserts)
+
+
 def make_insert_seqs(db, seqs):  # pylint: disable=C0103
     """create inserts if seqs not in db"""
     inserts = []
@@ -187,7 +292,7 @@ def make_insert_authors(db, authors):  # pylint: disable=C0103
     return "".join(inserts)
 
 
-def process_books_batch(db, booklines):  # pylint: disable=C0103,R0912,R0914
+def process_books_batch(db, booklines, stage):  # pylint: disable=C0103,R0912,R0914
     """index .list to database"""
     books = []
     book_ids = []
@@ -227,31 +332,42 @@ def process_books_batch(db, booklines):  # pylint: disable=C0103,R0912,R0914
         else:
             book_insert.append(book)
 
-    logging.debug("sequences...")
-    req = make_insert_seqs(db, seqs)
-    if req != "" and len(req) > 10:
-        db.cur.execute(req)
+    if len(seqs) > 0:
+        # logging.debug("sequences...")
+        req = make_insert_seqs(db, seqs)
+        if req != "" and len(req) > 10:
+            db.cur.execute(req)
 
-    logging.debug("genres...")
-    insert_genres(db, genres.keys())
+    if len(genres.keys()) > 0:
+        # logging.debug("genres...")
+        insert_genres(db, genres.keys())
 
-    logging.debug("authors...")
-    req = make_insert_authors(db, authors)
-    # logging.debug(req)
-    if req != "":
-        db.cur.execute(req)
+    if len(authors) > 0:
+        # logging.debug("authors...")
+        req = make_insert_authors(db, authors)
+        # logging.debug(req)
+        if req != "":
+            db.cur.execute(req)
 
-    logging.debug("books...")
-    req = make_inserts(db, book_insert)
-    # logging.debug(req)
-    if req != "":
-        db.cur.execute(req)
+    if len(book_insert) > 0:
+        # logging.debug("books...")
+        req = make_inserts(db, book_insert)
+        # logging.debug(req)
+        if req != "":
+            db.cur.execute(req)
 
-    logging.debug("end slice")
+    if len(book_update) > 0 and stage == "batchall":
+        logging.debug("books for update: %s...", len(book_update))
+        req = make_updates(db, book_update)
+        # logging.debug(req)
+        if req != "":
+            db.cur.execute(req)
+        # logging.debug("end slice")
+
     return True
 
 
-def process_list_books_batch(db, booklist):  # pylint: disable=C0103,R0912,R0914
+def process_list_books_batch(db, booklist, stage):  # pylint: disable=C0103,R0912,R0914
     """index .list to database"""
     with open(booklist) as lst:
         count = 0
@@ -259,7 +375,7 @@ def process_list_books_batch(db, booklist):  # pylint: disable=C0103,R0912,R0914
         while len(lines) > 0:
             count = count + len(lines)
             logging.info("   %s", count)
-            process_books_batch(db, lines)
+            process_books_batch(db, lines, stage)
             db.commit()
             lines = lst.readlines(PASS_SIZE_HINT)
 

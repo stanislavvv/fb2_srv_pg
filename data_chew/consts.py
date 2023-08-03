@@ -163,7 +163,7 @@ INSERT_REQ = {
         UPDATE author_seqs SET cnt = %d WHERE author_id = '%s' AND seq_id = '%s';
     """,
     "seq_books_replace": """
-        UPDATE seq_books SET seq_num = %s WHERE seq_id = '%s' AND book_id = '%s'
+        UPDATE seq_books SET seq_num = %s WHERE seq_id = '%s' AND book_id = '%s';
     """,
     "genres": """
         INSERT INTO genres(id, meta_id, name, cnt, description) VALUES ('%s', '%s', '%s', %s, '%s');
@@ -244,5 +244,8 @@ GET_REQ = {
     """,
     "get_seq_ids_of_author": """
         SELECT seq_id FROM author_seqs WHERE author_id = '%s';
+    """,
+    "get_seqs_of_book": """
+        SELECT seq_id FROM seq_books WHERE book_id = '%s';
     """
 }

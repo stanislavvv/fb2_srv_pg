@@ -26,10 +26,12 @@ def usage():
     print(" clean          -- remove static data from disk")
     print(" lists          -- make all lists from zips, does not touch database")
     print(" new_lists      -- update lists from updated/new zips, does not touch database")
-    print(" fillall        -- (re)fill all existing lists to database")
-    print(" fillnew        -- NOT FULLY IMPLEMENTED (re)fill only new/updated lists to database")
-    print(" lists_fill     -- make all lists from zips and fill to database in parallel")
-    print(" new_lists_fill -- update lists from updated/new zips and fill to database in parallel")
+    # print(" fillall        -- (re)fill all existing lists to database")
+    print(" fillonlybatch  -- quickly fill all existing lists to database, but only books not in db")
+    print(" fillallbatch   -- quickly fill all existing lists to database, update existing")
+    # print(" fillnew        -- NOT FULLY IMPLEMENTED (re)fill only new/updated lists to database")
+    # print(" lists_fill     -- make all lists from zips and fill to database in parallel")
+    # print(" new_lists_fill -- update lists from updated/new zips and fill to database in parallel")
 
 
 def clean():
@@ -158,6 +160,10 @@ if __name__ == "__main__":
             new_lists_fill()
         elif sys.argv[1] == "fillall":
             fromlists("all")
+        elif sys.argv[1] == "fillallbatch":
+            fromlists("batchall")
+        elif sys.argv[1] == "fillonlybatch":
+            fromlists("batchnew")
         elif sys.argv[1] == "fillnew":
             fromlists("newonly")
         else:

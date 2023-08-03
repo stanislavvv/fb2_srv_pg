@@ -76,7 +76,7 @@ class BookDB():
                 self.genres_replacements[replace_line[0]] = '|'.join(replacement)
         data.close()
 
-    def __genres_replace(self, book, genrs):
+    def genres_replace(self, book, genrs):
         """return genre or replaced genre"""
         ret = []
         for i in genrs:
@@ -275,7 +275,7 @@ class BookDB():
         req = INSERT_REQ["author_seqs"] % (auth_id, seq_id, 1)
         self.cur.execute(req)
 
-    def __replace_seq2author(self, seq, author):  # dummy
+    def __replace_seq2author(self, seq, author):
         seq_id = seq["id"]
         auth_id = author["id"]
         self.cur.execute(GET_REQ["seq_of_author_cnt"] % (auth_id, seq_id))
@@ -406,7 +406,7 @@ class BookDB():
         # fixes:
         if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
             book["genres"] = ["other"]
-        book["genres"] = self.__genres_replace(book, book["genres"])
+        book["genres"] = self.genres_replace(book, book["genres"])
         # /fixes
 
         try:
@@ -483,6 +483,20 @@ class BookDB():
 
     def recalc_authors_books(self):
         """recalc author's books count"""
+        self.cur.execute(GET_REQ["get_authors_ids"])
+        auth_ids = self.cur.fetchall()
+        for auth_id in auth_ids:
+            self.cur.execute(GET_REQ["get_auth_book_ids"] % auth_id[0])
+            ids = self.cur.fetchall()
+            book_ids = []
+            for book_id in ids:
+                book_ids.append(book_id[0])
+            self.cur.execute(GET_REQ["get_author_seq_ids"] % auth_id[0])
+            seq_ids = self.cur.fetchall()
+            for seq_id in seq_ids:
+                self.cur.execute(GET_REQ["get_auth_seq_cnt"] % (seq_id[0], "', '".join(book_ids)))
+                cnt = self.cur.fetchone()
+                self.cur.execute(INSERT_REQ["author_seqs_update"] % (cnt[0], auth_id[0], seq_id[0]))
 
     def recalc_seqs_books(self):
         """recalc books count in sequences"""

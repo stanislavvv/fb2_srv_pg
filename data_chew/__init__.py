@@ -111,11 +111,6 @@ def ziplist(inpx_data, zip_file):
 def process_lists(db, zipdir, stage):  # pylint: disable=C0103
     """process .list's to database"""
 
-    # load genres info from files
-    # get_genres_meta()
-    # get_genres()
-    # get_genres_replace()
-
     if stage == "all":
         try:
             db.create_tables()
@@ -129,13 +124,13 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
             db.conn.rollback()
             logging.error(ex)
             return False
-    elif stage == "batchnew":
+    elif stage in ("batchnew", "batchall"):
         try:
             db.create_tables()
             i = 0
             for booklist in sorted(glob.glob(zipdir + '/*.zip.list')):
                 logging.info("[%s] %s", str(i), booklist)
-                process_list_books_batch(db, booklist)
+                process_list_books_batch(db, booklist, stage)
                 i = i + 1
                 db.commit()
         except Exception as ex:  # pylint: disable=W0703

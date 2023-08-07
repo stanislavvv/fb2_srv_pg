@@ -24,7 +24,7 @@ def init_xslt(xsltfile, app):
 
 def create_app():
     """standard Flask create_app()"""
-    app = Flask(__name__, static_url_path='/st')
+    app = Flask(__name__)
     app.config.from_object(config[SELECTED_CONFIG])
     app.register_blueprint(dl, url_prefix=app.config['APPLICATION_ROOT'])
     app.register_blueprint(opds, url_prefix=app.config['APPLICATION_ROOT'])

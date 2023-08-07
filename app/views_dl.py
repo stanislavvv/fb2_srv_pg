@@ -84,9 +84,7 @@ def fb2_cover(book_id=None):
         buf = io.BytesIO(base64.b64decode(image_data))
         return Response(buf, mimetype=image_type)
     else:
-        location = url_for('static', filename=DEFAULT_IMAGE)
-        code = 302
-        return redirect(location, code, Response=None)
+        return current_app.send_static_file(DEFAULT_IMAGE)
     return redir_invalid(REDIR_ALL)
 
 

@@ -214,7 +214,7 @@ def opds_rnd_gen_meta(sub):
     return Response(xml, mimetype='text/xml')
 
 
-@opds.route(URL["rndgen"].replace("/opds", "/opds", 1) + "<id>", methods=['GET'])
+@opds.route(URL["rndgen"].replace("/opds", "/opds", 1) + "<gen_id>", methods=['GET'])
 def opds_rnd_genre(gen_id):
     """random books in genre"""
     data = view_rnd_genre(gen_id)

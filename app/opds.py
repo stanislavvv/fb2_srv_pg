@@ -19,6 +19,8 @@ from .internals import URL
 
 from .db import dbconnect
 
+from .consts import cover_names
+
 
 def ret_hdr():  # python does not have constants
     """return opds title"""
@@ -569,11 +571,13 @@ def books_list(
 
         authors = []
         links = []
-        links.append({
-            "@href": "%s/cover/%s/jpg" % (approot, book_id),
-            "@rel": "x-stanza-cover-image",
-            "@type": "image/jpeg"  # To Do get from db
-        })
+
+        for rel in cover_names:
+            links.append({
+                "@href": "%s/cover/%s/jpg" % (approot, book_id),
+                "@rel": rel,
+                "@type": "image/jpeg"  # To Do get from db
+            })
 
         category = []
         seq_name = ""
@@ -1058,11 +1062,12 @@ def random_data(
 
                 authors = []
                 links = []
-                links.append({
-                    "@href": "%s/cover/%s/jpg" % (approot, book_id),
-                    "@rel": "x-stanza-cover-image",
-                    "@type": "image/jpeg"  # To Do get from db
-                })
+                for rel in cover_names:
+                    links.append({
+                        "@href": "%s/cover/%s/jpg" % (approot, book_id),
+                        "@rel": rel,
+                        "@type": "image/jpeg"  # To Do get from db
+                    })
 
                 category = []
                 for author in book["authors"]:
@@ -1402,11 +1407,12 @@ def search_term(
 
                 authors = []
                 links = []
-                links.append({
-                    "@href": "%s/cover/%s/jpg" % (approot, book_id),
-                    "@rel": "x-stanza-cover-image",
-                    "@type": "image/jpeg"  # To Do get from db
-                })
+                for rel in cover_names:
+                    links.append({
+                        "@href": "%s/cover/%s/jpg" % (approot, book_id),
+                        "@rel": rel,
+                        "@type": "image/jpeg"  # To Do get from db
+                    })
                 category = []
                 for author in i["authors"]:
                     authors.append(

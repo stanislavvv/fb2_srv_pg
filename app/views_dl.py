@@ -7,7 +7,7 @@ import zipfile
 import time
 import base64
 
-from flask import Blueprint, Response, send_file, request, current_app, url_for, redirect
+from flask import Blueprint, Response, send_file, request, current_app
 
 # pylint: disable=E0402
 from .get_fb2 import fb2_out, html_out

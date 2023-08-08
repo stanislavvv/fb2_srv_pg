@@ -34,6 +34,13 @@ URL = {
     "dl": "/fb2/"  # download book
 }
 
+cover_names = [
+    "http://opds-spec.org/image",
+    "x-stanza-cover-image",
+    "http://opds-spec.org/thumbnail",
+    "x-stanza-cover-image-thumbnail"
+]
+
 BOOK_REQ = {
     "get_authors_one": """
         SELECT upper(substring(name, 1, 1)) as name1 FROM authors GROUP BY name1;

@@ -1,5 +1,6 @@
 # ToDo
 
+- speed up in random pages
 - code cleanup after batch insert (unused functions, etc)
 - browser cache control (30 days for pics and books content, 7 days for most pages, 5 min for random pages) -- testing
 

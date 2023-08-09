@@ -1,8 +1,7 @@
 # ToDo
 
-- [bug] default cover path must include `app.config["APPLICATION_ROOT"]` -- testing
 - code cleanup after batch insert (unused functions, etc)
-- browser cache control (30 days for pics and books content, 7 days for most pages, 5 min for random pages)
+- browser cache control (30 days for pics and books content, 7 days for most pages, 5 min for random pages) -- testing
 
 # ToDo sometimes
 

@@ -9,10 +9,15 @@ import base64
 
 from flask import Blueprint, Response, send_file, request, current_app
 
+from werkzeug.datastructures import Headers
+
 # pylint: disable=E0402
 from .get_fb2 import fb2_out, html_out
 from .validate import redir_invalid, validate_zip, validate_fb2, validate_id
 from .internals import get_book_cover
+from .consts import CACHE_TIME_ST
+
+ccontrol = "maxage=%d, must-revalidate" % CACHE_TIME_ST
 
 dl = Blueprint("dl", __name__)
 
@@ -50,7 +55,7 @@ def fb2_download(zip_file=None, filename=None):
             zf.writestr(data, fb2data)
         memory_file.seek(0)
         zip_name = filename + ".zip"
-        return send_file(memory_file, attachment_filename=zip_name, as_attachment=True)
+        return send_file(memory_file, attachment_filename=zip_name, as_attachment=True, cache_timeout=CACHE_TIME_ST)
     else:
         return Response("Book not found", status=404)
 
@@ -68,7 +73,9 @@ def fb2_read(zip_file=None, filename=None):
         return redir_invalid(REDIR_ALL)
     data = html_out(zip_file, filename)
     if data is not None:  # pylint: disable=R1705
-        return Response(data, mimetype='text/html')
+        head = Headers()
+        head.add('Cache-Control', ccontrol)
+        return Response(data, mimetype='text/html', headers=head)
     else:
         return Response("Book not found", status=404)
 
@@ -82,7 +89,9 @@ def fb2_cover(book_id=None):
     image_type, image_data = get_book_cover(book_id)
     if image_type is not None and image_data is not None:  # pylint: disable=R1705
         buf = io.BytesIO(base64.b64decode(image_data))
-        return Response(buf, mimetype=image_type)
+        head = Headers()
+        head.add('Cache-Control', ccontrol)
+        return Response(buf, mimetype=image_type, headers=head)
     else:
         return current_app.send_static_file(DEFAULT_IMAGE)
     return redir_invalid(REDIR_ALL)

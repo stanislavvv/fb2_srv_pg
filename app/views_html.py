@@ -14,6 +14,8 @@ from .views_internals import view_random_seqs, view_search, view_search_authors,
 from .views_internals import view_search_books, view_search_books_anno
 from .views_internals import view_rnd_gen_root, view_rnd_gen_meta, view_rnd_genre
 
+from .consts import CACHE_TIME, CACHE_TIME_RND
+
 html = Blueprint("html", __name__)
 
 REDIR_ALL = "html.html_root"
@@ -36,7 +38,9 @@ def html_root():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_root.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["seqidx"].replace("/opds", "/html", 1), methods=['GET'])
@@ -48,7 +52,9 @@ def html_seq_root():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_root.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["seqidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
@@ -60,7 +66,9 @@ def html_seq_sub(sub):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_list_linecnt.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["seq"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<seq_id>", methods=['GET'])
@@ -72,7 +80,9 @@ def html_seq(sub1, sub2, seq_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["authidx"].replace("/opds", "/html", 1), methods=['GET'])
@@ -84,7 +94,9 @@ def html_auth_root():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_root.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["authidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
@@ -96,7 +108,9 @@ def html_auth_sub(sub):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_list_linecnt.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>", methods=['GET'])
@@ -108,7 +122,9 @@ def html_author(sub1, sub2, auth_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_author_main.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/sequences", methods=['GET'])
@@ -120,7 +136,9 @@ def html_author_seqs(sub1, sub2, auth_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_list_linecnt.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/<seq_id>", methods=['GET'])
@@ -132,7 +150,9 @@ def html_author_seq(sub1, sub2, auth_id, seq_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/sequenceless", methods=['GET'])
@@ -144,7 +164,9 @@ def html_author_nonseq(sub1, sub2, auth_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/alphabet", methods=['GET'])
@@ -156,7 +178,9 @@ def html_author_alphabet(sub1, sub2, auth_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["author"].replace("/opds", "/html", 1) + "<sub1>/<sub2>/<auth_id>/time", methods=['GET'])
@@ -168,7 +192,9 @@ def html_author_time(sub1, sub2, auth_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["genidx"].replace("/opds", "/html", 1), methods=['GET'])
@@ -180,7 +206,9 @@ def html_gen_root():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_root.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["genidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
@@ -192,7 +220,9 @@ def html_gen_meta(sub):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_list_linecnt.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["genre"].replace("/opds", "/html", 1) + "<gen_id>", methods=['GET'])
@@ -205,7 +235,9 @@ def html_genre(gen_id, page=0):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["rndbook"].replace("/opds", "/html", 1), methods=['GET'])
@@ -217,7 +249,9 @@ def html_random_books():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME_RND
+    return resp
 
 
 @html.route(URL["rndseq"].replace("/opds", "/html", 1), methods=['GET'])
@@ -229,7 +263,9 @@ def html_random_seqs():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_list_linecnt.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME_RND
+    return resp
 
 
 @html.route(URL["search"].replace("/opds", "/html", 1), methods=['GET'])
@@ -241,7 +277,9 @@ def html_search():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_root.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["srchauth"].replace("/opds", "/html", 1), methods=['GET'])
@@ -253,7 +291,9 @@ def html_search_authors():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_root.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["srchseq"].replace("/opds", "/html", 1), methods=['GET'])
@@ -265,7 +305,9 @@ def html_search_sequences():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_list_linecnt.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["srchbook"].replace("/opds", "/html", 1), methods=['GET'])
@@ -277,7 +319,9 @@ def html_search_books():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["srchbookanno"].replace("/opds", "/html", 1), methods=['GET'])
@@ -289,7 +333,9 @@ def html_search_books_anno():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["rndgenidx"].replace("/opds", "/html", 1), methods=['GET'])
@@ -301,7 +347,9 @@ def html_rnd_gen_root():
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_root.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["rndgenidx"].replace("/opds", "/html", 1) + "<sub>", methods=['GET'])
@@ -313,7 +361,9 @@ def html_rnd_gen_meta(sub):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_list_linecnt.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
+    return resp
 
 
 @html.route(URL["rndgen"].replace("/opds", "/html", 1) + "<gen_id>", methods=['GET'])
@@ -325,4 +375,6 @@ def html_rnd_genre(gen_id):
     entry = data['feed']['entry']
     link = data['feed']['link']
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
-    return Response(page, mimetype='text/html')
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME_RND
+    return resp

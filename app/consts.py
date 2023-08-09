@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """some internal module constant strings"""
 
+# cache control
+CACHE_TIME = 60 * 60 * 24 * 7  # 7 days
+CACHE_TIME_ST = 60 * 60 * 24 * 30  # 30 days for files and images
+CACHE_TIME_RND = 60 * 5  # 5 minutes for random books list
+
 alphabet_1 = [  # first letters in main authors/sequences page
     'А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ё', 'Ж', 'З', 'И', 'Й',
     'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф',

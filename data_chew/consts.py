@@ -3,6 +3,10 @@
 """some string constats for indexing"""
 
 CREATE_REQ = [
+    # for quick random row in webapp
+    """
+    CREATE EXTENSION IF NOT EXISTS tsm_system_rows;
+    """,
     """
     CREATE TABLE IF NOT EXISTS books (
         zipfile	varchar NOT NULL,

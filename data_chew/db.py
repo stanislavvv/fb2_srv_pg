@@ -500,13 +500,19 @@ class BookDB():
 
     def recalc_seqs_books(self):
         """recalc books count in sequences"""
+        self.cur.execute(GET_REQ["get_seqs_ids"])
+        ids = self.cur.fetchall()
+        for seq_id in ids:
+            self.cur.execute(GET_REQ["get_seq_books_cnt"] % seq_id[0])
+            cnt = self.cur.fetchone()[0]
+            self.__replace_genre_cnt(seq_id[0], cnt)
 
     def recalc_genres_books(self):
         """recalc books count in genres"""
-        self.cur.execute(GET_REQ["get_seqs_ids"])
+        self.cur.execute(GET_REQ["get_genres_ids"])
         ids = self.cur.fetchall()
         for gen_id in ids:
-            self.cur.execute(GET_REQ["get_seq_books_cnt"])
+            self.cur.execute(GET_REQ["get_genre_books_cnt"] % gen_id[0])
             cnt = self.cur.fetchone()[0]
             self.__replace_genre_cnt(gen_id[0], cnt)
 

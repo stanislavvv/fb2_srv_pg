@@ -86,9 +86,14 @@ BOOK_REQ = {
                 WHERE seq_id IN (SELECT seq_id FROM author_seqs WHERE author_id = '%s')
             );
     """,
+    # ToDo: remove
     "get_rnd_books": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
         ORDER BY random() LIMIT %s;
+    """,
+    "get_rnd_book": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        TABLESAMPLE system_rows(1);
     """,
     "get_book_authors": """
         SELECT id, name FROM authors
@@ -127,10 +132,18 @@ BOOK_REQ = {
         SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
         WHERE upper(substring(sequences.name, 1, 3)) = '%s' GROUP BY id, name;
     """,
+    # ToDo: remove
     "get_rnd_seqs": """
         SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
         GROUP BY id
         ORDER BY random() LIMIT %s;
+    """,
+    "get_rnd_seq": """
+        SELECT id, name, count(*) FROM seq_books
+        INNER JOIN sequences ON sequences.id = seq_books.seq_id
+        WHERE seq_id IN (
+            SELECT id FROM sequences TABLESAMPLE system_rows(1)
+        ) GROUP BY id;
     """,
     "get_seq": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
@@ -181,16 +194,16 @@ BOOK_REQ = {
         SELECT cover_ctype, cover FROM books_covers WHERE book_id = '%s';
     """,
     "search_booktitle": """
-        SELECT book_id FROM books_descr WHERE book_title @@ to_tsquery('%s') LIMIT %s;
+        SELECT book_id FROM books_descr WHERE book_title_tsv @@ to_tsquery('%s') LIMIT %s;
     """,
     "search_bookanno": """
-        SELECT book_id FROM books_descr WHERE annotation @@ to_tsquery('%s') LIMIT %s;
+        SELECT book_id FROM books_descr WHERE anno_tsv @@ to_tsquery('%s') LIMIT %s;
     """,
     "search_seqname": """
         SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
-        WHERE name @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
+        WHERE name_tsv @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
     """,
     "search_author": """
-        SELECT id, name FROM authors WHERE name @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
+        SELECT id, name FROM authors WHERE name_tsv @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
     """
 }

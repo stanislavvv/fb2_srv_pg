@@ -24,6 +24,9 @@ CREATE_REQ = [
     CREATE INDEX IF NOT EXISTS books_zipfile ON books (zipfile);
     """,
     """
+    CREATE INDEX IF NOT EXISTS books_genres ON books USING GIN ((genres));
+    """,
+    """
     CREATE TABLE IF NOT EXISTS books_descr (
         book_id      char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
         book_title   text,

@@ -27,18 +27,30 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS books_descr (
         book_id      char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
         book_title   text,
+        book_title_tsv tsvector
+            GENERATED ALWAYS AS (
+                to_tsvector(
+                    'russian', book_title
+                )
+            ) STORED,
         pub_isbn     varchar,
         pub_year     varchar,
         publisher    text,
         publisher_id char(32),
-        annotation   text
+        annotation   text,
+        anno_tsv tsvector
+            GENERATED ALWAYS AS (
+                to_tsvector(
+                    'russian', annotation
+                )
+            ) STORED
     )
     """,
     """
-    CREATE INDEX IF NOT EXISTS books_descr_title ON books_descr USING GIN (to_tsvector('russian', book_title));
+    CREATE INDEX IF NOT EXISTS books_descr_title ON books_descr USING GIN (book_title_tsv);
     """,
     """
-    CREATE INDEX IF NOT EXISTS books_descr_anno ON books_descr USING GIN (to_tsvector('russian', annotation));
+    CREATE INDEX IF NOT EXISTS books_descr_anno ON books_descr USING GIN (anno_tsv);
     """,
     """
     CREATE TABLE IF NOT EXISTS books_covers (
@@ -51,12 +63,18 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS authors (
         id    char(32) UNIQUE NOT NULL,
         name  text,
+        name_tsv tsvector
+            GENERATED ALWAYS AS (
+                to_tsvector(
+                    'russian', name
+                )
+            ) STORED,
         info  text DEFAULT '',
         PRIMARY KEY(id)
     );
     """,
     """
-    CREATE INDEX IF NOT EXISTS authors_names ON authors USING GIN (to_tsvector('russian', name));
+    CREATE INDEX IF NOT EXISTS authors_names ON authors USING GIN (name_tsv);
     """,
     """
     CREATE TABLE IF NOT EXISTS books_authors (
@@ -69,12 +87,18 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS sequences (
         id    char(32) UNIQUE NOT NULL,
         name  text,
+        name_tsv tsvector
+            GENERATED ALWAYS AS (
+                to_tsvector(
+                    'russian', name
+                )
+            ) STORED,
         info  text DEFAULT '',
         PRIMARY KEY(id)
     );
     """,
     """
-    CREATE INDEX IF NOT EXISTS seq_names ON sequences USING GIN (to_tsvector('russian', name));
+    CREATE INDEX IF NOT EXISTS seq_names ON sequences USING GIN (name_tsv);
     """,
     """
     CREATE TABLE IF NOT EXISTS author_seqs (
@@ -221,13 +245,13 @@ GET_REQ = {
         SELECT id FROM sequences;
     """,
     "get_seq_books_cnt": """
-        SELECT count(book_id) as cnt FROM seq_books WHERE seq_id = '%s'
+        SELECT count(book_id) as cnt FROM seq_books WHERE seq_id = '%s';
     """,
     "get_genres_ids": """
         SELECT id FROM genres;
     """,
     "get_genre_books_cnt": """
-        SELECT count(book_id) as cnt FROM books WHERE '%s' = ANY (genres)
+        SELECT count(book_id) as cnt FROM books WHERE '%s' = ANY (genres);
     """,
     "get_authors_ids": """
         SELECT id FROM authors;

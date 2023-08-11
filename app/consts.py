@@ -86,14 +86,9 @@ BOOK_REQ = {
                 WHERE seq_id IN (SELECT seq_id FROM author_seqs WHERE author_id = '%s')
             );
     """,
-    # ToDo: remove
     "get_rnd_books": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
         ORDER BY random() LIMIT %s;
-    """,
-    "get_rnd_book": """
-        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
-        TABLESAMPLE system_rows(1);
     """,
     "get_book_authors": """
         SELECT id, name FROM authors
@@ -132,18 +127,10 @@ BOOK_REQ = {
         SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
         WHERE upper(substring(sequences.name, 1, 3)) = '%s' GROUP BY id, name;
     """,
-    # ToDo: remove
     "get_rnd_seqs": """
         SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
         GROUP BY id
         ORDER BY random() LIMIT %s;
-    """,
-    "get_rnd_seq": """
-        SELECT id, name, count(*) FROM seq_books
-        INNER JOIN sequences ON sequences.id = seq_books.seq_id
-        WHERE seq_id IN (
-            SELECT id FROM sequences TABLESAMPLE system_rows(1)
-        ) GROUP BY id;
     """,
     "get_seq": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books

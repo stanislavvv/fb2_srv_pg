@@ -166,7 +166,6 @@ INSERT_REQ = {
     "cover_replace": """
         UPDATE books_covers SET cover_ctype = '%s', cover = '%s' WHERE book_id = '%s';
     """,
-
     #  no author info in books list, must be updated later
     # "authors": """
     #     INSERT INTO authors(id, name, info) VALUES ('%s', '%s', '%s');
@@ -208,32 +207,9 @@ INSERT_REQ = {
 }
 
 GET_REQ = {
-    "book_exist": """
-        SELECT 1 FROM books WHERE book_id = '%s';
-    """,
-    "bookdescr_exist": """
-        SELECT 1 FROM books_descr WHERE book_id = '%s';
-    """,
-    "cover_exist": """
-        SELECT 1 FROM books_covers WHERE book_id = '%s';
-    """,
-    "author_exist": """
-        SELECT 1 FROM authors WHERE id = '%s';
-    """,
+
     "book_of_author": """
         SELECT 1 FROM books_authors WHERE book_id = '%s' AND author_id = '%s';
-    """,
-    "seq_exist": """
-        SELECT 1 FROM sequences WHERE id = '%s';
-    """,
-    "seq_of_author": """
-        SELECT 1 FROM author_seqs WHERE author_id = '%s' AND seq_id = '%s';
-    """,
-    "seq_of_author_cnt": """
-        SELECT cnt FROM author_seqs WHERE author_id = '%s' AND seq_id = '%s';
-    """,
-    "book_in_seq": """
-        SELECT 1 FROM seq_books WHERE seq_id = '%s' AND book_id = '%s'
     """,
     "genre_exist": """
         SELECT 1 FROM genres WHERE id = '%s';
@@ -273,9 +249,9 @@ GET_REQ = {
         SELECT count(*) as cnt FROM books INNER JOIN seq_books ON seq_books.book_id = books.book_id
         WHERE seq_books.seq_id = '%s' AND books.book_id IN ('%s');
     """,
-    "get_seq_ids_of_author": """
-        SELECT seq_id FROM author_seqs WHERE author_id = '%s';
-    """,
+    # "get_seq_ids_of_author": """
+    #     SELECT seq_id FROM author_seqs WHERE author_id = '%s';
+    # """,
     "get_seqs_of_book": """
         SELECT seq_id FROM seq_books WHERE book_id = '%s';
     """

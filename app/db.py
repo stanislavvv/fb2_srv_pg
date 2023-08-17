@@ -195,19 +195,19 @@ class BookDBro():
         data = self.cur.fetchall()
         return data
 
-    def get_rnd_books(self, limit):  # ToDo: replace ORDER BY to sampling
+    def get_rnd_books(self, limit):
         """get random books"""
         self.cur.execute(BOOK_REQ["get_rnd_books"] % limit)
         data = self.cur.fetchall()
         return data
 
-    def get_rnd_seqs(self, limit):  # ToDo: replace ORDER BY to sampling
+    def get_rnd_seqs(self, limit):
         """get random sequences"""
         self.cur.execute(BOOK_REQ["get_rnd_seqs"] % limit)
         data = self.cur.fetchall()
         return data
 
-    def get_rnd_genre_books(self, gen_id, limit):  # ToDo: replace ORDER BY to sampling
+    def get_rnd_genre_books(self, gen_id, limit):
         """get random books in genre"""
         self.cur.execute(BOOK_REQ["get_genre_rndbooks"] % (gen_id, limit))
         data = self.cur.fetchall()

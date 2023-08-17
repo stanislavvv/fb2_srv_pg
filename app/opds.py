@@ -17,38 +17,11 @@ from .internals import unicode_upper, html_refine, pubinfo_anno
 from .internals import custom_alphabet_sort, custom_alphabet_name_cmp, custom_alphabet_book_title_cmp
 from .internals import URL
 
+from .opds_int import ret_hdr
+
 from .db import dbconnect
 
-from .consts import cover_names
-
-
-def ret_hdr():  # python does not have constants
-    """return opds title"""
-    return {
-        "feed": {
-            "@xmlns": "http://www.w3.org/2005/Atom",
-            "@xmlns:dc": "http://purl.org/dc/terms/",
-            "@xmlns:os": "http://a9.com/-/spec/opensearch/1.1/",
-            "@xmlns:opds": "http://opds-spec.org/2010/catalog",
-            "id": "tag:root:authors",
-            "updated": "0000-00-00_00:00",
-            "title": "Books by authors",
-            "icon": "/favicon.ico",
-            "link": [
-                {
-                    "@href": current_app.config['APPLICATION_ROOT'] + URL["search"] + "?searchTerm={searchTerms}",
-                    "@rel": "search",
-                    "@type": "application/atom+xml"
-                },
-                {
-                    "@href": current_app.config['APPLICATION_ROOT'] + URL["start"],
-                    "@rel": "start",
-                    "@type": "application/atom+xml;profile=opds-catalog"
-                }
-            ],
-            "entry": []
-        }
-    }
+from .consts import cover_names, OPDS
 
 
 def main_opds():
@@ -57,117 +30,7 @@ def main_opds():
     dtiso = get_dtiso()
 
     # start data
-    data = """
-    {
-      "feed": {
-        "@xmlns": "http://www.w3.org/2005/Atom",
-        "@xmlns:dc": "http://purl.org/dc/terms/",
-        "@xmlns:os": "http://a9.com/-/spec/opensearch/1.1/",
-        "@xmlns:opds": "http://opds-spec.org/2010/catalog",
-        "id": "tag:root",
-        "title": "Home opds directory",
-        "updated": "%s",
-        "icon": "/favicon.ico",
-        "link": [
-          {
-            "@href": "%s%s?searchTerm={searchTerms}",
-            "@rel": "search",
-            "@type": "application/atom+xml"
-          },
-          {
-            "@href": "%s%s",
-            "@rel": "start",
-            "@type": "application/atom+xml;profile=opds-catalog"
-          },
-          {
-            "@href": "%s%s",
-            "@rel": "self",
-            "@type": "application/atom+xml;profile=opds-catalog"
-          }
-        ],
-        "entry": [
-          {
-            "updated": "%s",
-            "id": "tag:root:authors",
-            "title": "По авторам",
-            "content": {
-              "@type": "text",
-              "#text": "По авторам"
-            },
-            "link": {
-              "@href": "%s%s",
-              "@type": "application/atom+xml;profile=opds-catalog"
-            }
-          },
-          {
-            "updated": "%s",
-            "id": "tag:root:sequences",
-            "title": "По сериям",
-            "content": {
-              "@type": "text",
-              "#text": "По сериям"
-            },
-            "link": {
-              "@href": "%s%s",
-              "@type": "application/atom+xml;profile=opds-catalog"
-            }
-          },
-          {
-            "updated": "%s",
-            "id": "tag:root:genre",
-            "title": "По жанрам",
-            "content": {
-              "@type": "text",
-              "#text": "По жанрам"
-            },
-            "link": {
-              "@href": "%s%s",
-              "@type": "application/atom+xml;profile=opds-catalog"
-            }
-          },
-          {
-            "updated": "%s",
-            "id": "tag:root:random:books",
-            "title": "Случайные книги",
-            "content": {
-              "@type": "text",
-              "#text": "Случайные книги"
-            },
-            "link": {
-              "@href": "%s%s",
-              "@type": "application/atom+xml;profile=opds-catalog"
-            }
-          },
-          {
-            "updated": "%s",
-            "id": "tag:root:random:sequences",
-            "title": "Случайные серии",
-            "content": {
-              "@type": "text",
-              "#text": "Случайные серии"
-            },
-            "link": {
-              "@href": "%s%s",
-              "@type": "application/atom+xml;profile=opds-catalog"
-            }
-          },
-          {
-            "updated": "%s",
-            "id": "tag:root:random:genres",
-            "title": "Случайные книги в жанре",
-            "content": {
-              "@type": "text",
-              "#text": "Случайные книги в жанре"
-            },
-            "link": {
-              "@href": "%s%s",
-              "@type": "application/atom+xml;profile=opds-catalog"
-            }
-          }
-        ]
-      }
-    }
-    """ % (
+    data = OPDS["main"] % (
         dtiso, approot, URL["search"],
         approot, URL["start"],  # start
         approot, URL["start"],  # self

@@ -136,6 +136,15 @@ def custom_alphabet_book_title_cmp(str1, str2):
     s1len = len(str1["book_title"])
     s2len = len(str2["book_title"])
     i = 0
+    # zero-length strings case
+    if s1len == i:
+        if i == s2len:
+            return 0
+        else:
+            return -1
+    elif i == s2len:
+        return 1
+
     while custom_char_cmp(str1["book_title"][i], str2["book_title"][i]) == 0:
         i = i + 1
         if i == s1len:

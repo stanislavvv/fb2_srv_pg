@@ -17,7 +17,7 @@ from .validate import redir_invalid, validate_zip, validate_fb2, validate_id
 from .internals import get_book_cover
 from .consts import CACHE_TIME_ST
 
-ccontrol = "maxage=%d, must-revalidate" % CACHE_TIME_ST
+CCONTROL = "maxage=%d, must-revalidate" % CACHE_TIME_ST
 
 dl = Blueprint("dl", __name__)
 
@@ -74,7 +74,7 @@ def fb2_read(zip_file=None, filename=None):
     data = html_out(zip_file, filename)
     if data is not None:  # pylint: disable=R1705
         head = Headers()
-        head.add('Cache-Control', ccontrol)
+        head.add('Cache-Control', CCONTROL)
         return Response(data, mimetype='text/html', headers=head)
     else:
         return Response("Book not found", status=404)
@@ -90,7 +90,7 @@ def fb2_cover(book_id=None):
     if image_type is not None and image_data is not None:  # pylint: disable=R1705
         buf = io.BytesIO(base64.b64decode(image_data))
         head = Headers()
-        head.add('Cache-Control', ccontrol)
+        head.add('Cache-Control', CCONTROL)
         return Response(buf, mimetype=image_type, headers=head)
     else:
         return current_app.send_static_file(DEFAULT_IMAGE)

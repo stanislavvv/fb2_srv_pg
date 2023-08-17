@@ -46,6 +46,120 @@ cover_names = [
     "x-stanza-cover-image-thumbnail"
 ]
 
+OPDS = {
+    "main": """
+    {
+      "feed": {
+        "@xmlns": "http://www.w3.org/2005/Atom",
+        "@xmlns:dc": "http://purl.org/dc/terms/",
+        "@xmlns:os": "http://a9.com/-/spec/opensearch/1.1/",
+        "@xmlns:opds": "http://opds-spec.org/2010/catalog",
+        "id": "tag:root",
+        "title": "Home opds directory",
+        "updated": "%s",
+        "icon": "/favicon.ico",
+        "link": [
+          {
+            "@href": "%s%s?searchTerm={searchTerms}",
+            "@rel": "search",
+            "@type": "application/atom+xml"
+          },
+          {
+            "@href": "%s%s",
+            "@rel": "start",
+            "@type": "application/atom+xml;profile=opds-catalog"
+          },
+          {
+            "@href": "%s%s",
+            "@rel": "self",
+            "@type": "application/atom+xml;profile=opds-catalog"
+          }
+        ],
+        "entry": [
+          {
+            "updated": "%s",
+            "id": "tag:root:authors",
+            "title": "По авторам",
+            "content": {
+              "@type": "text",
+              "#text": "По авторам"
+            },
+            "link": {
+              "@href": "%s%s",
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          },
+          {
+            "updated": "%s",
+            "id": "tag:root:sequences",
+            "title": "По сериям",
+            "content": {
+              "@type": "text",
+              "#text": "По сериям"
+            },
+            "link": {
+              "@href": "%s%s",
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          },
+          {
+            "updated": "%s",
+            "id": "tag:root:genre",
+            "title": "По жанрам",
+            "content": {
+              "@type": "text",
+              "#text": "По жанрам"
+            },
+            "link": {
+              "@href": "%s%s",
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          },
+          {
+            "updated": "%s",
+            "id": "tag:root:random:books",
+            "title": "Случайные книги",
+            "content": {
+              "@type": "text",
+              "#text": "Случайные книги"
+            },
+            "link": {
+              "@href": "%s%s",
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          },
+          {
+            "updated": "%s",
+            "id": "tag:root:random:sequences",
+            "title": "Случайные серии",
+            "content": {
+              "@type": "text",
+              "#text": "Случайные серии"
+            },
+            "link": {
+              "@href": "%s%s",
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          },
+          {
+            "updated": "%s",
+            "id": "tag:root:random:genres",
+            "title": "Случайные книги в жанре",
+            "content": {
+              "@type": "text",
+              "#text": "Случайные книги в жанре"
+            },
+            "link": {
+              "@href": "%s%s",
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          }
+        ]
+      }
+    }
+    """
+}
+
 BOOK_REQ = {
     "get_authors_one": """
         SELECT upper(substring(name, 1, 1)) as name1 FROM authors GROUP BY name1;

@@ -15,7 +15,7 @@ from .data import get_replace_list, fb2parse
 
 from .inpx import get_inpx_meta
 
-from .idx import process_list_books, process_list_book, process_list_books_batch
+from .idx import process_list_books_batch
 
 INPX = "flibusta_fb2_local.inpx"  # filename of metadata indexes zip
 
@@ -30,7 +30,7 @@ def recalc_commit(db):  # pylint: disable=C0103
     logging.info("end")
 
 
-def create_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103
+def create_booklist(inpx_data, zip_file):  # pylint: disable=C0103
     """(re)create .list from .zip"""
 
     booklist = zip_file + ".list"
@@ -49,8 +49,6 @@ def create_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103
                 continue
             blist.write(json.dumps(book, ensure_ascii=False))  # jsonl in blist
             blist.write("\n")
-            if db is not None:
-                process_list_book(db, book)
 
     except Exception as ex:  # pylint: disable=W0703
         logging.error("error processing zip_file: %s", ex)
@@ -65,7 +63,7 @@ def create_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103
     blist.close()
 
 
-def update_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103
+def update_booklist(inpx_data, zip_file):  # pylint: disable=C0103
     """(re)create .list for new or updated .zip"""
 
     booklist = zip_file + ".list"
@@ -78,7 +76,7 @@ def update_booklist(db, inpx_data, zip_file):  # pylint: disable=C0103
             replacetime = os.path.getmtime(replacelist)
         if ziptime < listtime and replacetime < listtime:
             return False
-    create_booklist(db, inpx_data, zip_file)
+    create_booklist(inpx_data, zip_file)
     return True
 
 
@@ -111,20 +109,7 @@ def ziplist(inpx_data, zip_file):
 def process_lists(db, zipdir, stage):  # pylint: disable=C0103
     """process .list's to database"""
 
-    if stage == "all":
-        try:
-            db.create_tables()
-            i = 0
-            for booklist in sorted(glob.glob(zipdir + '/*.zip.list')):
-                logging.info("[%s] %s", str(i), booklist)
-                process_list_books(db, booklist)
-                i = i + 1
-                db.commit()
-        except Exception as ex:  # pylint: disable=W0703
-            db.conn.rollback()
-            logging.error(ex)
-            return False
-    elif stage in ("batchnew", "batchall"):
+    if stage in ("batchnew", "batchall"):
         try:
             db.create_tables()
             i = 0

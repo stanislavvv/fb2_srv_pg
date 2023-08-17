@@ -7,7 +7,7 @@ import logging
 # pylint: disable=E0402
 from .consts import INSERT_REQ, GET_REQ
 from .strings import quote_string
-from .db import sarray2pg, bdatetime2date
+from .db import sarray2pg, bdatetime2date, make_book_descr
 
 MAX_PASS_LENGTH = 1000
 MAX_PASS_LENGTH_GEN = 5
@@ -15,24 +15,6 @@ MAX_PASS_LENGTH_GEN = 5
 PASS_SIZE_HINT = 10485760
 
 authors_seqs = {}
-
-
-def process_list_books(db, booklist):  # pylint: disable=C0103
-    """index .list to database"""
-    with open(booklist) as lst:
-        for line in lst:
-            book = json.loads(line)
-            if book is None:
-                continue
-            if "deleted" not in book:
-                book["deleted"] = 0
-            logging.debug("%s/%s", book["zipfile"], book["filename"])
-            try:
-                db.add_book(book)
-            except Exception as ex:
-                logging.error(ex)
-                raise
-    return True
 
 
 def make_update_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
@@ -52,29 +34,8 @@ def make_update_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
         book["book_id"]
     )
     req.append(INSERT_REQ["book_replace"] % book_ins)
-    pub_isbn = "NULL"
-    pub_year = "NULL"
-    publisher = "NULL"
-    publisher_id = "NULL"
-    if "pub_info" in book and book["pub_info"] is not None:
-        bookpub = book["pub_info"]
-        if "isbn" in bookpub and bookpub["isbn"] is not None:
-            pub_isbn = "'%s'" % quote_string(bookpub["isbn"])
-        if "year" in bookpub and bookpub["year"] is not None:
-            pub_year = "'%s'" % quote_string(bookpub["year"])
-        if "publisher" in bookpub and bookpub["publisher"] is not None:
-            publisher = "'%s'" % quote_string(bookpub["publisher"])
-        if "publisher_id" in bookpub and bookpub["publisher_id"] is not None:
-            publisher_id = "'%s'" % quote_string(bookpub["publisher_id"])
-    bookdescr = (
-        "'%s'" % quote_string(book["book_title"]),
-        pub_isbn,
-        pub_year,
-        publisher,
-        publisher_id,
-        "'%s'" % quote_string(book["annotation"]),
-        "'%s'" % book["book_id"]
-    )
+
+    bookdescr = make_book_descr(book, update=True)
     req.append(INSERT_REQ["bookdescr_replace"] % bookdescr)
     book_id = book["book_id"]
 
@@ -148,29 +109,8 @@ def make_insert_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
         book["deleted"]
     )
     req.append(INSERT_REQ["books"] % book_ins)
-    pub_isbn = "NULL"
-    pub_year = "NULL"
-    publisher = "NULL"
-    publisher_id = "NULL"
-    if "pub_info" in book and book["pub_info"] is not None:
-        bookpub = book["pub_info"]
-        if "isbn" in bookpub and bookpub["isbn"] is not None:
-            pub_isbn = "'%s'" % quote_string(bookpub["isbn"])
-        if "year" in bookpub and bookpub["year"] is not None:
-            pub_year = "'%s'" % quote_string(bookpub["year"])
-        if "publisher" in bookpub and bookpub["publisher"] is not None:
-            publisher = "'%s'" % quote_string(bookpub["publisher"])
-        if "publisher_id" in bookpub and bookpub["publisher_id"] is not None:
-            publisher_id = "'%s'" % quote_string(bookpub["publisher_id"])
-    bookdescr = (
-        "'%s'" % quote_string(book["book_id"]),
-        "'%s'" % quote_string(book["book_title"]),
-        pub_isbn,
-        pub_year,
-        publisher,
-        publisher_id,
-        "'%s'" % quote_string(book["annotation"])
-    )
+
+    bookdescr = make_book_descr(book)
     req.append(INSERT_REQ["bookdescr"] % bookdescr)
     book_id = book["book_id"]
 
@@ -378,12 +318,3 @@ def process_list_books_batch(db, booklist, stage):  # pylint: disable=C0103,R091
             process_books_batch(db, lines, stage)
             db.commit()
             lines = lst.readlines(PASS_SIZE_HINT)
-
-
-def process_list_book(db, book):  # pylint: disable=C0103
-    """add book to db"""
-    try:
-        db.add_book(book)
-    except Exception as ex:
-        logging.error(ex)
-        raise

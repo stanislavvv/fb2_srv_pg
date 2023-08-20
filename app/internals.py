@@ -114,14 +114,14 @@ def custom_alphabet_cmp(str1: str, str2: str):  # pylint: disable=R0911
     return custom_char_cmp(str1[i], str2[i])
 
 
-def custom_alphabet_name_cmp(str1, str2):
+def custom_alphabet_name_cmp(str1, str2):  # pylint: disable=R0911
     """custom compare name fields"""
     s1len = len(str1["name"])
     s2len = len(str2["name"])
     i = 0
     # zero-length strings case
     if s1len == i:
-        if i == s2len:
+        if i == s2len:  # pylint: disable=R1705
             return 0
         else:
             return -1
@@ -139,14 +139,14 @@ def custom_alphabet_name_cmp(str1, str2):
     return custom_char_cmp(str1["name"][i], str2["name"][i])
 
 
-def custom_alphabet_book_title_cmp(str1, str2):
+def custom_alphabet_book_title_cmp(str1, str2):  # pylint: disable=R0911
     """custom compare book_title fields"""
     s1len = len(str1["book_title"])
     s2len = len(str2["book_title"])
     i = 0
     # zero-length strings case
     if s1len == i:
-        if i == s2len:
+        if i == s2len:  # pylint: disable=R1705
             return 0
         else:
             return -1

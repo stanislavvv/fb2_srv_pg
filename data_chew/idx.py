@@ -3,6 +3,7 @@
 
 import json
 import logging
+import gzip
 
 # pylint: disable=E0402
 from .consts import INSERT_REQ, GET_REQ
@@ -307,9 +308,17 @@ def process_books_batch(db, booklines, stage):  # pylint: disable=C0103,R0912,R0
     return True
 
 
+def open_booklist(booklist):
+    """return file object of booklist in plain or compressed format"""
+    if booklist.find('gz') >= len(booklist) - 3:  # pylint: disable=R1705
+        return gzip.open(booklist)
+    else:
+        return open(booklist)
+
+
 def process_list_books_batch(db, booklist, stage):  # pylint: disable=C0103,R0912,R0914
     """index .list to database"""
-    with open(booklist) as lst:
+    with open_booklist(booklist) as lst:
         count = 0
         lines = lst.readlines(PASS_SIZE_HINT)
         while len(lines) > 0:

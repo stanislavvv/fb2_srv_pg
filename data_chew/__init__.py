@@ -67,6 +67,7 @@ def update_booklist(inpx_data, zip_file):  # pylint: disable=C0103
     """(re)create .list for new or updated .zip"""
 
     booklist = zip_file + ".list"
+    booklistgz = zip_file + ".list.gz"
     replacelist = zip_file + ".replace"
     if os.path.exists(booklist):
         ziptime = os.path.getmtime(zip_file)
@@ -76,6 +77,15 @@ def update_booklist(inpx_data, zip_file):  # pylint: disable=C0103
             replacetime = os.path.getmtime(replacelist)
         if ziptime < listtime and replacetime < listtime:
             return False
+    elif os.path.exists(booklistgz):
+        ziptime = os.path.getmtime(zip_file)
+        listtime = os.path.getmtime(booklistgz)
+        replacetime = 0
+        if os.path.exists(replacelist):
+            replacetime = os.path.getmtime(replacelist)
+        if ziptime < listtime and replacetime < listtime:
+            return False
+        os.remove(booklistgz)  # remove outdated .list.gz, because it is not .list
     create_booklist(inpx_data, zip_file)
     return True
 
@@ -113,7 +123,7 @@ def process_lists(db, zipdir, stage):  # pylint: disable=C0103
         try:
             db.create_tables()
             i = 0
-            for booklist in sorted(glob.glob(zipdir + '/*.zip.list')):
+            for booklist in sorted(glob.glob(zipdir + '/*.zip.list') + glob.glob(zipdir + '/*.zip.list.gz')):
                 logging.info("[%s] %s", str(i), booklist)
                 process_list_books_batch(db, booklist, stage)
                 i = i + 1

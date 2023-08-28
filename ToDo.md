@@ -1,7 +1,5 @@
 # ToDo
 
-- load/check date `.list.gz` as alternative for `.list`
-
 # ToDo sometimes
 
 - fsck for database (remove sequences without books, etc)

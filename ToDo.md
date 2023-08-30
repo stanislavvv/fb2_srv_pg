@@ -1,5 +1,7 @@
 # ToDo
 
+- refactor db to ORM in separate branch
+
 # ToDo sometimes
 
 - fsck for database (remove sequences without books, etc)

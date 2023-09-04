@@ -295,16 +295,16 @@ BOOK_REQ = {
         SELECT cover_ctype, cover FROM books_covers WHERE book_id = '%s';
     """,
     "search_booktitle": """
-        SELECT book_id FROM books_descr WHERE book_title_tsv @@ to_tsquery('%s') LIMIT %s;
+        SELECT book_id FROM books_descr WHERE %s LIMIT %s;
     """,
     "search_bookanno": """
-        SELECT book_id FROM books_descr WHERE anno_tsv @@ to_tsquery('%s') LIMIT %s;
+        SELECT book_id FROM books_descr WHERE %s LIMIT %s;
     """,
     "search_seqname": """
         SELECT id, name, count(*) AS cnt FROM sequences INNER JOIN seq_books ON sequences.id = seq_books.seq_id
-        WHERE name_tsv @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
+        WHERE %s GROUP BY id, name LIMIT %s;
     """,
     "search_author": """
-        SELECT id, name FROM authors WHERE name_tsv @@ to_tsquery('%s') GROUP BY id, name LIMIT %s;
+        SELECT id, name FROM authors WHERE %s GROUP BY id, name LIMIT %s;
     """
 }

@@ -224,8 +224,8 @@ class BookDBro():
         """search books in book titles"""
         s_terms = []
         for trm in terms:
-            s_terms.append('%s:*' % quote_string(trm))
-        sterms = ' & '.join(s_terms)
+            s_terms.append("book_title ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_booktitle"] % (sterms, limit))
         data = self.cur.fetchall()
         return data
@@ -234,8 +234,8 @@ class BookDBro():
         """search books in book annotations"""
         s_terms = []
         for trm in terms:
-            s_terms.append('%s:*' % quote_string(trm))
-        sterms = ' & '.join(s_terms)
+            s_terms.append("annotation ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_bookanno"] % (sterms, limit))
         data = self.cur.fetchall()
         return data
@@ -244,8 +244,8 @@ class BookDBro():
         """search sequences"""
         s_terms = []
         for trm in terms:
-            s_terms.append('%s:*' % quote_string(trm))
-        sterms = ' & '.join(s_terms)
+            s_terms.append("name ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_seqname"] % (sterms, limit))
         data = self.cur.fetchall()
         return data
@@ -254,8 +254,8 @@ class BookDBro():
         """search authors"""
         s_terms = []
         for trm in terms:
-            s_terms.append('%s:*' % quote_string(trm))
-        sterms = ' & '.join(s_terms)
+            s_terms.append("name ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
         self.cur.execute(BOOK_REQ["search_author"] % (sterms, limit))
         data = self.cur.fetchall()
         return data

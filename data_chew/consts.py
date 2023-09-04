@@ -3,9 +3,9 @@
 """some string constats for indexing"""
 
 CREATE_REQ = [
-    # for quick random row in webapp
+    # trigram fast search
     """
-    CREATE EXTENSION IF NOT EXISTS tsm_system_rows;
+    CREATE EXTENSION IF NOT EXISTS pg_trgm;
     """,
     """
     CREATE TABLE IF NOT EXISTS books (
@@ -30,12 +30,6 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS books_descr (
         book_id      char(32) NOT NULL REFERENCES books(book_id) ON DELETE CASCADE,
         book_title   text,
-        book_title_tsv tsvector
-            GENERATED ALWAYS AS (
-                to_tsvector(
-                    'russian', book_title
-                )
-            ) STORED,
         pub_isbn     varchar,
         pub_year     varchar,
         publisher    text,
@@ -50,10 +44,10 @@ CREATE_REQ = [
     )
     """,
     """
-    CREATE INDEX IF NOT EXISTS books_descr_title ON books_descr USING GIN (book_title_tsv);
+    CREATE INDEX IF NOT EXISTS books_descr_title ON books_descr USING GIN (book_title gin_trgm_ops);
     """,
     """
-    CREATE INDEX IF NOT EXISTS books_descr_anno ON books_descr USING GIN (anno_tsv);
+    CREATE INDEX IF NOT EXISTS books_descr_anno ON books_descr USING GIN (annotation gin_trgm_ops);
     """,
     """
     CREATE TABLE IF NOT EXISTS books_covers (
@@ -66,18 +60,12 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS authors (
         id    char(32) UNIQUE NOT NULL,
         name  text,
-        name_tsv tsvector
-            GENERATED ALWAYS AS (
-                to_tsvector(
-                    'russian', name
-                )
-            ) STORED,
         info  text DEFAULT '',
         PRIMARY KEY(id)
     );
     """,
     """
-    CREATE INDEX IF NOT EXISTS authors_names ON authors USING GIN (name_tsv);
+    CREATE INDEX IF NOT EXISTS authors_names ON authors USING GIN (name gin_trgm_ops);
     """,
     """
     CREATE TABLE IF NOT EXISTS books_authors (
@@ -90,18 +78,12 @@ CREATE_REQ = [
     CREATE TABLE IF NOT EXISTS sequences (
         id    char(32) UNIQUE NOT NULL,
         name  text,
-        name_tsv tsvector
-            GENERATED ALWAYS AS (
-                to_tsvector(
-                    'russian', name
-                )
-            ) STORED,
         info  text DEFAULT '',
         PRIMARY KEY(id)
     );
     """,
     """
-    CREATE INDEX IF NOT EXISTS seq_names ON sequences USING GIN (name_tsv);
+    CREATE INDEX IF NOT EXISTS seq_names ON sequences USING GIN (name gin_trgm_ops);
     """,
     """
     CREATE TABLE IF NOT EXISTS author_seqs (
@@ -166,17 +148,9 @@ INSERT_REQ = {
     "cover_replace": """
         UPDATE books_covers SET cover_ctype = '%s', cover = '%s' WHERE book_id = '%s';
     """,
-    #  no author info in books list, must be updated later
-    # "authors": """
-    #     INSERT INTO authors(id, name, info) VALUES ('%s', '%s', '%s');
-    # """,
     "author": """
         INSERT INTO authors(id, name) VALUES ('%s', '%s');
     """,
-    #  no sequence info in books list
-    # "sequences": """
-    #     INSERT INTO sequences(id, name, info) VALUES ('%s', '%s', '%s');
-    # """,
     "sequences": """
         INSERT INTO sequences(id, name) VALUES ('%s', '%s');
     """,
@@ -249,9 +223,6 @@ GET_REQ = {
         SELECT count(*) as cnt FROM books INNER JOIN seq_books ON seq_books.book_id = books.book_id
         WHERE seq_books.seq_id = '%s' AND books.book_id IN ('%s');
     """,
-    # "get_seq_ids_of_author": """
-    #     SELECT seq_id FROM author_seqs WHERE author_id = '%s';
-    # """,
     "get_seqs_of_book": """
         SELECT seq_id FROM seq_books WHERE book_id = '%s';
     """

@@ -1,7 +1,5 @@
 # ToDo
 
-- load images on-demand (only when its show on screen)
-
 # ToDo sometimes
 
 - fsck for database (remove sequences without books, etc)

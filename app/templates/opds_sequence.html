@@ -14,7 +14,7 @@
             <p>
             <!---cover image here--->
             {% for l in i.link %}
-                  {% if l['@rel'] == 'x-stanza-cover-image' %}<img src={{l['@href']}} alt="{{l['@rel']}}">{% endif %}
+                  {% if l['@rel'] == 'x-stanza-cover-image' %}<img src={{l['@href']}} alt="{{l['@rel']}}" loading="lazy">{% endif %}
             {% endfor %}
             </p>
             <p>Ссылки: 

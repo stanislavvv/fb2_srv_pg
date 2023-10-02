@@ -1,5 +1,7 @@
 # ToDo
 
+- use HIDE_DELETED config option (forgot to implement)
+
 # ToDo sometimes
 
 - fsck for database (remove sequences without books, etc)

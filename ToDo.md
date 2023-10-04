@@ -1,6 +1,8 @@
 # ToDo
 
 - use HIDE_DELETED config option (forgot to implement)
+- refactor:
+  - merge `data_chew/` and `app/`
 
 # ToDo sometimes
 

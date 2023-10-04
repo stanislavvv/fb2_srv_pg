@@ -11,3 +11,5 @@ logs
 app/config.py
 venv
 docker-compose*.yml
+out.*
+

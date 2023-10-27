@@ -1,0 +1,479 @@
+# -*- coding: utf-8 -*-
+"""library database interface"""
+
+import logging
+import psycopg2
+
+from flask import current_app
+
+# pylint: disable=E0402
+from .consts import BOOK_REQ, GET_REQ, INSERT_REQ, CREATE_REQ
+from .datachew_strings import quote_string
+
+
+def sarray2pg(arr):
+    """array of any to postgres request substring"""
+    rarr = []
+    for elem in arr:
+        rarr.append("'%s'" % str(elem))
+    return "ARRAY [%s]" % ",".join(rarr)
+
+
+def bdatetime2date(date_time):
+    """string 2008-07-05_00:00 -> 2008-07-05"""
+    return date_time.split("_")[0]
+
+
+def make_book_descr(book, update=False):
+    """return book description struct for insert/update templating"""
+    pub_isbn = "NULL"
+    pub_year = "NULL"
+    publisher = "NULL"
+    publisher_id = "NULL"
+    if "pub_info" in book and book["pub_info"] is not None:
+        bookpub = book["pub_info"]
+        if "isbn" in bookpub and bookpub["isbn"] is not None:
+            pub_isbn = "'%s'" % quote_string(bookpub["isbn"])
+        if "year" in bookpub and bookpub["year"] is not None:
+            pub_year = "'%s'" % quote_string(bookpub["year"])
+        if "publisher" in bookpub and bookpub["publisher"] is not None:
+            publisher = "'%s'" % quote_string(bookpub["publisher"])
+        if "publisher_id" in bookpub and bookpub["publisher_id"] is not None:
+            publisher_id = "'%s'" % quote_string(bookpub["publisher_id"])
+    if update:
+        bookdescr = (
+            "'%s'" % quote_string(book["book_title"]),
+            pub_isbn,
+            pub_year,
+            publisher,
+            publisher_id,
+            "'%s'" % quote_string(book["annotation"]),
+            "'%s'" % quote_string(book["book_id"])
+        )
+    else:
+        bookdescr = (
+            "'%s'" % quote_string(book["book_id"]),
+            "'%s'" % quote_string(book["book_title"]),
+            pub_isbn,
+            pub_year,
+            publisher,
+            publisher_id,
+            "'%s'" % quote_string(book["annotation"])
+        )
+    return bookdescr
+
+
+class BookDB():
+    """read-only interface for books database"""
+    # pylint: disable=R0904
+    # genres meta (see get_genres_meta())
+    genres_meta = {}
+
+    # genres (see get_genres())
+    genres = {}
+
+    # fix some wrong genres
+    genres_replacements = {}
+
+    def __get_genres_meta(self):
+        """init genres meta dict"""
+        data = open('genres_meta.list', 'r')
+        if data:
+            while True:
+                line = data.readline()
+                if not line:
+                    break
+                meta_line = line.strip('\n').split('|')
+                if len(meta_line) > 1:
+                    self.genres_meta[meta_line[0]] = meta_line[1]
+            data.close()
+        else:
+            logging.error("Can't open genres_meta.list")
+
+    def __get_genres(self):
+        """init genres dict"""
+        data = open('genres.list', 'r')
+        if data:
+            while True:
+                line = data.readline()
+                if not line:
+                    break
+                genre_line = line.strip('\n').split('|')
+                if len(genre_line) > 1:
+                    self.genres[genre_line[1]] = {"descr": genre_line[2], "meta_id": genre_line[0]}
+            data.close()
+        else:
+            logging.error("Can't open genres.list")
+
+    def __get_genres_replace(self):
+        """init genres_replace dict"""
+        data = open('genres_replace.list', 'r')
+        if data:
+            while True:
+                line = data.readline()
+                if not line:
+                    break
+                replace_line = line.strip('\n').split('|')
+                if len(replace_line) > 1:
+                    replacement = replace_line[1].split(",")
+                    self.genres_replacements[replace_line[0]] = '|'.join(replacement)
+            data.close()
+        else:
+            logging.error("Can't open genres_replace.list")
+
+    def pre_idx(self):
+        self.__get_genres_meta()
+        self.__get_genres()
+        self.__get_genres_replace()
+        logging.info("genres data loaded to vars")
+
+    def genres_replace(self, book, genrs):
+        """return genre or replaced genre"""
+        ret = []
+        for i in genrs:
+            if i not in self.genres and i != "":
+                if i in self.genres_replacements:
+                    if self.genres_replacements[i] is not None and self.genres_replacements[i] != "":
+                        ret.append(self.genres_replacements[i])
+                else:
+                    logging.warning(
+                        "unknown genre '%s' replaced to 'other' for %s/%s",
+                        i,
+                        book["zipfile"],
+                        book["filename"]
+                    )
+                    ret.append('other')
+            else:
+                ret.append(i)
+        return ret
+
+    def __init__(self, pg_host, pg_base, pg_user, pg_pass):
+        # pylint: disable=R0801
+        # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
+        self.conn = psycopg2.connect(
+            host=pg_host,
+            database=pg_base,
+            user=pg_user,
+            password=pg_pass
+        )
+        self.cur = self.conn.cursor()
+        logging.info("connected to db")
+
+    def get_book_authors(self, book_id):
+        """get authors of one book"""
+        self.cur.execute(BOOK_REQ["get_book_authors"] % book_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_books_authors(self, book_ids):
+        """get authors of many books"""
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_authors"] % req_data)
+        data = self.cur.fetchall()
+        return data
+
+    def get_book_seqs(self, book_id):
+        """get sequences which one book belongs to"""
+        self.cur.execute(BOOK_REQ["get_book_seqs"] % book_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_books_seqs(self, book_ids):
+        """get sequences which any of many books belongs to"""
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_seqs"] % req_data)
+        data = self.cur.fetchall()
+        return data
+
+    def get_book_descr(self, book_id):
+        """get title/annotation/publication for one book"""
+        self.cur.execute(BOOK_REQ["get_book_descr"] % book_id)
+        data = self.cur.fetchone()
+        return data
+
+    def get_books_descr(self, book_ids):
+        """get title/annotation/publication for many book"""
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_descr"] % req_data)
+        data = self.cur.fetchall()
+        return data
+
+    def get_authors_one(self):
+        """get first letters of all authors names"""
+        self.cur.execute(BOOK_REQ["get_authors_one"])
+        data = self.cur.fetchall()
+        return data
+
+    def get_authors_three(self, auth_sub):
+        """get three letters of authors names on letter"""
+        self.cur.execute(BOOK_REQ["get_authors_three"] % auth_sub)
+        data = self.cur.fetchall()
+        return data
+
+    def get_authors_list(self, auth_sub):
+        """get list of author with names on three letters"""
+        self.cur.execute(BOOK_REQ["get_authors"] % auth_sub)
+        data = self.cur.fetchall()
+        return data
+
+    def get_author(self, auth_id):
+        """get author by id"""
+        self.cur.execute(BOOK_REQ["get_author"] % auth_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_author_seqs(self, auth_id):
+        """get book sequences of author"""
+        self.cur.execute(BOOK_REQ["get_auth_seqs"] % auth_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_author_seq(self, auth_id, seq_id):
+        """list books of author in sequence"""
+        self.cur.execute(BOOK_REQ["get_auth_seq"] % (auth_id, seq_id))
+        data = self.cur.fetchall()
+        return data
+
+    def get_author_nonseq(self, auth_id, seq_id):
+        """list books of not belong to any sequence"""
+        self.cur.execute(BOOK_REQ["get_auth_nonseq"] % (auth_id, seq_id))
+        data = self.cur.fetchall()
+        return data
+
+    def get_author_books(self, auth_id):
+        """list all books of author"""
+        self.cur.execute(BOOK_REQ["get_auth_books"] % auth_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_seq_name(self, seq_id):
+        """get sequence name by id"""
+        self.cur.execute(BOOK_REQ["get_seq_name"] % seq_id)
+        data = self.cur.fetchone()
+        return data[0]
+
+    def get_seqs_one(self):
+        """get first letters of all sequences"""
+        self.cur.execute(BOOK_REQ["get_seqs_one"])
+        data = self.cur.fetchall()
+        return data
+
+    def get_seqs_three(self, seq_sub):
+        """get three letters of sequences on letter"""
+        self.cur.execute(BOOK_REQ["get_seqs_three"] % seq_sub)
+        data = self.cur.fetchall()
+        return data
+
+    def get_seqs_list(self, seq_sub):
+        """get list of sequences with names on three letters"""
+        self.cur.execute(BOOK_REQ["get_seqs"] % seq_sub)
+        data = self.cur.fetchall()
+        return data
+
+    def get_seq(self, seq_id):
+        """get books in sequence"""
+        self.cur.execute(BOOK_REQ["get_seq"] % seq_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_genre_name(self, gen_id):
+        """get name of genre by id"""
+        self.cur.execute(BOOK_REQ["get_genre_name"] % gen_id)
+        data = self.cur.fetchone()
+        return data
+
+    def get_meta_name(self, meta_id):
+        """get genre meta name by id"""
+        self.cur.execute(BOOK_REQ["get_meta_name"] % meta_id)
+        data = self.cur.fetchone()
+        return data
+
+    def get_genres_meta(self):
+        """list genre metas"""
+        self.cur.execute(BOOK_REQ["get_genres_meta"])
+        data = self.cur.fetchall()
+        return data
+
+    def get_genres(self, meta_id):
+        """list genres in meta"""
+        self.cur.execute(BOOK_REQ["get_genres_in_meta"] % meta_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_genre_books(self, gen_id, paginate, limit, offset):
+        """list books in genre"""
+        if paginate:
+            self.cur.execute(BOOK_REQ["get_genre_books_pag"] % (gen_id, limit, offset))
+        else:
+            self.cur.execute(BOOK_REQ["get_genre_books"] % gen_id)
+        data = self.cur.fetchall()
+        return data
+
+    def get_rnd_books(self, limit):
+        """get random books"""
+        self.cur.execute(BOOK_REQ["get_rnd_books"] % limit)
+        data = self.cur.fetchall()
+        return data
+
+    def get_rnd_seqs(self, limit):
+        """get random sequences"""
+        self.cur.execute(BOOK_REQ["get_rnd_seqs"] % limit)
+        data = self.cur.fetchall()
+        return data
+
+    def get_rnd_genre_books(self, gen_id, limit):
+        """get random books in genre"""
+        self.cur.execute(BOOK_REQ["get_genre_rndbooks"] % (gen_id, limit))
+        data = self.cur.fetchall()
+        return data
+
+    def get_books_byids(self, book_ids):
+        """get books data by list of ids"""
+        req_data = "', '".join(book_ids)
+        self.cur.execute(BOOK_REQ["get_books_byids"] % req_data)
+        data = self.cur.fetchall()
+        return data
+
+    def get_search_titles(self, terms, limit):
+        """search books in book titles"""
+        s_terms = []
+        for trm in terms:
+            s_terms.append("book_title ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_booktitle"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
+    def get_search_anno(self, terms, limit):
+        """search books in book annotations"""
+        s_terms = []
+        for trm in terms:
+            s_terms.append("annotation ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_bookanno"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
+    def get_search_seqs(self, terms, limit):
+        """search sequences"""
+        s_terms = []
+        for trm in terms:
+            s_terms.append("name ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_seqname"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
+    def get_search_authors(self, terms, limit):
+        """search authors"""
+        s_terms = []
+        for trm in terms:
+            s_terms.append("name ILIKE '%%%s%%'" % quote_string(trm))
+        sterms = ' OR '.join(s_terms)
+        self.cur.execute(BOOK_REQ["search_author"] % (sterms, limit))
+        data = self.cur.fetchall()
+        return data
+
+    def get_book_cover(self, book_id):
+        """return image with type"""
+        self.cur.execute(BOOK_REQ["get_cover_data"] % book_id)
+        data = self.cur.fetchone()
+        return data
+
+    def __genre_exist(self, genre):
+        self.cur.execute(GET_REQ["genre_exist"] % str(genre))
+        data = self.cur.fetchone()
+        return data
+
+    def __meta_exists(self, meta):
+        self.cur.execute(GET_REQ["meta_exist"] % str(meta))
+        data = self.cur.fetchone()
+        return data
+
+    def __add_meta(self, meta):
+        if not self.__meta_exists(meta):
+            meta_id = str(meta)
+            descr = quote_string(self.genres_meta[meta_id])
+            req = INSERT_REQ["meta"] % (meta_id, descr, '')
+            # logging.debug("insert req: %s" % req)
+            self.cur.execute(req)
+
+    def __add_genre(self, genre):
+        info = self.genres[genre]
+        meta_id = info["meta_id"]
+        descr = info["descr"]
+        self.__add_meta(meta_id)
+        req = INSERT_REQ["genres"] % (genre, meta_id, descr, 1, '')
+        # logging.debug("insert req: %s" % req)
+        self.cur.execute(req)
+
+    def __replace_genre(self, genre):  # simply increment
+        self.cur.execute(GET_REQ["get_genre_cnt"] % genre)
+        cnt = self.cur.fetchone()[0]
+        self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt + 1, genre))
+
+    def __replace_genre_cnt(self, genre, cnt):  # set cnt
+        self.cur.execute(INSERT_REQ["genre_cnt_update"] % (cnt, genre))
+
+    def add_genre(self, genre):
+        """add/update known genre data to db"""
+        if self.__genre_exist(genre):
+            self.__replace_genre(genre)
+        else:
+            self.__add_genre(genre)
+
+    def recalc_authors_books(self):
+        """recalc author's books count"""
+        self.cur.execute(GET_REQ["get_authors_ids"])
+        auth_ids = self.cur.fetchall()
+        for auth_id in auth_ids:
+            self.cur.execute(GET_REQ["get_auth_book_ids"] % auth_id[0])
+            ids = self.cur.fetchall()
+            book_ids = []
+            for book_id in ids:
+                book_ids.append(book_id[0])
+            self.cur.execute(GET_REQ["get_author_seq_ids"] % auth_id[0])
+            seq_ids = self.cur.fetchall()
+            for seq_id in seq_ids:
+                self.cur.execute(GET_REQ["get_auth_seq_cnt"] % (seq_id[0], "', '".join(book_ids)))
+                cnt = self.cur.fetchone()
+                self.cur.execute(INSERT_REQ["author_seqs_update"] % (cnt[0], auth_id[0], seq_id[0]))
+
+    def recalc_seqs_books(self):
+        """recalc books count in sequences"""
+        self.cur.execute(GET_REQ["get_seqs_ids"])
+        ids = self.cur.fetchall()
+        for seq_id in ids:
+            self.cur.execute(GET_REQ["get_seq_books_cnt"] % seq_id[0])
+            cnt = self.cur.fetchone()[0]
+            self.__replace_genre_cnt(seq_id[0], cnt)
+
+    def recalc_genres_books(self):
+        """recalc books count in genres"""
+        self.cur.execute(GET_REQ["get_genres_ids"])
+        ids = self.cur.fetchall()
+        for gen_id in ids:
+            self.cur.execute(GET_REQ["get_genre_books_cnt"] % gen_id[0])
+            cnt = self.cur.fetchone()[0]
+            self.__replace_genre_cnt(gen_id[0], cnt)
+
+    def commit(self):
+        """send COMMIT to database"""
+        self.conn.commit()
+
+    def create_tables(self):
+        """create tables/indexes"""
+        logging.info("creating tables...")
+        for req in CREATE_REQ:
+            # logging.debug("query: %s" % str(req))
+            self.cur.execute(req)
+            # logging.debug("done")
+
+
+def dbconnect():
+    """return object for connected database"""
+    pg_host = current_app.config['PG_HOST']
+    pg_base = current_app.config['PG_BASE']
+    pg_user = current_app.config['PG_USER']
+    pg_pass = current_app.config['PG_PASS']
+    return BookDB(pg_host, pg_base, pg_user, pg_pass)

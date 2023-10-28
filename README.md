@@ -20,6 +20,7 @@ docker-compose up -d
 ```
 docker-compose down
 sudo rm -rf pgdata
+docker system prune -f
 ```
 
 Если не править `docker-compose.yml`, то `PG_*` в `app/config.py` находятся в нужном состоянии

@@ -4,7 +4,6 @@
 - use HIDE_DELETED config option (forgot to implement)
 - refactor:
   - join app and data_chew
-  - requests with too big read (books without sequence, books in seq of author)
 
 # ToDo sometimes
 

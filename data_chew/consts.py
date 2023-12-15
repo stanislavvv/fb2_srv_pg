@@ -57,6 +57,9 @@ CREATE_REQ = [
     )
     """,
     """
+    CREATE INDEX IF NOT EXISTS books_descr_anno_book_id ON books_covers (book_id);
+    """,
+    """
     CREATE TABLE IF NOT EXISTS authors (
         id    char(32) UNIQUE NOT NULL,
         name  text,
@@ -73,6 +76,12 @@ CREATE_REQ = [
         author_id char(32) NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
         UNIQUE (author_id, book_id)
     );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS author_names_bookid ON books_authors (book_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS author_names_authid ON books_authors (author_id);
     """,
     """
     CREATE TABLE IF NOT EXISTS sequences (
@@ -92,6 +101,12 @@ CREATE_REQ = [
         cnt       integer DEFAULT 0,
         UNIQUE (author_id, seq_id)
     );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS author_seqs_authid ON author_seqs (author_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS author_seqs_seqid ON author_seqs (seq_id);
     """,
     """
     CREATE TABLE IF NOT EXISTS genres_meta (
@@ -118,6 +133,12 @@ CREATE_REQ = [
         seq_num	integer DEFAULT NULL,
         UNIQUE (seq_id, book_id, seq_num)
     );
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS seq_books_bookid ON seq_books (book_id);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS seq_books_seqid ON seq_books (seq_id);
     """
 ]
 

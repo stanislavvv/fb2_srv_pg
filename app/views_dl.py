@@ -7,7 +7,7 @@ import zipfile
 import time
 import base64
 
-from flask import Blueprint, Response, send_file, request, current_app
+from flask import Blueprint, Response, send_file, request, current_app, __version__ as FLASK_VER
 
 from werkzeug.datastructures import Headers
 
@@ -55,7 +55,10 @@ def fb2_download(zip_file=None, filename=None):
             zf.writestr(data, fb2data)
         memory_file.seek(0)
         zip_name = filename + ".zip"
-        return send_file(memory_file, attachment_filename=zip_name, as_attachment=True, cache_timeout=CACHE_TIME_ST)
+        if FLASK_VER < '2.1.3':  # use OLD send_file interface
+            return send_file(memory_file, attachment_filename=zip_name, as_attachment=True, cache_timeout=CACHE_TIME_ST)
+        else:
+            return send_file(memory_file, download_name=zip_name, as_attachment=True)
     else:
         return Response("Book not found", status=404)
 

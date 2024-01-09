@@ -1,6 +1,5 @@
 # ToDo
 
-- add requirements.txt and virtualenv create and use in scripts [higher priority as python3.7 deprecation]
 - use newer flask
 - use HIDE_DELETED config option (forgot to implement)
 - languages to std view (for example: 'RU|RU-ru|ru-' --> 'ru')

@@ -3,3 +3,4 @@ Flask==3.0.0
 lxml==5.1.0
 psycopg2_binary==2.9.9
 xmltodict==0.13.0
+gunicorn

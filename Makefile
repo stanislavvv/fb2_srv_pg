@@ -12,8 +12,9 @@ help:
 	@echo "Available targets:"
 	@echo "  clean    - clean all"
 	@echo "  flakeall - check all .py by flake8"
+	@echo "  lintall  - check all .py by pylint"
 	@echo "  help     - this text"
-	@echo "  newpages - recreate data/pages"
+	@echo "  update   - update data from .zip"
 
 clean:
 	find . -name '*.pyc' -delete
@@ -26,18 +27,11 @@ flakeall:
 lintall:
 	find . -name '*.py' -print0 | xargs -0 -n 100 pylint $(PYLINT_ARGS)
 
-newpages:
-	@echo "--- rename old pages ---"
-	mv -f data/pages "$(DATA)/pages.rm" ||:
+update:
 	@echo "------ lists ------"
 	./datachew.py new_lists
-	@echo "------ stages -----"
-	./datachew.py stage1
-	./datachew.py stage2
-	./datachew.py stage3
-	./datachew.py stage4
-	@echo "--- remove old pages ---"
-	rm -rf "$(DATA)/pages.rm" ||:
+	@echo "------ data -----"
+	./datachew.py fillonly
 
 #dockerbuild:
 #	docker build -t "$(DOCKERTAG)" .

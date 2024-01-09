@@ -29,9 +29,9 @@ lintall:
 
 update:
 	@echo "------ lists ------"
-	./datachew.py new_lists
+	./datachew.sh new_lists
 	@echo "------ data -----"
-	./datachew.py fillonly
+	./datachew.sh fillonly
 
 #dockerbuild:
 #	docker build -t "$(DOCKERTAG)" .

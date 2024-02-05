@@ -245,11 +245,12 @@ def process_books_batch(db, booklines, stage):  # pylint: disable=C0103,R0912,R0
     authors = {}
     for line in booklines:
         book = json.loads(line)
+        if book is None:
+            continue
         if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
             book["genres"] = ["other"]
         book["genres"] = db.genres_replace(book, book["genres"])
-        if book is None:
-            continue
+        book["lang"] = db.lang_replace(book, book["lang"])
         if "deleted" not in book:
             book["deleted"] = 0
         books.append(book)

@@ -22,10 +22,10 @@ clean:
 	rm -rf venv
 
 flakeall:
-	find . -name '*.py' -print0 | xargs -0 -n 100 flake8 $(FLAKE8_ARGS)
+	find . -not -path "./venv/*" -name '*.py' -print0 | xargs -0 -n 100 flake8 $(FLAKE8_ARGS)
 
 lintall:
-	find . -name '*.py' -print0 | xargs -0 -n 100 pylint $(PYLINT_ARGS)
+	find . -not -path "./venv/*" -name '*.py' -print0 | xargs -0 -n 100 pylint $(PYLINT_ARGS)
 
 update:
 	@echo "------ lists ------"

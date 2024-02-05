@@ -78,6 +78,9 @@ class BookDB():
     # fix some wrong genres
     genres_replacements = {}
 
+    # fix some wrong langs
+    langs_replacements = {}
+
     def __get_genres_meta(self):
         """init genres meta dict"""
         data = open('genres_meta.list', 'r')
@@ -115,6 +118,19 @@ class BookDB():
                 self.genres_replacements[replace_line[0]] = '|'.join(replacement)
         data.close()
 
+    def __get_langs_replace(self):
+        """init genres_replace dict"""
+        data = open('langs_replace.list', 'r')
+        while True:
+            line = data.readline()
+            if not line:
+                break
+            replace_line = line.strip('\n').split('|')
+            if len(replace_line) > 1:
+                replacement = replace_line[1].split(",")
+                self.langs_replacements[replace_line[0]] = '|'.join(replacement)
+        data.close()
+
     def genres_replace(self, book, genrs):
         """return genre or replaced genre"""
         ret = []
@@ -135,6 +151,19 @@ class BookDB():
                 ret.append(i)
         return ret
 
+    def lang_replace(self, book, lng):
+        """return langs or replaced lang -- simple variant"""
+        if lng in self.langs_replacements:
+            logging.debug(
+                "replaced lang '%s' to '%s' for %s/%s",
+                lng,
+                self.langs_replacements[lng],
+                book["zipfile"],
+                book["filename"]
+            )
+            return self.langs_replacements[lng]
+        return lng
+
     def __init__(self, pg_host, pg_base, pg_user, pg_pass):
         # pylint: disable=R0801
         # logging.debug("db conn params:", pg_host, pg_base, pg_user, pg_pass)
@@ -149,6 +178,7 @@ class BookDB():
         self.__get_genres_meta()
         self.__get_genres()
         self.__get_genres_replace()
+        self.__get_langs_replace()
         logging.info("genres data loaded to vars")
 
     def __genre_exist(self, genre):

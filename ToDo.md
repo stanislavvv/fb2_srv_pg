@@ -3,6 +3,7 @@
 - [datachew] languages to std view (for example: 'RU|RU-ru|ru-' --> 'ru' as in ISO 639-1 if possible or ISO 639-2)
 - [opds] add filtering by language (may be by url parameter), use ISO 639-1 or ISO 639-2 (translated to ISO 639-1 internally)
 - refactor:
+  - [opds] many single gen_id -> name requests to single request
   - [opds] slow sql queries:
     - books in sequence
     - books in genre

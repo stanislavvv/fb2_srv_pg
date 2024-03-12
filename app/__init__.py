@@ -12,7 +12,7 @@ from .config import config, SELECTED_CONFIG
 from .views_dl import dl
 from .views_opds import opds
 from .views_html import html
-from .internals import tpl_headers_symbols
+from .internals import tpl_headers_symbols, load_genre_names
 
 
 def init_xslt(xsltfile, app):
@@ -31,4 +31,6 @@ def create_app():
     app.register_blueprint(html, url_prefix=app.config['APPLICATION_ROOT'])
     init_xslt(app.config['FB2_XSLT'], app)
     app.jinja_env.filters['head2sym'] = tpl_headers_symbols  # pylint: disable=E1101
+    with app.app_context():
+        load_genre_names()
     return app

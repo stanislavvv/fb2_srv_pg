@@ -264,6 +264,9 @@ BOOK_REQ = {
     "get_genre_name": """
         SELECT name FROM genres WHERE id = '%s';
     """,
+    "get_genre_names": """
+        SELECT id, name FROM genres;
+    """,
     "get_meta_name": """
         SELECT name FROM genres_meta WHERE meta_id = '%s';
     """,

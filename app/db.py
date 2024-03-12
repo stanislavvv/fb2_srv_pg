@@ -43,7 +43,15 @@ class BookDBro():
             password=pg_pass
         )
         self.cur = self.conn.cursor()
-        current_app.logger.info("connected to db")
+        current_app.logger.debug("connected to db")
+
+    def get_genre_names(self):
+        """get ALL genre names with id"""
+        current_app.logger.debug(BOOK_REQ["get_genre_names"])
+        self.cur.execute(BOOK_REQ["get_genre_names"])
+        data = self.cur.fetchall()
+        current_app.logger.debug("end")
+        return data
 
     def get_book_authors(self, book_id):
         """get authors of one book"""

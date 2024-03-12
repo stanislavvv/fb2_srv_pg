@@ -13,6 +13,15 @@ from bs4 import BeautifulSoup
 from .consts import URL, alphabet_1, alphabet_2
 from .db import dbconnect
 
+genre_names = {}
+
+
+def load_genre_names():
+    db_conn = dbconnect()
+    data = db_conn.get_genre_names()
+    for k, v in data:
+        genre_names[k] = v
+
 
 def tpl_headers_symbols(link: str):
     """replace link name for html interface"""
@@ -312,10 +321,12 @@ def get_meta_name(meta_id):
 def get_genre_name(gen_id: str):
     """genre name by id"""
     ret = gen_id
-    db_conn = dbconnect()
-    dbdata = db_conn.get_genre_name(gen_id)
-    if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
-        ret = dbdata[0]
+    # db_conn = dbconnect()
+    # dbdata = db_conn.get_genre_name(gen_id)
+    # if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
+        # ret = dbdata[0]
+    if gen_id in genre_names:
+        ret = genre_names[gen_id]
     return ret
 
 

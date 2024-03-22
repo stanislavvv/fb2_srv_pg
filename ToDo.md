@@ -3,8 +3,8 @@
 - [datachew] languages to std view (for example: 'RU|RU-ru|ru-' --> 'ru' as in ISO 639-1 if possible or ISO 639-2)
 - [opds] add filtering by language (may be by url parameter), use ISO 639-1 or ISO 639-2 (translated to ISO 639-1 internally)
 - refactor:
-  - [opds] many single gen_id -> name requests to single request
-  - [opds] slow sql queries:
+  - use nullable type for seq num field (will require regenerate all sequences data in database)
+  - [opds] slow sql queries (test and may be fix after new storage setup):
     - books in sequence
     - books in genre
     - random books
@@ -17,5 +17,5 @@
 - [datachew] fsck for database (remove sequences without books, etc)
 - [datachew] clean input in `datachew/data.py:str_normalize`, not only uppercase
 - `lang` field in `books` table must be array of strings as `genres` (may be or not)
-- use ORM for database
-- join app and data_chew
+- use ORM for database (may be, if any ORM can create trigram or similar fts index)
+- join app and data_chew (or not join?)

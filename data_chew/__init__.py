@@ -35,20 +35,20 @@ def create_booklist(inpx_data, zip_file):  # pylint: disable=C0103
 
     booklist = zip_file + ".list"
     try:
-        blist = open(booklist, 'w')
+        with open(booklist, 'w', encoding='utf-8') as blist:
 
-        files = list_zip(zip_file)
-        z_file = zipfile.ZipFile(zip_file)
-        inpx_meta = get_inpx_meta(inpx_data, zip_file)
-        replace_data = get_replace_list(zip_file)
+            files = list_zip(zip_file)
+            z_file = zipfile.ZipFile(zip_file)  # pylint: disable=R1732
+            inpx_meta = get_inpx_meta(inpx_data, zip_file)
+            replace_data = get_replace_list(zip_file)
 
-        for filename in files:
-            logging.debug("%s/%s            ", zip_file, filename)
-            _, book = fb2parse(z_file, filename, replace_data, inpx_meta)
-            if book is None:
-                continue
-            blist.write(json.dumps(book, ensure_ascii=False))  # jsonl in blist
-            blist.write("\n")
+            for filename in files:
+                logging.debug("%s/%s            ", zip_file, filename)
+                _, book = fb2parse(z_file, filename, replace_data, inpx_meta)
+                if book is None:
+                    continue
+                blist.write(json.dumps(book, ensure_ascii=False))  # jsonl in blist
+                blist.write("\n")
 
     except Exception as ex:  # pylint: disable=W0703
         logging.error("error processing zip_file: %s", ex)
@@ -60,7 +60,6 @@ def create_booklist(inpx_data, zip_file):  # pylint: disable=C0103
         logging.info("removing %s", booklist)
         os.remove(booklist)
         sys.exit(1)
-    blist.close()
 
 
 def update_booklist(inpx_data, zip_file):  # pylint: disable=C0103
@@ -93,7 +92,7 @@ def update_booklist(inpx_data, zip_file):  # pylint: disable=C0103
 def list_zip(zip_file):
     """return list of files in zip_file"""
     ret = []
-    z_file = zipfile.ZipFile(zip_file)
+    z_file = zipfile.ZipFile(zip_file)  # pylint: disable=R1732
     for filename in z_file.namelist():
         if not os.path.isdir(filename):
             ret.append(filename)
@@ -105,7 +104,7 @@ def ziplist(inpx_data, zip_file):
 
     logging.info(zip_file)
     ret = []
-    z_file = zipfile.ZipFile(zip_file)
+    z_file = zipfile.ZipFile(zip_file)  # pylint: disable=R1732
     replace_data = get_replace_list(zip_file)
     inpx_data = get_inpx_meta(inpx_data, zip_file)
     for filename in z_file.namelist():

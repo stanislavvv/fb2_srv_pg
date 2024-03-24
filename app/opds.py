@@ -9,7 +9,7 @@ import urllib
 from functools import cmp_to_key
 from flask import current_app
 
-# pylint: disable=E0402
+# pylint: disable=E0402,C0209
 from .internals import get_dtiso, id2path, get_book_entry, sizeof_fmt, get_seq_link
 from .internals import get_book_link, url_str, get_books_descr, get_books_authors
 from .internals import get_books_seqs, get_genre_name

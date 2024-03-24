@@ -245,9 +245,8 @@ def get_replace_list(zip_file):
     replace_list = zip_file + ".replace"
     if os.path.isfile(replace_list):
         try:
-            rlist = open(replace_list, encoding="utf-8")
-            ret = json.load(rlist)
-            rlist.close()
+            with open(replace_list, encoding="utf-8") as rlist:
+                ret = json.load(rlist)
         except Exception as ex:  # pylint: disable=W0703
             # used error() because error in file data, not in program
             logging.error("Can't load json from '%s': %s", replace_list, str(ex))

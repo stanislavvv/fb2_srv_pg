@@ -3,15 +3,15 @@
 
 from flask import Blueprint, Response, render_template, redirect, url_for
 
-# pylint: disable=E0402
+# pylint: disable=E0402,C0209
 from .internals import URL
 
 from .views_internals import view_main, view_seq_root, view_seq_sub, view_seq, view_auth_root
 from .views_internals import view_auth_sub, view_author, view_author_seqs, view_author_seq
 from .views_internals import view_author_nonseq, view_author_alphabet, view_author_time
 from .views_internals import view_gen_root, view_gen_meta, view_genre, view_random_books
-from .views_internals import view_random_seqs, view_search, view_search_authors, view_search_sequences
-from .views_internals import view_search_books, view_search_books_anno
+from .views_internals import view_random_seqs, view_search, view_search_authors
+from .views_internals import view_search_sequences, view_search_books, view_search_books_anno
 from .views_internals import view_rnd_gen_root, view_rnd_gen_meta, view_rnd_genre
 
 from .consts import CACHE_TIME, CACHE_TIME_RND

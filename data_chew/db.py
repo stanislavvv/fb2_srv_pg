@@ -6,7 +6,7 @@ import logging
 import psycopg2
 
 
-# pylint: disable=E0402
+# pylint: disable=E0402,C0209
 from .consts import CREATE_REQ, INSERT_REQ, GET_REQ
 from .strings import quote_string
 
@@ -83,53 +83,49 @@ class BookDB():
 
     def __get_genres_meta(self):
         """init genres meta dict"""
-        data = open('genres_meta.list', 'r')
-        while True:
-            line = data.readline()
-            if not line:
-                break
-            meta_line = line.strip('\n').split('|')
-            if len(meta_line) > 1:
-                self.genres_meta[meta_line[0]] = meta_line[1]
-        data.close()
+        with open('genres_meta.list', 'r', encoding='utf-8') as data:
+            while True:
+                line = data.readline()
+                if not line:
+                    break
+                meta_line = line.strip('\n').split('|')
+                if len(meta_line) > 1:
+                    self.genres_meta[meta_line[0]] = meta_line[1]
 
     def __get_genres(self):
         """init genres dict"""
-        data = open('genres.list', 'r')
-        while True:
-            line = data.readline()
-            if not line:
-                break
-            genre_line = line.strip('\n').split('|')
-            if len(genre_line) > 1:
-                self.genres[genre_line[1]] = {"descr": genre_line[2], "meta_id": genre_line[0]}
-        data.close()
+        with open('genres.list', 'r', encoding='utf-8') as data:
+            while True:
+                line = data.readline()
+                if not line:
+                    break
+                genre_line = line.strip('\n').split('|')
+                if len(genre_line) > 1:
+                    self.genres[genre_line[1]] = {"descr": genre_line[2], "meta_id": genre_line[0]}
 
     def __get_genres_replace(self):
         """init genres_replace dict"""
-        data = open('genres_replace.list', 'r')
-        while True:
-            line = data.readline()
-            if not line:
-                break
-            replace_line = line.strip('\n').split('|')
-            if len(replace_line) > 1:
-                replacement = replace_line[1].split(",")
-                self.genres_replacements[replace_line[0]] = '|'.join(replacement)
-        data.close()
+        with open('genres_replace.list', 'r', encoding='utf-8') as data:
+            while True:
+                line = data.readline()
+                if not line:
+                    break
+                replace_line = line.strip('\n').split('|')
+                if len(replace_line) > 1:
+                    replacement = replace_line[1].split(",")
+                    self.genres_replacements[replace_line[0]] = '|'.join(replacement)
 
     def __get_langs_replace(self):
         """init genres_replace dict"""
-        data = open('langs_replace.list', 'r')
-        while True:
-            line = data.readline()
-            if not line:
-                break
-            replace_line = line.strip('\n').split('|')
-            if len(replace_line) > 1:
-                replacement = replace_line[1].split(",")
-                self.langs_replacements[replace_line[0]] = '|'.join(replacement)
-        data.close()
+        with open('langs_replace.list', 'r', encoding='utf-8') as data:
+            while True:
+                line = data.readline()
+                if not line:
+                    break
+                replace_line = line.strip('\n').split('|')
+                if len(replace_line) > 1:
+                    replacement = replace_line[1].split(",")
+                    self.langs_replacements[replace_line[0]] = '|'.join(replacement)
 
     def genres_replace(self, book, genrs):
         """return genre or replaced genre"""

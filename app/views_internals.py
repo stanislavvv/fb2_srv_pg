@@ -3,11 +3,12 @@
 
 from flask import request
 
-# pylint: disable=E0402
+# pylint: disable=E0402,C0209
 from .opds import main_opds, str_list, seq_cnt_list, books_list, auth_list, main_author
 from .opds import author_seqs, name_list, name_cnt_list, random_data
 from .opds import search_main, search_term
-from .validate import validate_prefix, validate_id, validate_genre_meta, validate_genre, validate_search
+from .validate import validate_prefix, validate_id, validate_genre_meta
+from .validate import validate_genre, validate_search
 from .internals import id2path, URL, get_author_name, get_seq_name, get_meta_name, get_genre_name
 
 
@@ -40,11 +41,30 @@ def view_seq_sub(sub: str):
     if len(sub) >= 3:
         baseref = URL["seq"]
         subtag = "tag:sequences:"
-        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, tpl="%d книг(и) в серии", sub=sub)
+        data = seq_cnt_list(
+            tag,
+            title,
+            baseref,
+            self,
+            upref,
+            subtag,
+            tpl="%d книг(и) в серии",
+            sub=sub
+        )
     else:
         baseref = URL["seqidx"]
         subtag = "tag:sequence:"
-        data = seq_cnt_list(tag, title, baseref, self, upref, subtag, tpl="серий: %d", layout="simple", sub=sub)
+        data = seq_cnt_list(
+            tag,
+            title,
+            baseref,
+            self,
+            upref,
+            subtag,
+            tpl="серий: %d",
+            layout="simple",
+            sub=sub
+        )
     return data
 
 
@@ -92,7 +112,17 @@ def view_auth_sub(sub: str):
         baseref = URL["authidx"]
         tag = "tag:authors:" + sub
         subtag = "tag:author:"
-        data = auth_list(tag, title, baseref, self, upref, subtag, "%d aвт.", sub=sub, layout="simple")
+        data = auth_list(
+            tag,
+            title,
+            baseref,
+            self,
+            upref,
+            subtag,
+            "%d aвт.",
+            sub=sub,
+            layout="simple"
+        )
     return data
 
 
@@ -220,7 +250,18 @@ def view_genre(gen_id: str, page: int):
     title = "Жанр " + get_genre_name(gen_id)
     authref = URL["author"]
     seqref = URL["seq"]
-    data = books_list(tag, title, self, upref, authref, seqref, '', page=page, paginate=True, gen_id=gen_id)
+    data = books_list(
+        tag,
+        title,
+        self,
+        upref,
+        authref,
+        seqref,
+        '',
+        page=page,
+        paginate=True,
+        gen_id=gen_id
+    )
     return data
 
 

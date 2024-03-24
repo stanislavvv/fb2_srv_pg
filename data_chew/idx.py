@@ -5,7 +5,7 @@ import json
 import logging
 import gzip
 
-# pylint: disable=E0402
+# pylint: disable=E0402,C0209
 from .consts import INSERT_REQ, GET_REQ
 from .strings import quote_string
 from .db import sarray2pg, bdatetime2date, make_book_descr
@@ -21,7 +21,7 @@ authors_seqs = {}
 def make_update_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
     """return updates/inserts/delete for book"""
     req = []
-    global authors_seqs  # pylint: disable=W0603,C0103
+    global authors_seqs  # pylint: disable=W0602,W0603,C0103
     gnrs = sarray2pg(book["genres"])
     bdate = bdatetime2date(book["date_time"])
     book_ins = (
@@ -96,7 +96,7 @@ def make_update_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
 def make_insert_book(db, book):  # pylint: disable=C0103,R0912,R0914,R0915,R1702
     """return inserts for book"""
     req = []
-    global authors_seqs  # pylint: disable=W0603,C0103
+    global authors_seqs  # pylint: disable=W0602,W0603,C0103
     gnrs = sarray2pg(book["genres"])
     bdate = bdatetime2date(book["date_time"])
     book_ins = (
@@ -233,7 +233,7 @@ def make_insert_authors(db, authors):  # pylint: disable=C0103
     return "".join(inserts)
 
 
-def process_books_batch(db, booklines, stage):  # pylint: disable=C0103,R0912,R0914
+def process_books_batch(db, booklines, stage):  # pylint: disable=C0103,R0912,R0914,R0915
     """index .list to database"""
     books = []
     book_ids = []
@@ -247,7 +247,8 @@ def process_books_batch(db, booklines, stage):  # pylint: disable=C0103,R0912,R0
         book = json.loads(line)
         if book is None:
             continue
-        if "genres" not in book or book["genres"] is None or book["genres"] == "" or book["genres"] == []:
+        if "genres" not in book or book["genres"] in (None, "", []):
+            # book["genres"] is None or book["genres"] == "" or book["genres"] == []:
             book["genres"] = ["other"]
         book["genres"] = db.genres_replace(book, book["genres"])
         book["lang"] = db.lang_replace(book, book["lang"])
@@ -314,7 +315,7 @@ def open_booklist(booklist):
     if booklist.find('gz') >= len(booklist) - 3:  # pylint: disable=R1705
         return gzip.open(booklist)
     else:
-        return open(booklist)
+        return open(booklist, encoding="utf-8")
 
 
 def process_list_books_batch(db, booklist, stage):  # pylint: disable=C0103,R0912,R0914

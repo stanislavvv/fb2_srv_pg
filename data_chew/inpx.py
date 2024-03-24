@@ -121,6 +121,7 @@ def get_inpx_meta(inpx_data, zip_file):
     inp_file = os.path.basename(zip_file).replace(".zip", ".inp")
 
     try:
+        # pylint: disable=R1732
         inpx_zip = zipfile.ZipFile(inpx_data)
         f_inpx = inpx_zip.open(inp_file, "r")
         data = f_inpx.read().decode('utf-8')

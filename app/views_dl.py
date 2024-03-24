@@ -55,6 +55,7 @@ def fb2_download(zip_file=None, filename=None):
             zf.writestr(data, fb2data)
         memory_file.seek(0)
         zip_name = filename + ".zip"
+        # flake8: noqa: N812
         if FLASK_VER < '2.1.3':
             # use OLD send_file interface
             # pylint: disable=E1123

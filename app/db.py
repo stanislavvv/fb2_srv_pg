@@ -8,7 +8,7 @@ import psycopg2
 
 from flask import current_app
 
-# pylint: disable=E0402
+# pylint: disable=E0402,C0209
 from .consts import BOOK_REQ
 
 

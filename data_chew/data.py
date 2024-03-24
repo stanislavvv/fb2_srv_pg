@@ -2,7 +2,7 @@
 
 """non-database data manipulation functions"""
 
-# pylint: disable=C0325
+# pylint: disable=C0325,C0209
 
 import hashlib
 import json
@@ -153,7 +153,7 @@ def get_sequence(seq, zip_file, filename):
     return struct: [{"name": "SomeName", "id": "id...", num: 3}, ...]
     for sequence(s) in data
     """
-    # pylint: disable=R0912
+    # pylint: disable=R0912,C0209
     ret = []
     context = "get seq for file '%s/%s'" % (zip_file, filename)
     if isinstance(seq, str):
@@ -186,7 +186,9 @@ def get_sequence(seq, zip_file, filename):
             name = None
             num = None
             if '@name' in single_seq:
-                name = strip_quotes(single_seq['@name'].strip('|').replace('«', '"').replace('»', '"'))
+                name = strip_quotes(
+                    single_seq['@name'].strip('|').replace('«', '"').replace('»', '"')
+                )
                 name = name.strip()
                 seq_id = make_id(name)
             if '@number' in single_seq:
@@ -243,7 +245,7 @@ def get_replace_list(zip_file):
     replace_list = zip_file + ".replace"
     if os.path.isfile(replace_list):
         try:
-            rlist = open(replace_list)
+            rlist = open(replace_list, encoding="utf-8")
             ret = json.load(rlist)
             rlist.close()
         except Exception as ex:  # pylint: disable=W0703
@@ -268,10 +270,10 @@ def get_title(title):
         return title.replace('«', '"').replace('»', '"')
     if isinstance(title, dict):
         if '#text' in title:
-            return(str(title["#text"]).replace('«', '"').replace('»', '"'))
+            return str(title["#text"]).replace('«', '"').replace('»', '"')
         if 'p' in title:
-            return(str(title['p']).replace('«', '"').replace('»', '"'))
-    return(str(title).replace('«', '"').replace('»', '"'))
+            return str(title['p']).replace('«', '"').replace('»', '"')
+    return str(title).replace('«', '"').replace('»', '"')
 
 
 def array2string(arr):
@@ -445,7 +447,11 @@ def fb2parse(z_file, filename, replace_data, inpx_data):  # pylint: disable=R091
                 )
             if "binary" in fb2data_full:
                 binary = fb2data_full["binary"]  # mostly images here
-                cover = get_image(covername, binary, context="%s/%s" % (zip_file, filename))  # get corresponding image
+                cover = get_image(
+                    covername,
+                    binary,
+                    context="%s/%s" % (zip_file, filename)
+                )  # get corresponding image
     pubinfo = None
     try:
         pubinfo = get_struct_by_key('publish-info', descr)  # descr['publish-info']

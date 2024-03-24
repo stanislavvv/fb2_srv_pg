@@ -9,7 +9,7 @@ import logging
 from functools import cmp_to_key
 from bs4 import BeautifulSoup
 
-# pylint: disable=E0402
+# pylint: disable=E0402,R1705
 from .consts import URL, alphabet_1, alphabet_2
 from .db import dbconnect
 
@@ -17,8 +17,10 @@ genre_names = {}
 
 
 def load_genre_names():
+    """load genres names at startup"""
     db_conn = dbconnect()
     data = db_conn.get_genre_names()
+    # pylint: disable=C0103
     for k, v in data:
         genre_names[k] = v
 
@@ -286,6 +288,7 @@ def html_refine(txt: str):
 
 def pubinfo_anno(pubinfo):
     """create publication info for opds"""
+    # pylint: disable=C0209
     ret = ""
     if pubinfo["isbn"] is not None and pubinfo["isbn"] != 'None':
         ret = ret + "<p><b>Данные публикации:</b></p><p>ISBN: %s</p>" % pubinfo["isbn"]
@@ -324,7 +327,9 @@ def get_genre_name(gen_id: str):
     # db_conn = dbconnect()
     # dbdata = db_conn.get_genre_name(gen_id)
     # if dbdata is not None and dbdata[0] is not None and dbdata[0] != '':
-        # ret = dbdata[0]
+    #     ret = dbdata[0]
+
+    # pylint: disable=R1715
     if gen_id in genre_names:
         ret = genre_names[gen_id]
     return ret

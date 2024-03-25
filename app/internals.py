@@ -18,11 +18,14 @@ genre_names = {}
 
 def load_genre_names():
     """load genres names at startup"""
-    db_conn = dbconnect()
-    data = db_conn.get_genre_names()
-    # pylint: disable=C0103
-    for k, v in data:
-        genre_names[k] = v
+    try:
+        db_conn = dbconnect()
+        data = db_conn.get_genre_names()
+        # pylint: disable=C0103
+        for k, v in data:
+            genre_names[k] = v
+    except Exception as ex:  # pylint: disable=W0703
+        print(ex)
 
 
 def tpl_headers_symbols(link: str):

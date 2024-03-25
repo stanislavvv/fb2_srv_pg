@@ -75,15 +75,15 @@ def fromlists(stage):
 
 
 if __name__ == "__main__":
-    app = create_app()
-    DEBUG = app.config['DEBUG']
-    DBLOGLEVEL = app.config['DBLOGLEVEL']
-    DBLOGFORMAT = app.config['DBLOGFORMAT']
-    logging.basicConfig(level=DBLOGLEVEL, format=DBLOGFORMAT)
-    if "PIC_WIDTH" in app.config:
-        set_data_config("width", app.config['PIC_WIDTH'])
 
     if len(sys.argv) > 1:
+        app = create_app()
+        DEBUG = app.config['DEBUG']
+        DBLOGLEVEL = app.config['DBLOGLEVEL']
+        DBLOGFORMAT = app.config['DBLOGFORMAT']
+        logging.basicConfig(level=DBLOGLEVEL, format=DBLOGFORMAT)
+        if "PIC_WIDTH" in app.config:
+            set_data_config("width", app.config['PIC_WIDTH'])
         if sys.argv[1] == "clean":
             clean()
         # elif sys.argv[1] == "asnew":

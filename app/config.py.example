@@ -19,7 +19,6 @@ class DevelopmentConfig(Config):
     DBLOGLEVEL = logging.DEBUG  # DEBUG, INFO, WARN, ERR
     DBLOGFORMAT = '%(asctime)s -- %(message)s'
     DEBUG = True  # generate debug artefacts
-    GENRES_LIST = "genres.list"
     ZIPS = "data"
     TITLE = "Home opds directory"
     FB2_XSLT = 'fb2_to_html.xsl'
@@ -40,7 +39,6 @@ class TestConfig(Config):
     DBLOGFORMAT = '%(asctime)s -- %(message)s'
     TESTING = True
     DEBUG = False
-    GENRES_LIST = "genres.list"
     ZIPS = "data"
     TITLE = "Home opds directory"
     FB2_XSLT = 'fb2_to_html.xsl'
@@ -60,7 +58,6 @@ class ProductionConfig(Config):
     DBLOGLEVEL = logging.INFO
     DBLOGFORMAT = '%(asctime)s -- %(message)s'
     DEBUG = False
-    GENRES_LIST = "genres.list"
     ZIPS = "data"
     TITLE = "Home opds directory"
     FB2_XSLT = 'fb2_to_html.xsl'

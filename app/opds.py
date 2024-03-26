@@ -475,16 +475,22 @@ def books_list(
                     if seq_id is not None and seq_id == s_id:
                         seq_name = seq["name"]
                         seq_num = seq.get("num")
-                        if seq_num is None:
-                            seq_num = "0"
+                        # if seq_num is None:
+                        #     seq_num = "0"
         links.append(get_book_link(approot, zipfile, filename, 'dl'))
         links.append(get_book_link(approot, zipfile, filename, 'read'))
 
         if seq_id is not None and seq_id != '':
-            annotext = """
-            <p class=\"book\"> %s </p>\n<br/>формат: fb2<br/>
-            размер: %s<br/>Серия: %s, номер: %s<br/>
-            """ % (annotation, sizeof_fmt(size), seq_name, seq_num)
+            if seq_num is None:
+                annotext = """
+                <p class=\"book\"> %s </p>\n<br/>формат: fb2<br/>
+                размер: %s<br/>Серия: %s<br/>
+                """ % (annotation, sizeof_fmt(size), seq_name)
+            else:
+                annotext = """
+                <p class=\"book\"> %s </p>\n<br/>формат: fb2<br/>
+                размер: %s<br/>Серия: %s, номер: %s<br/>
+                """ % (annotation, sizeof_fmt(size), seq_name, seq_num)
         else:
             annotext = """
             <p class=\"book\"> %s </p>\n<br/>формат: fb2<br/>

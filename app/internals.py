@@ -25,7 +25,7 @@ def load_genre_names():
         for k, v in data:
             genre_names[k] = v
     except Exception as ex:  # pylint: disable=W0703
-        print(ex)
+        logging.debug(ex)
 
 
 def tpl_headers_symbols(link: str):

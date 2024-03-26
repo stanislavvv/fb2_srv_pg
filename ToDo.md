@@ -4,7 +4,6 @@
 - [opds] add filtering by language (may be by url parameter), use ISO 639-1 or ISO 639-2 (translated to ISO 639-1 internally)
 - [opds] add per-zip view (without another division, simple list)
 - refactor:
-  - use nullable type for seq num field (will require regenerate all sequences data in database)
   - [opds] slow sql queries (test and may be fix after new storage setup):
     - books in sequence
     - books in genre

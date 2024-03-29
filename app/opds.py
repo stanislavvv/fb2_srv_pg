@@ -1309,7 +1309,7 @@ def search_term(
                 if i["sequences"] is not None:
                     for seq in i["sequences"]:
                         if seq.get("id") is not None:
-                            links.append(get_seq_link(approot, baseref, id2path(seq["id"]), seq["name"]))
+                            links.append(get_seq_link(approot, URL["seq"], id2path(seq["id"]), seq["name"]))
 
                 links.append(get_book_link(approot, zipfile, filename, 'dl'))
                 links.append(get_book_link(approot, zipfile, filename, 'read'))

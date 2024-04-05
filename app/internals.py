@@ -18,6 +18,7 @@ genre_names = {}
 
 def load_genre_names():
     """load genres names at startup"""
+    global genre_names
     try:
         db_conn = dbconnect()
         data = db_conn.get_genre_names()

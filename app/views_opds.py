@@ -14,7 +14,7 @@ from .views_internals import view_author_nonseq, view_author_alphabet, view_auth
 from .views_internals import view_gen_root, view_gen_meta, view_genre, view_random_books
 from .views_internals import view_random_seqs, view_search, view_search_authors
 from .views_internals import view_search_sequences, view_search_books, view_search_books_anno
-from .views_internals import view_rnd_gen_root, view_rnd_gen_meta, view_rnd_genre
+from .views_internals import view_rnd_gen_root, view_rnd_gen_meta, view_rnd_genre, view_time
 
 from .consts import CACHE_TIME, CACHE_TIME_RND
 
@@ -244,7 +244,7 @@ def opds_search_books_anno():
     return resp
 
 
-@opds.route(URL["rndgenidx"].replace("/opds", "/opds", 1), methods=['GET'])
+@opds.route(URL["rndgenidx"], methods=['GET'])
 def opds_rnd_gen_root():
     """genres meta list for random books in genre"""
     data = view_rnd_gen_root()
@@ -254,7 +254,7 @@ def opds_rnd_gen_root():
     return resp
 
 
-@opds.route(URL["rndgenidx"].replace("/opds", "/opds", 1) + "<sub>", methods=['GET'])
+@opds.route(URL["rndgenidx"] + "<sub>", methods=['GET'])
 def opds_rnd_gen_meta(sub):
     """genres list for random books in genre"""
     data = view_rnd_gen_meta(sub)
@@ -264,11 +264,22 @@ def opds_rnd_gen_meta(sub):
     return resp
 
 
-@opds.route(URL["rndgen"].replace("/opds", "/opds", 1) + "<gen_id>", methods=['GET'])
+@opds.route(URL["rndgen"] + "<gen_id>", methods=['GET'])
 def opds_rnd_genre(gen_id):
     """random books in genre"""
     data = view_rnd_genre(gen_id)
     xml = xmltodict.unparse(data, pretty=True)
     resp = Response(xml, mimetype='text/xml')
     resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME_RND
+    return resp
+
+
+@opds.route(URL["time"], methods=['GET'])
+@opds.route(URL["time"] + "/<int:page>", methods=['GET'])
+def opds_time(page=0):
+    """all books of author order by date"""
+    data = view_time(page)
+    xml = xmltodict.unparse(data, pretty=True)
+    resp = Response(xml, mimetype='text/xml')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
     return resp

@@ -34,6 +34,7 @@ def main_opds():
         dtiso, approot, URL["search"],
         approot, URL["start"],  # start
         approot, URL["start"],  # self
+        dtiso, approot, URL["time"],
         dtiso, approot, URL["authidx"],
         dtiso, approot, URL["seqidx"],
         dtiso, approot, URL["genidx"],
@@ -314,7 +315,8 @@ def books_list(
             elif gen_id is not None and gen_id != '':
                 dbdata = db_conn.get_genre_books(gen_id, paginate, limit, offset)
             else:
-                name = "'" + "DUMMY" + "'"
+                name = ""
+                dbdata = db_conn.get_books_by_time(limit, offset)
         book_ids = []
         for book in dbdata:
             book_ids.append(book[3])

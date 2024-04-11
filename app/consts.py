@@ -35,6 +35,7 @@ URL = {
     "rndseq": "/opds/random-sequences/",
     "rndgen": "/opds/rnd-genre/",
     "rndgenidx": "/opds/rnd-genresindex/",
+    "time": "/opds/time",  # all books by time (from new to old)
     "read": "/read/",  # read book
     "dl": "/fb2/"  # download book
 }
@@ -76,6 +77,19 @@ OPDS = {
           }
         ],
         "entry": [
+          {
+            "updated": "%s",
+            "id": "tag:root:time",
+            "title": "По дате поступления",
+            "content": {
+              "@type": "text",
+              "#text": "По дате поступления"
+            },
+            "link": {
+              "@href": "%s%s",
+              "@type": "application/atom+xml;profile=opds-catalog"
+            }
+          },
           {
             "updated": "%s",
             "id": "tag:root:authors",
@@ -287,6 +301,12 @@ BOOK_REQ = {
         WHERE
             '%s' = ANY (genres)
         ORDER BY filename
+        LIMIT %s
+        OFFSET %s;
+    """,
+    "get_books_by_time_pag": """
+        SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
+        ORDER BY date DESC
         LIMIT %s
         OFFSET %s;
     """,

@@ -252,6 +252,14 @@ class BookDBro():
         current_app.logger.debug("end")
         return data
 
+    def get_books_by_time(self, limit, offset):
+        """paginated list of all books by time"""
+        current_app.logger.debug(BOOK_REQ["get_books_by_time_pag"] % (limit, offset))
+        self.cur.execute(BOOK_REQ["get_books_by_time_pag"] % (limit, offset))
+        data = self.cur.fetchall()
+        current_app.logger.debug("end")
+        return data
+
     def get_rnd_books(self, limit):
         """get random books"""
         current_app.logger.debug(BOOK_REQ["get_rnd_books"] % limit)

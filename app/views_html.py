@@ -12,7 +12,7 @@ from .views_internals import view_author_nonseq, view_author_alphabet, view_auth
 from .views_internals import view_gen_root, view_gen_meta, view_genre, view_random_books
 from .views_internals import view_random_seqs, view_search, view_search_authors
 from .views_internals import view_search_sequences, view_search_books, view_search_books_anno
-from .views_internals import view_rnd_gen_root, view_rnd_gen_meta, view_rnd_genre
+from .views_internals import view_rnd_gen_root, view_rnd_gen_meta, view_rnd_genre, view_time
 
 from .consts import CACHE_TIME, CACHE_TIME_RND
 
@@ -377,4 +377,19 @@ def html_rnd_genre(gen_id):
     page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
     resp = Response(page, mimetype='text/html')
     resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME_RND
+    return resp
+
+
+@html.route(URL["time"].replace("/opds", "/html", 1), methods=['GET'])
+@html.route(URL["time"].replace("/opds", "/html", 1) + "/<int:page>", methods=['GET'])
+def html_time(page=0):
+    """all books of author order by date"""
+    data = view_time(page)
+    title = data['feed']['title']
+    updated = data['feed']['updated']
+    entry = data['feed']['entry']
+    link = data['feed']['link']
+    page = render_template('opds_sequence.html', title=title, updated=updated, link=link, entry=entry)
+    resp = Response(page, mimetype='text/html')
+    resp.headers['Cache-Control'] = "max-age=%d, must-revalidate" % CACHE_TIME
     return resp

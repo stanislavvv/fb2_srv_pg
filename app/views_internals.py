@@ -422,3 +422,15 @@ def view_rnd_genre(gen_id):
                 True,
                 gen_id=gen_id)
     return data
+
+
+def view_time(page=0):
+    """all books in order by date from new to old"""
+    self = URL["time"]
+    upref = URL["start"]
+    tag = "tag:root:books:time"
+    title = "Книги по дате добавления"
+    authref = URL["author"]
+    seqref = URL["seq"]
+    data = books_list(tag, title, self, upref, authref, seqref, None, timeorder=True, page=page, paginate=True)
+    return data

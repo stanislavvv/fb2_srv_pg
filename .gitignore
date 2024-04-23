@@ -13,4 +13,5 @@ venv
 venv.sh
 docker-compose*.yml
 out.*
+pycallgraph.png
 

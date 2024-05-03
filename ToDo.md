@@ -1,6 +1,6 @@
 # ToDo
 
-- [datachew] languages to std view (for example: 'RU|RU-ru|ru-' --> 'ru' as in ISO 639-1 if possible or ISO 639-2)
+- [datachew] languages to std view (for example: 'RU|RU-ru|ru-' --> 'ru' as in ISO 639-1 if possible or ISO 639-2), see https://datahub.io/core/language-codes
 - [opds] add filtering by language (may be by url parameter), use ISO 639-1 or ISO 639-2 (translated to ISO 639-1 internally)
 - [opds] add order by date desc view (without another division, simple list)
 - refactor:

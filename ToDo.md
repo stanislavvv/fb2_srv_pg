@@ -1,8 +1,8 @@
 # ToDo
 
-- [datachew] languages to std view (for example: 'RU|RU-ru|ru-' --> 'ru' as in ISO 639-1 if possible or ISO 639-2), see https://datahub.io/core/language-codes
+- [datachew] languages to std view (for example: 'RU|RU-ru|ru-' --> 'ru' as in ISO 639-1 if possible or ISO 639-2), see https://datahub.io/core/language-codes -- testing
 - [opds] add filtering by language (may be by url parameter), use ISO 639-1 or ISO 639-2 (translated to ISO 639-1 internally)
-- [opds] add order by date desc view (without another division, simple list)
+- [opds] add order by date desc view (without another division, simple list) -- testing
 - [opds] [bug] fix genre names -- need more testing, can't reproduce
 - refactor:
   - [opds] slow sql queries (test and may be fix after new storage setup):

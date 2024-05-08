@@ -65,6 +65,8 @@ def fb2_download(zip_file=None, filename=None):
                 as_attachment=True,
                 cache_timeout=CACHE_TIME_ST
             )
+        # use NEW send_file interface (at old system pylint blame on it)
+        # pylint: disable=E1123
         return send_file(memory_file, download_name=zip_name, as_attachment=True)
     else:
         return Response("Book not found", status=404)

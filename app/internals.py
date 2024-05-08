@@ -13,11 +13,13 @@ from bs4 import BeautifulSoup
 from .consts import URL, alphabet_1, alphabet_2
 from .db import dbconnect
 
-genre_names = {}
+# this is global, not constant
+genre_names = {}  # pylint: disable=C0103
 
 
 def load_genre_names():
     """load genres names at startup"""
+    # pylint: disable=W0603,C0103
     global genre_names
     try:
         db_conn = dbconnect()

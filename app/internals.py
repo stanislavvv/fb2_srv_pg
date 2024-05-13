@@ -19,7 +19,7 @@ genre_names = {}  # pylint: disable=C0103
 
 def load_genre_names():
     """load genres names at startup"""
-    # pylint: disable=W0603,C0103
+    # pylint: disable=W0603,C0103,W0602
     global genre_names
     try:
         db_conn = dbconnect()

@@ -4,6 +4,7 @@
 - [opds] add filtering by language (may be by url parameter), use ISO 639-1 or ISO 639-2 (translated to ISO 639-1 internally)
 - [opds] add order by date desc view (without another division, simple list) -- testing
 - [opds] [bug] fix genre names -- need more testing, can't reproduce
+- [opds] [bug] in all books by time must be more than one page
 - refactor:
   - [opds] slow sql queries (test and may be fix after new storage setup):
     - books in sequence

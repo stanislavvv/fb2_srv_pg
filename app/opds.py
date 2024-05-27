@@ -396,7 +396,7 @@ def books_list(
         data = sorted(dfix, key=cmp_to_key(custom_alphabet_book_title_cmp))
     if paginate:
         next_link = None
-        if len(data) >= limit:
+        if len(data) >= limit or timeorder:  # hack for global book list by time
             next_link = page + 1
         prev = page - 1
         if prev > 0:

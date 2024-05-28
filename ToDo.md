@@ -18,3 +18,6 @@
 - `lang` field in `books` table must be array of strings as `genres` (may be or not)
 - use ORM for database (may be, if any ORM can create trigram or similar fts index)
 - join app and data_chew (or not join?)
+
+# ToDo may be or not in far far future
+- rewrite app with all flask guidelines or in golang

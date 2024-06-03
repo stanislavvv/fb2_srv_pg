@@ -306,7 +306,7 @@ BOOK_REQ = {
     """,
     "get_books_by_time_pag": """
         SELECT zipfile, filename, genres, book_id, lang, date, size, deleted FROM books
-        ORDER BY date DESC
+        ORDER BY date DESC, filename DESC
         LIMIT %s
         OFFSET %s;
     """,

@@ -395,9 +395,10 @@ def books_list(
                 dfix.append(book)
         data = sorted(dfix, key=cmp_to_key(custom_alphabet_book_title_cmp))
     if paginate:
-        next_link = None
-        if len(data) >= limit or timeorder:  # hack for global book list by time
-            next_link = page + 1
+        # next_link = None
+        # if len(data) >= limit or timeorder:  # hack for global book list by time
+        #     next_link = page + 1
+        next_link = page + 1  # remove dirty hack and next page always exists
         prev = page - 1
         if prev > 0:
             ret["feed"]["link"].append(

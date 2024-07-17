@@ -19,7 +19,7 @@ from .internals import URL
 
 from .opds_int import ret_hdr
 
-from .db import dbconnect
+from .db import dbconnect, quote_string
 
 from .consts import cover_names, OPDS
 
@@ -143,7 +143,7 @@ def seq_cnt_list(
     try:
         db_conn = dbconnect()
         if len(sub) < 3:
-            dbdata = db_conn.get_seqs_three(sub)
+            dbdata = db_conn.get_seqs_three(quote_string(sub))
             for seq in dbdata:
                 name = seq[0]
                 seq_id = name
@@ -154,7 +154,7 @@ def seq_cnt_list(
                     "cnt": cnt
                 })
         else:
-            dbdata = db_conn.get_seqs_list(sub)
+            dbdata = db_conn.get_seqs_list(quote_string(sub))
             for seq in dbdata:
                 name = seq[1]
                 seq_id = seq[0]
@@ -222,9 +222,10 @@ def auth_list(
 
     data = []
     try:
+        sub = sub.replace("`","'")  # temporary hack
         db_conn = dbconnect()
         if layout == 'simple':
-            dbdata = db_conn.get_authors_three(sub)
+            dbdata = db_conn.get_authors_three(quote_string(sub))
             for auth in dbdata:
                 data.append({
                     "id": auth[0],
@@ -232,7 +233,7 @@ def auth_list(
                     "cnt": auth[1]
                 })
         else:
-            dbdata = db_conn.get_authors_list(sub)
+            dbdata = db_conn.get_authors_list(quote_string(sub))
             for auth in dbdata:
                 data.append({
                     "id": auth[0],

@@ -7,7 +7,6 @@
     - books in genre
     - random books
     - random books in genre
-- [bug][opds] no next page in genres books list (only with `HIDE_DELETED = True`) -- testing
 
 # ToDo sometimes
 

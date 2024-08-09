@@ -1,5 +1,6 @@
 # ToDo
 
+- [bug][opds] Can't open list of authors/sequences with only one character in name
 - [opds] add filtering by language (may be by url parameter), use ISO 639-1 or ISO 639-2 (translated to ISO 639-1 internally)
 - refactor:
   - [opds] slow sql queries (test and may be fix after new storage setup):

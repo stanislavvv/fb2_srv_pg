@@ -140,9 +140,11 @@ def seq_cnt_list(
     )
 
     data = []
+    sub = sub.strip(' ')
     try:
         db_conn = dbconnect()
-        if len(sub) < 3:
+        # if len(sub) < 3:
+        if layout == 'simple':
             dbdata = db_conn.get_seqs_three(quote_string(sub))
             for seq in dbdata:
                 name = seq[0]
@@ -157,7 +159,7 @@ def seq_cnt_list(
             dbdata = db_conn.get_seqs_list(quote_string(sub))
             for seq in dbdata:
                 name = seq[1]
-                seq_id = seq[0]
+                seq_id = seq[0].ljust(3, ' ')
                 cnt = seq[2]
                 data.append({
                     "id": seq_id,
@@ -222,13 +224,13 @@ def auth_list(
 
     data = []
     try:
-        sub = sub.replace("`","'")  # temporary hack
+        sub = sub.strip(' ')
         db_conn = dbconnect()
         if layout == 'simple':
             dbdata = db_conn.get_authors_three(quote_string(sub))
             for auth in dbdata:
                 data.append({
-                    "id": auth[0],
+                    "id": auth[0].ljust(3, ' '),
                     "name": auth[0],
                     "cnt": auth[1]
                 })

@@ -38,7 +38,7 @@ def view_seq_sub(sub: str):
     upref = URL["seqidx"]
     tag = "tag:sequences:" + sub
     title = "Серии на '" + sub + "'"
-    if len(sub) >= 3:
+    if len(sub) >= 2:
         baseref = URL["seq"]
         subtag = "tag:sequences:"
         data = seq_cnt_list(
@@ -103,7 +103,7 @@ def view_auth_sub(sub: str):
     self = URL["authidx"] + sub
     upref = URL["authidx"]
     title = "Авторы на '" + sub + "'"
-    if len(sub) >= 3:
+    if len(sub) >= 2:
         baseref = URL["author"]
         tag = "tag:authors:" + sub
         subtag = "tag:authors:"
